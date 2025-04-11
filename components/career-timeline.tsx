@@ -50,7 +50,7 @@ const careerData: CareerEntry[] = [
     title: "株式会社網屋",
     subtitle: "正社員",
     description:
-      "自社セキュリティパッケージ製品 ALog Converter の開発に従事し、フロントエンド開発をメインとして機能要望に沿って開発",
+      "自社セキュリティパッケージ製品 ALog Converter の開発に従事し、 フロントエンド開発をメインとして機能要望に沿って開発",
     startDate: "2018年08月",
     endDate: "2022年03月",
     highlighted: false,

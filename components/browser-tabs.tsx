@@ -4,8 +4,9 @@ import type React from "react"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/utils"
 import { motion } from "framer-motion"
+import { RssButton } from "./rss-button"
 
 type Tab = {
   name: string
@@ -58,6 +59,7 @@ export function BrowserTabs() {
         <div className="flex h-7 w-full items-center rounded-full bg-background/60 px-3 text-xs text-muted-foreground">
           myportfolio.vercel.app{pathname}
         </div>
+        <RssButton />
       </div>
     </div>
   )

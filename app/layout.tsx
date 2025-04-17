@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { BackgroundScene } from "@/components/background-scene"
+import { AnnouncementBanner } from "../components/announcement-banner"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,7 +24,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <BackgroundScene />
-          <div className="relative min-h-screen">{children}</div>
+          <div className="relative min-h-screen">
+            <AnnouncementBanner />
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>

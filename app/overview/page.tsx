@@ -13,9 +13,11 @@ export default function OverviewPage() {
           <h2 className="mb-4 text-2xl font-semibold">コンセプト</h2>
           <div className="rounded-lg bg-primary/5 p-4 border border-primary/10">
             <p className="text-muted-foreground">
-              このportfolioはvibecodingベースで作っていますが、高速で作っても保守性が高くなければ意味がなく、
-              ある程度は保守性を保てる良い設計であることというのは仕事をするうえで大事なことなので
-              リリースは一定期間を設けてしていくつもりです。
+              このポートフォリオサイトは「vibecoding」の手法をベースに構築していますが、
+              開発の迅速さだけでなく、コードの保守性と設計品質を重視しています。
+              高速な開発と優れた保守性を両立させることは、プロフェッショナルな開発者として
+              最も大切な価値観の一つです。そのため、十分な検証期間を設けながら
+              計画的にリリースを進めていきます。
             </p>
           </div>
         </section>

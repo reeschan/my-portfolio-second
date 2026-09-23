@@ -4,7 +4,7 @@ import { useRef } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Float, Environment, Preload } from "@react-three/drei"
 import { MathUtils, type Group, type Mesh } from "three"
-import { useMotionValue, useSpring } from "framer-motion"
+import { useMotionValue, useSpring } from "motion/react"
 import { usePathname } from "next/navigation"
 
 // パーティクルシステム

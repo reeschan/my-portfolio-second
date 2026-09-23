@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { SkillRadar } from "@/components/skill-radar";
-import { ExperienceChart } from "@/components/experience-chart";
 import { SkillCategory } from "@/types/skill-types";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -78,28 +77,16 @@ export function SkillsVisualization() {
     { subject: "DevOps", shortSubject: "DevOps", value: 4, fullMark: 5 },
   ];
 
-  // 経験年数の推移（折れ線グラフ用）
-  const experienceData = [
-    { year: 2018, value: 1 },
-    { year: 2019, value: 2 },
-    { year: 2020, value: 3 },
-    { year: 2021, value: 4 },
-    { year: 2022, value: 5 },
-    { year: 2023, value: 6 },
-    { year: 2024, value: 7 },
-  ];
-
   // クライアントサイドでのみレンダリング
   if (!isMounted) {
     return (
       <div className="space-y-6">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">概要</TabsTrigger>
             <TabsTrigger value="frontend">フロントエンド</TabsTrigger>
             <TabsTrigger value="backend">バックエンド</TabsTrigger>
             <TabsTrigger value="aws">AWS</TabsTrigger>
-            <TabsTrigger value="experience">経験</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="mt-6">
             <Card>
@@ -122,33 +109,16 @@ export function SkillsVisualization() {
         onValueChange={setActiveTab}
         className="w-full"
       >
-        <TabsList
-          className={`grid w-full ${isMobile ? "grid-cols-3" : "grid-cols-5"}`}
-        >
-          <TabsTrigger value="overview">
-            {isMobile ? "概要" : "概要"}
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">概要</TabsTrigger>
           <TabsTrigger value="frontend">
             {isMobile ? "FE" : "フロントエンド"}
           </TabsTrigger>
           <TabsTrigger value="backend">
             {isMobile ? "BE" : "バックエンド"}
           </TabsTrigger>
-          {!isMobile && <TabsTrigger value="aws">AWS</TabsTrigger>}
-          {!isMobile && (
-            <TabsTrigger value="experience">
-              {isMobile ? "経験" : "経験"}
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="aws">AWS</TabsTrigger>
         </TabsList>
-
-        {/* モバイル用の追加タブ行 */}
-        {isMobile && (
-          <TabsList className="grid w-full grid-cols-2 mt-2">
-            <TabsTrigger value="aws">AWS</TabsTrigger>
-            <TabsTrigger value="experience">経験</TabsTrigger>
-          </TabsList>
-        )}
 
         <TabsContent value="overview" className="mt-6">
           <SkillRadar
@@ -196,10 +166,6 @@ export function SkillsVisualization() {
             dataKey="level"
             angleDataKey="name"
           />
-        </TabsContent>
-
-        <TabsContent value="experience" className="mt-6">
-          <ExperienceChart title="エンジニア経験の推移" data={experienceData} />
         </TabsContent>
       </Tabs>
     </div>

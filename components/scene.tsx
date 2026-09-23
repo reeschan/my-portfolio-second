@@ -1,24 +1,38 @@
 "use client"
 
-import { useRef } from "react"
+import { useMemo, useRef } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Float, Environment, Preload } from "@react-three/drei"
+import { Float, Preload } from "@react-three/drei"
 import { MathUtils, type Group, type Mesh } from "three"
-import { useMotionValue, useSpring } from "framer-motion"
+import type { ThreeElements } from "@react-three/fiber"
+import { useMotionValue, useSpring } from "motion/react"
 import { usePathname } from "next/navigation"
 
+// three.js は CSS 変数 (hsl(var(--primary)) など) を解釈できないため、
+// ダークテーマの値に合わせた定数で色を持つ
+const COLORS = {
+  primary: "#3399ff", // --primary: 210 100% 60%
+  secondary: "#2e2e38", // --secondary: 240 10% 20%
+  accent: "#2e2e38", // --accent: 240 10% 20%
+  gridCenter: "#20252f", // --muted-foreground (10%) を背景に重ねた色
+  grid: "#191e28", // --muted-foreground (5%) を背景に重ねた色
+} as const
+
 // パーティクルシステム
-function Particles({ count = 200, color = "hsl(var(--primary))" }) {
+function Particles({ count = 200, color = COLORS.primary }) {
   const mesh = useRef<Group>(null)
   const { viewport, mouse } = useThree()
 
-  // パーティクルの位置を生成
-  const positions = new Float32Array(count * 3)
-  for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 10 // x
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 10 // y
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 10 // z
-  }
+  // パーティクルの位置を生成 (count が変わったときだけ作り直す)
+  const positions = useMemo(() => {
+    const array = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      array[i * 3] = (Math.random() - 0.5) * 10 // x
+      array[i * 3 + 1] = (Math.random() - 0.5) * 10 // y
+      array[i * 3 + 2] = (Math.random() - 0.5) * 10 // z
+    }
+    return array
+  }, [count])
 
   useFrame((state, delta) => {
     if (mesh.current) {
@@ -31,7 +45,7 @@ function Particles({ count = 200, color = "hsl(var(--primary))" }) {
     <group ref={mesh}>
       <points>
         <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         </bufferGeometry>
         <pointsMaterial size={0.05} color={color} sizeAttenuation transparent opacity={0.4} />
       </points>
@@ -39,8 +53,17 @@ function Particles({ count = 200, color = "hsl(var(--primary))" }) {
   )
 }
 
+type MeshProps = ThreeElements["mesh"]
+
+type FloatingObjectProps = {
+  position: MeshProps["position"]
+  scale: MeshProps["scale"]
+  rotation: MeshProps["rotation"]
+  color?: string
+}
+
 // 浮遊する幾何学オブジェクト
-function FloatingObject({ position, scale, rotation, color = "hsl(var(--primary))" }) {
+function FloatingObject({ position, scale, rotation, color = COLORS.primary }: FloatingObjectProps) {
   const mesh = useRef<Mesh>(null)
 
   useFrame((state, delta) => {
@@ -64,7 +87,7 @@ function FloatingObject({ position, scale, rotation, color = "hsl(var(--primary)
 function Grid() {
   return (
     <gridHelper
-      args={[30, 30, "hsl(var(--muted-foreground)/10)", "hsl(var(--muted-foreground)/5)"]}
+      args={[30, 30, COLORS.gridCenter, COLORS.grid]}
       position={[0, -3, 0]}
       rotation={[0, 0, 0]}
     />
@@ -89,8 +112,8 @@ function MouseFollower() {
     <mesh position={[(smoothMouseX.get() * viewport.width) / 4, (-smoothMouseY.get() * viewport.height) / 4, -2]}>
       <sphereGeometry args={[0.5, 16, 16]} />
       <meshStandardMaterial
-        color="hsl(var(--primary))"
-        emissive="hsl(var(--primary))"
+        color={COLORS.primary}
+        emissive={COLORS.primary}
         emissiveIntensity={0.3}
         transparent
         opacity={0.4}
@@ -112,16 +135,15 @@ function SceneContent() {
       <Grid />
       <MouseFollower />
       {/* トップページでは浮遊オブジェクトを増やす */}
-      <FloatingObject position={[3, 1, -5]} scale={0.8} rotation={[0, 0, 0]} color="hsl(var(--primary))" />
-      <FloatingObject position={[-3, -1, -3]} scale={0.6} rotation={[0, 0, 0]} color="hsl(var(--secondary))" />
-      <FloatingObject position={[0, 2, -4]} scale={0.4} rotation={[0, 0, 0]} color="hsl(var(--accent))" />
+      <FloatingObject position={[3, 1, -5]} scale={0.8} rotation={[0, 0, 0]} color={COLORS.primary} />
+      <FloatingObject position={[-3, -1, -3]} scale={0.6} rotation={[0, 0, 0]} color={COLORS.secondary} />
+      <FloatingObject position={[0, 2, -4]} scale={0.4} rotation={[0, 0, 0]} color={COLORS.accent} />
       {isHomePage && (
         <>
-          <FloatingObject position={[4, -2, -6]} scale={0.7} rotation={[0, 0, 0]} color="hsl(var(--primary))" />
-          <FloatingObject position={[-4, 3, -5]} scale={0.5} rotation={[0, 0, 0]} color="hsl(var(--secondary))" />
+          <FloatingObject position={[4, -2, -6]} scale={0.7} rotation={[0, 0, 0]} color={COLORS.primary} />
+          <FloatingObject position={[-4, 3, -5]} scale={0.5} rotation={[0, 0, 0]} color={COLORS.secondary} />
         </>
       )}
-      <Environment preset="city" intensity={0.3} />
       <Preload all />
     </>
   )

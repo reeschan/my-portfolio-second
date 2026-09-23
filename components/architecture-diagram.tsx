@@ -20,7 +20,7 @@ export function ArchitectureDiagram() {
                 {/* 1行目: ユーザーインターフェース */}
                 <div className="col-span-3 p-3 bg-primary/10 rounded-md border border-primary/20 transition-all hover:bg-primary/15 hover:shadow-md">
                   <strong>UI レイヤー</strong>
-                  <p>コンポーネント (Tailwind, Framer Motion)</p>
+                  <p>コンポーネント (Tailwind, Motion)</p>
                 </div>
                 
                 {/* 2行目: データと状態管理 */}
@@ -32,7 +32,7 @@ export function ArchitectureDiagram() {
                 {/* 3行目: 視覚化 */}
                 <div className="col-span-3 p-3 bg-green-500/10 rounded-md border border-green-500/20 transition-all hover:bg-green-500/15 hover:shadow-md">
                   <strong>視覚化レイヤー</strong>
-                  <p>Recharts, React Vertical Timeline</p>
+                  <p>Recharts</p>
                 </div>
                 
                 {/* 4行目: インフラ */}

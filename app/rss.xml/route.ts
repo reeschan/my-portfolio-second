@@ -1,8 +1,6 @@
-import { NextResponse } from "next/server"
-
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://myportfolio.vercel.app"
-  
+
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 <channel>
@@ -23,7 +21,7 @@ export async function GET() {
 </channel>
 </rss>`
 
-  return new NextResponse(rss, {
+  return new Response(rss, {
     headers: {
       "Content-Type": "application/xml",
       "Cache-Control": "s-maxage=86400, stale-while-revalidate",

@@ -27,7 +27,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             >
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Ryuki Tobita
               </span>
               <span className="block mt-2">Portfolio</span>

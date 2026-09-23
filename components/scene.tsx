@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Float, Environment, Preload } from "@react-three/drei"
 import { MathUtils, type Group, type Mesh } from "three"
+import type { ThreeElements } from "@react-three/fiber"
 import { useMotionValue, useSpring } from "motion/react"
 import { usePathname } from "next/navigation"
 
@@ -31,7 +32,7 @@ function Particles({ count = 200, color = "hsl(var(--primary))" }) {
     <group ref={mesh}>
       <points>
         <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+          <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         </bufferGeometry>
         <pointsMaterial size={0.05} color={color} sizeAttenuation transparent opacity={0.4} />
       </points>
@@ -39,8 +40,17 @@ function Particles({ count = 200, color = "hsl(var(--primary))" }) {
   )
 }
 
+type MeshProps = ThreeElements["mesh"]
+
+type FloatingObjectProps = {
+  position: MeshProps["position"]
+  scale: MeshProps["scale"]
+  rotation: MeshProps["rotation"]
+  color?: string
+}
+
 // 浮遊する幾何学オブジェクト
-function FloatingObject({ position, scale, rotation, color = "hsl(var(--primary))" }) {
+function FloatingObject({ position, scale, rotation, color = "hsl(var(--primary))" }: FloatingObjectProps) {
   const mesh = useRef<Mesh>(null)
 
   useFrame((state, delta) => {
@@ -121,7 +131,7 @@ function SceneContent() {
           <FloatingObject position={[-4, 3, -5]} scale={0.5} rotation={[0, 0, 0]} color="hsl(var(--secondary))" />
         </>
       )}
-      <Environment preset="city" intensity={0.3} />
+      <Environment preset="city" environmentIntensity={0.3} />
       <Preload all />
     </>
   )

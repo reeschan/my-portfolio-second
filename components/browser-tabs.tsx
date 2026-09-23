@@ -5,7 +5,7 @@ import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "../lib/utils"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import { RssButton } from "./rss-button"
 
 type Tab = {
@@ -19,6 +19,7 @@ const tabs: Tab[] = [
   { name: "経歴", path: "/career" },
   { name: "スキル", path: "/skills" },
   { name: "ワーク", path: "/works" },
+  { name: "Now", path: "/now" },
   { name: "チャット", path: "/chat" },
 ]
 
@@ -28,7 +29,7 @@ export function BrowserTabs() {
   return (
     <div className="relative">
       {/* タブバー */}
-      <div className="flex h-12 items-center gap-1 rounded-t-lg bg-background/60 px-2 backdrop-blur-md border-b border-border/20">
+      <div className="flex h-12 items-center gap-1 overflow-x-auto rounded-t-lg bg-background/60 px-2 backdrop-blur-md border-b border-border/20">
         {tabs.map((tab) => {
           const isActive = pathname === tab.path
 
@@ -37,7 +38,7 @@ export function BrowserTabs() {
               key={tab.path}
               href={tab.path}
               className={cn(
-                "group relative flex h-9 items-center gap-2 rounded-t-md px-4 text-sm font-medium transition-colors",
+                "group relative flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-t-md px-4 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-primary/5 text-primary"
                   : "text-muted-foreground hover:bg-muted/30 hover:text-foreground",

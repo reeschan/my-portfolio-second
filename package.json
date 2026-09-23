@@ -21,7 +21,6 @@
     "next-themes": "^0.4.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-vertical-timeline-component": "^3.5.3",
     "recharts": "^3.10.1",
     "tailwind-merge": "^3.7.0",
     "three": "^0.186.0"
@@ -36,10 +35,5 @@
     "tailwindcss": "^4.3.3",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "ignoredBuiltDependencies": [
-      "react-vertical-timeline-component"
-    ]
   }
 }

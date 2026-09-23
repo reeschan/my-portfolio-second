@@ -106,29 +106,3 @@
     cursor: pointer;
   }
 }
-
-/* タイムラインのカスタムスタイル */
-.vertical-timeline::before {
-  background: hsl(var(--border)) !important;
-}
-
-.vertical-timeline-element-content {
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
-  border-radius: var(--radius) !important;
-}
-
-.vertical-timeline-element-content-arrow {
-  border-right: 7px solid hsl(var(--card)) !important;
-}
-
-.vertical-timeline-element-date {
-  opacity: 0.8 !important;
-  margin-top: 0.5rem !important;
-}
-
-@media only screen and (min-width: 1170px) {
-  .vertical-timeline--two-columns .vertical-timeline-element-content .vertical-timeline-element-date {
-    opacity: 0.8 !important;
-  }
-}
-

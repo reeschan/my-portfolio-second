@@ -11,7 +11,9 @@ const baseUrl = process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1"
 const model = process.env.MOONSHOT_MODEL ?? "kimi-k2.6"
 
 const maxMessages = 20
-const maxMessageLength = 1000
+// 訪問者の入力は画面側と同じ 1000 字まで。AI の過去の回答は長くなるため、弾かずに切り詰めて送る
+const maxUserMessageLength = 1000
+const maxAssistantMessageLength = 4000
 
 function parseMessages(body: unknown): ChatMessage[] | null {
   if (typeof body !== "object" || body === null || !("messages" in body)) return null
@@ -23,8 +25,13 @@ function parseMessages(body: unknown): ChatMessage[] | null {
     if (typeof m !== "object" || m === null) return null
     const { role, content } = m as Record<string, unknown>
     if ((role !== "user" && role !== "assistant") || typeof content !== "string") return null
-    if (content.length === 0 || content.length > maxMessageLength) return null
-    parsed.push({ role, content })
+    if (content.length === 0) return null
+    if (role === "user") {
+      if (content.length > maxUserMessageLength) return null
+      parsed.push({ role, content })
+    } else {
+      parsed.push({ role, content: content.slice(0, maxAssistantMessageLength) })
+    }
   }
 
   return parsed.at(-1)?.role === "user" ? parsed : null

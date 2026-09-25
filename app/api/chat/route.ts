@@ -4,7 +4,8 @@ import { buildSystemPrompt } from "@/lib/chat/system-prompt"
 import type { ChatMessage } from "@/types/chat-types"
 
 export const runtime = "nodejs"
-export const maxDuration = 120
+// Vercel Hobby プランの上限は 60 秒
+export const maxDuration = 60
 
 const baseUrl = process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1"
 const model = process.env.MOONSHOT_MODEL ?? "kimi-k2.6"

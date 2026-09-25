@@ -4,7 +4,7 @@ import { buildSystemPrompt } from "@/lib/chat/system-prompt"
 import type { ChatMessage } from "@/types/chat-types"
 
 export const runtime = "nodejs"
-export const maxDuration = 60
+export const maxDuration = 120
 
 const baseUrl = process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1"
 const model = process.env.MOONSHOT_MODEL ?? "kimi-k2.6"
@@ -46,8 +46,12 @@ function createSseContentStream() {
         if (payload === "[DONE]") continue
 
         try {
-          const content = JSON.parse(payload).choices?.[0]?.delta?.content
+          const choice = JSON.parse(payload).choices?.[0]
+          const content = choice?.delta?.content
           if (typeof content === "string" && content) controller.enqueue(content)
+          if (choice?.finish_reason === "length") {
+            controller.enqueue("\n\n（回答が長くなったため、ここで区切りました。続きは質問を絞ってお尋ねください）")
+          }
         } catch {
           // 途中で壊れた行は無視する
         }
@@ -81,7 +85,8 @@ export async function POST(request: Request) {
     body: JSON.stringify({
       model,
       stream: true,
-      max_tokens: 1024,
+      // 思考モデルは思考過程もこの上限に含まれるため、途中で回答が切れないよう余裕を持たせる
+      max_tokens: 8192,
       messages: [{ role: "system", content: await buildSystemPrompt() }, ...messages],
     }),
     signal: request.signal,

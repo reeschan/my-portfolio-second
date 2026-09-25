@@ -119,7 +119,9 @@ export function ResumeChat() {
       </form>
 
       <p className="mt-2 text-xs text-muted-foreground">
-        AI (Kimi) が職務経歴書をもとに回答します。内容に誤りが含まれる場合があります。
+        職務経歴や保有している知識や技術、人柄について大まかに回答します。
+        <br />
+        詳細については LinkedIn やメールにてメッセージをいただけると幸いです。
       </p>
     </div>
   )

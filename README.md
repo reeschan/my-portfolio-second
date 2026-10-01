@@ -20,6 +20,16 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## テスト
+
+```bash
+pnpm test:unit          # Vitest (チャット API・伏せ字・レート制限)
+pnpm test:e2e           # Playwright (デスクトップ + スマホ幅)
+pnpm test:coverage-map  # ルート × 観点の表
+```
+
+テスト観点は [testing/e2e-policy.yml](testing/e2e-policy.yml) で管理している。経緯は [docs/adr/0001-testing-strategy.md](docs/adr/0001-testing-strategy.md)、AI エージェント向けの指示は [AGENTS.md](AGENTS.md) にある。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

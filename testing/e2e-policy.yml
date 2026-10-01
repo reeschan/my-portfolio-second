@@ -1,0 +1,103 @@
+# E2E / テスト方針の設定ファイル
+#
+# 人とエージェント (Claude Code / Codex / Kimi など) の両方が読む、テスト観点の唯一の正本。
+# 観点を足す・外す・必須にするときはこのファイルを書き換える。理由が残るべき変更 (新しい観点や道具の採用など) は
+# docs/adr/ に ADR を足す (書き方は docs/adr/README.md)。
+#
+# - 各テストは観点を Playwright のタグ (@smoke など) で、対象ルートを annotation { type: "route" } で示す
+# - `pnpm test:coverage-map` がこのファイルと app/ のルート・テスト一覧を突き合わせて、穴を一覧にする
+# - required: true の観点に穴があると `pnpm test:coverage-map --check` (CI) が失敗する
+
+version: 1
+
+tools:
+  e2e: playwright   # e2e/*.spec.ts
+  unit: vitest      # **/*.test.ts (ソースの隣に置く)
+
+# 対象外にするルート (テスト不要と判断したもの)。理由も書く
+exclude_routes: []
+
+perspectives:
+  smoke:
+    enabled: true
+    required: true
+    applies_to: pages
+    description: 各ページが 200 で表示され、見出し・タブ・アドレスバーが出て、console.error / 未捕捉例外がない
+    how: e2e/smoke.spec.ts。console エラーの検出は e2e/fixtures.ts の自動フィクスチャが全テストで行う
+
+  navigation:
+    enabled: true
+    required: false
+    applies_to: pages
+    description: タブ・リンクでページ間を移動できる。タブの並び順が仕様どおり
+    how: e2e/navigation.spec.ts
+
+  interaction:
+    enabled: true
+    required: false
+    applies_to: pages
+    description: ダイアログ・タブ切り替え・バナーなど、ページ内の操作が動く。開いたものは閉じられる
+    how: 操作ごとに 1 テスト。ロール (getByRole) で要素を取り、CSS セレクタや見た目の文言の位置には依存しない
+
+  chat:
+    enabled: true
+    required: false
+    routes: [/chat]
+    description: 質問の送信・候補ボタン・エラー時の復帰・入力制限
+    how: e2e/chat.spec.ts
+
+  external-mock:
+    enabled: true
+    required: true
+    routes: [/chat, /api/chat]
+    description: 外部 LLM (Moonshot / Kimi) をテストから絶対に呼ばない。E2E は page.route で /api/chat を、ユニットは fetch をモックする
+    rules:
+      - playwright.config.ts の webServer は MOONSHOT_API_KEY を空にして起動する
+      - 本物の API キーを CI のシークレットに入れない
+
+  api-contract:
+    enabled: true
+    required: true
+    applies_to: api
+    description: API ルートの入力検証・ステータスコード・レスポンス形式
+    how: ルートの隣に route.test.ts を置き、Vitest で POST/GET を直接呼ぶ (例 app/api/chat/route.test.ts)
+
+  privacy:
+    enabled: true
+    required: false
+    routes: [/api/chat]
+    description: チャットの回答から連絡先 (メール・電話・郵便番号) が漏れない。思考過程を返さない
+    how: lib/chat/redact.test.ts と app/api/chat/route.test.ts
+
+  a11y:
+    enabled: true
+    required: false
+    applies_to: pages
+    fail_on: [critical, serious]   # e2e/a11y.spec.ts と揃える
+    description: axe-core で WCAG 2 A/AA の重大な違反がない。装飾の 3D canvas は対象外
+    how: e2e/a11y.spec.ts
+
+  responsive:
+    enabled: true
+    required: false
+    applies_to: pages
+    viewports: [desktop, mobile]   # playwright.config.ts の projects 名
+    description: スマホ幅 (Pixel 7) でも主要な表示と導線が使える
+    how: テストに @responsive タグを付けると mobile プロジェクトでも実行される
+
+  visual-regression:
+    enabled: false
+    reason: 3D 背景とアニメーションで画面が毎回変わり、スクリーンショット比較が不安定になるため。採用するなら ADR を書く
+
+  performance:
+    enabled: false
+    reason: 個人サイトで現状は不要。Lighthouse CI などを入れるなら ADR を書く
+
+# 定期巡回 (docs/agents/e2e-patrol.md) の上限
+patrol:
+  max_new_tests_per_run: 6
+  max_changed_lines: 400
+  # 追加したテストはこの回数連続で通ったものだけを PR に含める (フレーク防止)
+  required_consecutive_passes: 3
+  # アプリ本体のコードは変更しない。バグを見つけたら test.fixme にして PR 本文で報告する
+  allow_app_code_changes: false

@@ -1,15 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
+import { useIsClient } from "@/hooks/use-is-client"
 
 export default function Home() {
-  const [isLoaded, setIsLoaded] = useState(false)
-
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
+  // 登場アニメーションをハイドレーション後に始めるため、クライアントで描画するまで出さない
+  const isLoaded = useIsClient()
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6">

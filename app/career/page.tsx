@@ -1,5 +1,5 @@
-import { PageTemplate } from "@/components/page-template"
-import { CareerTimeline } from "@/components/career-timeline"
+import { PageTemplate } from "@/components/layout/page-template"
+import { CareerTimeline } from "@/components/features/career/career-timeline"
 
 export default function CareerPage() {
   return (

@@ -1,0 +1,5 @@
+#!/bin/sh
+# 人が手元でコミットするときも commit-gate の合格を求める (任意)。有効にするには:
+#   git config core.hooksPath .githooks
+# 緊急時は git commit --no-verify で飛ばせるが、CI (ci-ok) は通らないとマージできない
+exec node scripts/commit-gate.mjs verify

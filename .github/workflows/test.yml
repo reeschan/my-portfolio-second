@@ -1,16 +1,40 @@
-name: test
+name: ci
+
+# 品質ゲート。lint / 型チェック / ユニット / ビルド / E2E がすべて通らないと main にマージできない。
+# ブランチ保護 (ルールセット) は .github/rulesets/main.json を GitHub に取り込んで有効にする
+# (必須チェックは最後の「ci-ok」1 つだけ。ジョブを増やしても needs に足せばルールセットは変えなくてよい)
+# 経緯: docs/adr/0007-ci-quality-gate.md
 
 on:
   pull_request:
   push:
     branches: [main]
+  merge_group:
 
 concurrency:
-  group: test-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  unit:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  typecheck:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -24,9 +48,49 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # eval の採点ロジック (evals/privacy/score.test.ts) もここで回る。LLM は呼ばない
       - run: pnpm test:unit
 
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # E2E ジョブで同じビルドを使い回す (キャッシュは要らないので除く)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: |
+            .next
+            !.next/cache
+          include-hidden-files: true
+          retention-days: 1
+
   e2e:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -42,8 +106,11 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       # 必須観点 (testing/e2e-policy.yml の required: true) に穴があればここで落とす
       - run: pnpm test:coverage-map -- --check
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next
       # E2E は本番ビルドに対して回す。LLM の API キーは渡さない (常にモック)
-      - run: pnpm build
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -51,3 +118,18 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # ブランチ保護で必須にするのはこのジョブだけ。どれか 1 つでも失敗・スキップしたら落ちる
+  ci-ok:
+    if: always()
+    needs: [lint, typecheck, unit, build, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: すべてのジョブが成功したか確認する
+        run: |
+          echo '${{ toJSON(needs) }}'
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "true" ]; then
+            echo "失敗したジョブがあります" >&2
+            exit 1
+          fi

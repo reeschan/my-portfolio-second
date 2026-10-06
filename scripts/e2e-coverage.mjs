@@ -8,6 +8,7 @@
 // テスト側の書き方:
 //   - Playwright: test("...", { tag: ["@smoke"], annotation: routes("/chat") }, ...)  (e2e/fixtures.ts の routes())
 //   - Vitest:     ファイル先頭のコメントに  // @perspectives api-contract privacy  と  // @routes /api/chat
+//                 ルートに紐づかない道具のテストは  // @coverage-map ignore <理由>  で表から外す
 
 import { execFileSync } from "node:child_process"
 import { readFileSync, readdirSync, writeFileSync } from "node:fs"
@@ -74,6 +75,8 @@ const seen = new Set()
 
 for (const file of walk(root).filter((f) => /\.test\.(ts|tsx)$/.test(f))) {
   const src = readFileSync(file, "utf8")
+  // 画面やルートに紐づかない道具のテスト (コミットゲートなど) は表に載せない。理由をコメントで添える
+  if (/^\/\/\s*@coverage-map\s+ignore\b/m.test(src)) continue
   const perspectives = src.match(/^\/\/\s*@perspectives\s+(.+)$/m)?.[1].trim().split(/\s+/) ?? []
   const testRoutes = src.match(/^\/\/\s*@routes\s+(.+)$/m)?.[1].trim().split(/\s+/) ?? []
   tests.push({ source: "vitest", file: path.relative(root, file), title: "(file)", perspectives, routes: testRoutes })

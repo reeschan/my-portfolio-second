@@ -1,46 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ryuki Tobita's Portfolio
 
-## Getting Started
+フロントエンドからクラウド基盤まで手がけるエンジニア、Ryuki Tobita の個人ポートフォリオサイト。
+ブラウザのタブを模した画面で経歴・スキル・作品を見せ、職務経歴について AI に質問できるチャットを備えている。
 
-First, run the development server:
+## ページ
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| パス | 内容 |
+| --- | --- |
+| `/` | トップ (Enter から各ページへ) |
+| `/overview` | 概要・プロフィール |
+| `/career` | 経歴のタイムライン。フリーランス期は参画案件の詳細をダイアログで見られる |
+| `/skills` | スキルのレーダーチャート (概要 / フロントエンド / バックエンド / AWS) と資格 |
+| `/works` | 制作物。カードから詳細とアーキテクチャを開ける |
+| `/now` | いま取り組んでいること ([nownownow.com](https://nownownow.com/about) の考え方) |
+| `/chat` | 職務経歴について答える AI チャット (Moonshot / Kimi) |
+| `/rss.xml` | RSS フィード |
+
+全ページの背後に three.js の 3D 背景があり、その上にガラス調のパネルを重ねるデザイン (ダークテーマ既定)。
+
+## アーキテクチャ
+
+```mermaid
+flowchart LR
+  subgraph Browser["ブラウザ"]
+    UI["ページ (app/**/page.tsx)<br/>PageTemplate + 部品"]
+    BG["3D 背景<br/>React Three Fiber"]
+    Chart["スキルのチャート<br/>Recharts"]
+    ChatUI["チャット画面<br/>ResumeChat"]
+  end
+
+  subgraph Vercel["Vercel (Next.js App Router)"]
+    RSC["サーバーコンポーネント<br/>data/*.ts を描画"]
+    ChatAPI["/api/chat<br/>入力検証・レート制限"]
+    Prompt["システムプロンプト<br/>lib/chat/system-prompt.ts"]
+    Docs[("data/resume.md<br/>data/profile-freelance.md<br/>(サーバーのみ)")]
+    Redact["伏せ字<br/>lib/chat/redact.ts"]
+    RSS["/rss.xml"]
+  end
+
+  LLM["Moonshot API<br/>(Kimi)"]
+
+  UI --> RSC
+  UI --- BG
+  UI --- Chart
+  ChatUI -- "POST 会話履歴" --> ChatAPI
+  ChatAPI --> Prompt
+  Prompt --> Docs
+  ChatAPI -- "ストリーム" --> LLM
+  LLM -- "回答 (思考過程は捨てる)" --> Redact
+  Redact -- "テキストのストリーム" --> ChatUI
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 画面の部品の層
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## テスト
-
-```bash
-pnpm test:unit          # Vitest (チャット API・伏せ字・レート制限)
-pnpm test:e2e           # Playwright (デスクトップ + スマホ幅)
-pnpm test:coverage-map  # ルート × 観点の表
+```mermaid
+flowchart TD
+  page["app/**/page.tsx"] --> layout["components/layout<br/>PageTemplate・BrowserTabs"]
+  page --> features["components/features<br/>career・skills・works・chat・background"]
+  features --> common["components/common<br/>GlassPanel・Section・Callout・TagList…"]
+  layout --> common
+  common --> ui["components/ui<br/>shadcn/ui (Radix)"]
+  features --> data["data/*.ts"]
+  theme["app/globals.css<br/>デザイントークン"] -.-> ui
+  theme -.-> common
 ```
 
-テスト観点は [testing/e2e-policy.yml](testing/e2e-policy.yml) で管理している。経緯は [docs/adr/0001-testing-strategy.md](docs/adr/0001-testing-strategy.md)、AI エージェント向けの指示は [AGENTS.md](AGENTS.md) にある。
+### 技術
 
-## Learn More
+| 領域 | 採用しているもの | 理由 |
+| --- | --- | --- |
+| フレームワーク | Next.js (App Router)、TypeScript、pnpm | [ADR 0002](docs/adr/0002-framework-and-hosting.md) |
+| ホスティング | Vercel | 同上 |
+| UI | Tailwind CSS v4、shadcn/ui (Radix)、lucide、Motion | [ADR 0003](docs/adr/0003-ui-foundation.md) |
+| デザイン | ダーク既定・青のアクセント・ガラス調のトークン | [ADR 0004](docs/adr/0004-design-theme.md)、[docs/design/theme.md](docs/design/theme.md) |
+| 部品の構成 | ui / common / layout / features + data | [ADR 0005](docs/adr/0005-component-architecture.md)、[docs/design/components.md](docs/design/components.md) |
+| 可視化・3D | React Three Fiber、Recharts | [ADR 0006](docs/adr/0006-visualization-and-3d.md) |
+| AI チャット | Moonshot / Kimi、自前のプロンプト + 伏せ字 + プライバシー eval | [ADR 0008](docs/adr/0008-chat-llm-and-privacy-eval.md) |
+| テスト | Playwright (E2E)、Vitest、axe | [ADR 0001](docs/adr/0001-testing-strategy.md) |
+| 品質ゲート | ESLint、GitHub Actions (`ci-ok`)、コミットゲート | [ADR 0007](docs/adr/0007-ci-quality-gate.md)、[ADR 0009](docs/adr/0009-commit-gate.md) |
 
-To learn more about Next.js, take a look at the following resources:
+## 開発
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm install
+cp .env.example .env.local   # チャットを動かすなら MOONSHOT_API_KEY を書く (なくても他のページは動く)
+pnpm dev                     # http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| 目的 | コマンド |
+| --- | --- |
+| lint / 型チェック | `pnpm lint` / `pnpm typecheck` |
+| ユニットテスト (Vitest) | `pnpm test:unit` |
+| E2E テスト (Playwright、デスクトップ + スマホ幅) | `pnpm test:e2e` |
+| ルート × 観点のカバレッジ表 | `pnpm test:coverage-map` |
+| CI と同じ確認 (E2E 以外) | `pnpm check` |
+| コミット前の検査 | `pnpm commit-gate` |
+| チャットのプライバシー eval (本物の LLM を呼ぶ) | `pnpm eval:privacy` |
 
-## Deploy on Vercel
+- テストの観点は [testing/e2e-policy.yml](testing/e2e-policy.yml)、網羅状況は [docs/testing/coverage-map.md](docs/testing/coverage-map.md)
+- E2E・ユニットは LLM を必ずモックする。本物の LLM を呼ぶのは eval だけ ([evals/privacy/](evals/privacy/README.md))
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 開発の進め方
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 実装は **PBI ありき**: PBI (何を・なぜ・完了条件) → WORK (計画と記録) → 必要なら ADR → 実装とテスト → コミットゲート → PR。手順は [docs/agents/development-flow.md](docs/agents/development-flow.md)
+- `main` には PR からのみマージする。CI の `ci-ok` (lint・型・ユニット・ビルド・E2E) が緑であることが条件 ([.github/rulesets/main.json](.github/rulesets/main.json))
+- AI エージェント向けの指示は [AGENTS.md](AGENTS.md)。Self 組織の共通スキル (PBI の起票・PR の作成) は [plugins/self-base/](plugins/self-base/README.md)

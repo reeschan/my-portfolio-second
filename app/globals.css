@@ -1,9 +1,20 @@
+/*
+ * デザインテーマ (正本)。トークンの一覧と使い分けは docs/design/theme.md、決定の経緯は docs/adr/0004-design-theme.md。
+ *
+ * 層は 3 つ。
+ *   1. :root / .dark   … 色の生値 (HSL のチャンネルだけ。recharts などが hsl(var(--x)) で直接読むため)
+ *   2. @theme inline   … 生値を Tailwind のユーティリティ (bg-primary, text-muted-foreground …) に橋渡しする
+ *   3. @utility        … このサイト固有の見た目 (ガラス調パネルなど) を 1 クラスにまとめる
+ *
+ * 画面側では生の色 (bg-blue-500 や #3399ff) を書かず、必ずトークン経由で指定する。
+ */
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* --- 色: shadcn/ui 互換の基本トークン --- */
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
@@ -24,9 +35,26 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* --- 色: このサイトで追加したトークン --- */
+  /* 図やレイヤーの塗り分け用 (アーキテクチャ図・グラフ)。順番に使う */
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  /* RSS アイコンのホバー色。ブランド色なのでテーマに依らず固定 */
+  --color-rss: hsl(var(--rss));
+
+  /* --- 文字 --- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+
+  /* --- 角丸 --- */
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  /* --- 影・ぼかし: 3D 背景の上に浮くパネルの質感 --- */
+  --shadow-panel: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --blur-glass: 12px;
 }
 
 @layer base {
@@ -59,9 +87,17 @@
     --input: 240 6% 90%;
     --ring: 240 5% 65%;
 
+    --chart-1: 220 100% 50%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 271 91% 65%;
+
+    --rss: 25 95% 53%;
+
     --radius: 0.5rem;
   }
 
+  /* 既定のテーマ (layout.tsx の defaultTheme="dark")。3D 背景の配色もこちらに合わせている (lib/theme.ts) */
   .dark {
     --background: 220 30% 10%;
     --foreground: 220 10% 98%;
@@ -90,7 +126,30 @@
     --border: 240 6% 20%;
     --input: 240 6% 20%;
     --ring: 240 5% 65%;
+
+    --chart-1: 210 100% 60%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 271 91% 65%;
   }
+}
+
+/*
+ * ガラス調の面。3D 背景を透かしつつ文字を読めるようにするための、このサイトの基本の見た目。
+ * - glass-panel: ページ本文などの大きな面 (components/common/glass-panel.tsx)
+ * - glass-bar:   タブバー・アドレスバー・バナーなどの帯
+ */
+@utility glass-panel {
+  border-width: 1px;
+  border-color: hsl(var(--border) / 0.2);
+  background-color: hsl(var(--card) / 0.6);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(var(--blur-glass));
+}
+
+@utility glass-bar {
+  background-color: hsl(var(--background) / 0.6);
+  backdrop-filter: blur(var(--blur-glass));
 }
 
 @layer base {
@@ -98,7 +157,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background font-sans text-foreground;
   }
   /* v4 ではボタンのカーソルが既定で pointer でなくなったため補う */
   button:not(:disabled),

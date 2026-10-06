@@ -1,0 +1,15 @@
+{
+  "name": "self",
+  "description": "Self 組織の共有プラグイン。どのリポジトリでも使える開発の型 (PBI 駆動・PR 作成など) をまとめる",
+  "owner": {
+    "name": "Self"
+  },
+  "plugins": [
+    {
+      "name": "self-base",
+      "source": "./plugins/self-base",
+      "description": "ベーステンプレート用のスキル集: PBI の起票 (start-pbi) と PR の作成 (create-pr)",
+      "version": "0.1.0"
+    }
+  ]
+}

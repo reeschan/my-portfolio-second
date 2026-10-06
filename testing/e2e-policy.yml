@@ -85,6 +85,27 @@ perspectives:
     description: スマホ幅 (Pixel 7) でも主要な表示と導線が使える
     how: テストに @responsive タグを付けると mobile プロジェクトでも実行される
 
+  content:
+    enabled: true
+    required: false
+    applies_to: pages
+    description: data/ に書いた内容 (経歴・資格・作品・Now) が漏れなく画面に出る
+    how: e2e/content.spec.ts。期待値は data/ から import して突き合わせる (文言の二重管理をしない)
+
+  theme:
+    enabled: true
+    required: false
+    applies_to: pages
+    description: 既定のダークテーマが当たり、app/globals.css のトークンが定義され、画面がトークン経由で塗られている
+    how: e2e/theme.spec.ts。ピクセル比較はせず、computed style とトークンの値を突き合わせる (docs/adr/0004-design-theme.md)
+
+  llm-eval:
+    enabled: true
+    required: false
+    routes: [/api/chat]
+    description: 自前のシステムプロンプトで、個人情報 (連絡先・住所など) や指示文を返さないことを、本物の LLM に対して採点する
+    how: evals/privacy/ (pnpm eval:privacy)。外部 LLM を呼ぶので CI・E2E では回さない。採点ロジックは evals/privacy/score.test.ts で検証する (docs/adr/0008-chat-privacy-eval.md)
+
   visual-regression:
     enabled: false
     reason: 3D 背景とアニメーションで画面が毎回変わり、スクリーンショット比較が不安定になるため。採用するなら ADR を書く

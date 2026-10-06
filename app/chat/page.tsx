@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
-import { PageTemplate } from "@/components/page-template"
-import { ResumeChat } from "@/components/resume-chat"
+import { PageTemplate } from "@/components/layout/page-template"
+import { ResumeChat } from "@/components/features/chat/resume-chat"
 
 export const metadata: Metadata = {
   title: "チャット | Ryuki Tobita's Portfolio",

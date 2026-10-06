@@ -1,0 +1,9 @@
+{
+  "name": "self-base",
+  "displayName": "Self Base",
+  "version": "0.1.0",
+  "description": "Self 組織のベーステンプレート。PBI → WORK → (ADR) → 実装 → コミットゲート → PR の流れを、どのリポジトリでも同じ手順で回すためのスキル集",
+  "author": {
+    "name": "Self"
+  }
+}

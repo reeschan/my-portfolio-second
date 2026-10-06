@@ -37,3 +37,23 @@ test.describe("ナビゲーション", () => {
     await expect(close).toBeHidden()
   })
 })
+
+test.describe("ナビゲーション (現在地)", () => {
+  for (const p of pages) {
+    test(`${p.path} では「${p.tab}」タブだけが現在のページとして示される`, { tag: "@navigation", annotation: routes(p.path) }, async ({ page }) => {
+      await page.goto(p.path)
+      const nav = page.getByRole("navigation", { name: "ページ切り替え" })
+      await expect(nav.getByRole("link", { name: p.tab, exact: true })).toHaveAttribute("aria-current", "page")
+      await expect(nav.locator("[aria-current]")).toHaveCount(1)
+    })
+  }
+
+  test("スマホ幅でもタブバーを横にスクロールして最後のタブまで押せる", { tag: ["@navigation", "@responsive"], annotation: routes("/overview", "/chat") }, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.goto("/overview")
+    const last = page.getByRole("navigation", { name: "ページ切り替え" }).getByRole("link", { name: "チャット", exact: true })
+    await last.scrollIntoViewIfNeeded()
+    await last.click()
+    await expect(page).toHaveURL(/\/chat$/)
+  })
+})

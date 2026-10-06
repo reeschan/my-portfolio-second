@@ -11,7 +11,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
+import { useIsClient } from "@/hooks/use-is-client";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { chartColors } from "@/lib/theme";
 
 // スキルデータの型定義をエクスポート
 export type SkillData = {
@@ -44,6 +46,8 @@ export function SkillRadar({
   // モバイル画面かどうかを判定
   const isMobile = useMediaQuery("(max-width: 640px)");
   const isSmallerMobile = useMediaQuery("(max-width: 400px)");
+  // recharts はサーバーでは大きさを測れないため、マウント後にだけ描く (それまでは同じ高さの枠を出す)
+  const isMounted = useIsClient();
 
   // データにモバイル用の短縮名がある場合は使用する
   const processedData = useMemo(() => {
@@ -85,6 +89,7 @@ export function SkillRadar({
       <CardContent className="pt-6">
         <h2 className="text-xl font-semibold mb-4">{title}</h2>
         <div className={`${isMobile ? "h-[350px]" : "h-[400px]"} w-full`}>
+          {isMounted ? (
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart
               cx="50%"
@@ -92,11 +97,11 @@ export function SkillRadar({
               outerRadius={isMobile ? "70%" : "80%"}
               data={processedData}
             >
-              <PolarGrid stroke="hsl(var(--muted-foreground)/50)" />
+              <PolarGrid stroke={chartColors.grid} />
               <PolarAngleAxis
                 dataKey={angleDataKey}
                 tick={{
-                  fill: "hsl(var(--foreground))",
+                  fill: chartColors.foreground,
                   fontSize: isMobile ? 12 : 14,
                 }}
               />
@@ -104,22 +109,25 @@ export function SkillRadar({
                 angle={30}
                 domain={[0, 5]}
                 tickCount={6}
-                stroke="hsl(var(--muted-foreground)/50)"
+                stroke={chartColors.grid}
                 tick={{ fontSize: isMobile ? 10 : 12 }}
               />
               <Radar
                 name="スキルレベル"
                 dataKey={dataKey}
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary))"
+                stroke={chartColors.primary}
+                fill={chartColors.primary}
                 fillOpacity={0.6}
               />
               <Legend
-                formatter={(value) => `スキルレベル (5段階評価)`}
+                formatter={() => "スキルレベル (5段階評価)"}
                 wrapperStyle={{ fontSize: isMobile ? 12 : 14 }}
               />
             </RadarChart>
           </ResponsiveContainer>
+          ) : (
+            <div className="h-full w-full animate-pulse rounded-md bg-muted/20" />
+          )}
         </div>
         {children && <div className="mt-8">{children}</div>}
       </CardContent>

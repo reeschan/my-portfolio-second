@@ -7,34 +7,27 @@ import { MathUtils, type Group, type Mesh } from "three"
 import type { ThreeElements } from "@react-three/fiber"
 import { useMotionValue, useSpring } from "motion/react"
 import { usePathname } from "next/navigation"
+import { sceneColors } from "@/lib/theme"
 
-// three.js は CSS 変数 (hsl(var(--primary)) など) を解釈できないため、
-// ダークテーマの値に合わせた定数で色を持つ
-const COLORS = {
-  primary: "#3399ff", // --primary: 210 100% 60%
-  secondary: "#2e2e38", // --secondary: 240 10% 20%
-  accent: "#2e2e38", // --accent: 240 10% 20%
-  gridCenter: "#20252f", // --muted-foreground (10%) を背景に重ねた色
-  grid: "#191e28", // --muted-foreground (5%) を背景に重ねた色
-} as const
+// three.js は CSS 変数 (hsl(var(--primary)) など) を解釈できないため、テーマ色の定数を使う
+const COLORS = sceneColors
+
+// -5〜5 の立方体にランダムに散らした座標 (x, y, z の並び)
+function randomPositions(count: number) {
+  const array = new Float32Array(count * 3)
+  for (let i = 0; i < array.length; i++) array[i] = (Math.random() - 0.5) * 10
+  return array
+}
 
 // パーティクルシステム
 function Particles({ count = 200, color = COLORS.primary }) {
   const mesh = useRef<Group>(null)
-  const { viewport, mouse } = useThree()
+  const { mouse } = useThree()
 
-  // パーティクルの位置を生成 (count が変わったときだけ作り直す)
-  const positions = useMemo(() => {
-    const array = new Float32Array(count * 3)
-    for (let i = 0; i < count; i++) {
-      array[i * 3] = (Math.random() - 0.5) * 10 // x
-      array[i * 3 + 1] = (Math.random() - 0.5) * 10 // y
-      array[i * 3 + 2] = (Math.random() - 0.5) * 10 // z
-    }
-    return array
-  }, [count])
+  // パーティクルの位置 (count が変わったときだけ作り直す)。乱数は描画のたびに変わらないよう useMemo に閉じ込める
+  const positions = useMemo(() => randomPositions(count), [count])
 
-  useFrame((state, delta) => {
+  useFrame(() => {
     if (mesh.current) {
       mesh.current.rotation.x = MathUtils.lerp(mesh.current.rotation.x, mouse.y * 0.2, 0.1)
       mesh.current.rotation.y = MathUtils.lerp(mesh.current.rotation.y, mouse.x * 0.2, 0.1)

@@ -1,16 +1,12 @@
 import type { Metadata } from "next"
-import { PageTemplate } from "@/components/page-template"
+import { BulletList, Callout, Section, TextLink } from "@/components/common"
+import { PageTemplate } from "@/components/layout/page-template"
 import { now } from "@/data/now"
+import { formatJapaneseDate } from "@/lib/format"
 
 export const metadata: Metadata = {
   title: "Now | Ryuki Tobita's Portfolio",
   description: "いま取り組んでいること",
-}
-
-// "YYYY-MM-DD" を「YYYY年M月D日」に整形する (タイムゾーンの影響を受けないよう文字列から組み立てる)
-function formatDate(iso: string) {
-  const [year, month, day] = iso.split("-").map(Number)
-  return `${year}年${month}月${day}日`
 }
 
 export default function NowPage() {
@@ -19,36 +15,24 @@ export default function NowPage() {
       <div className="max-w-2xl space-y-8">
         <p className="text-muted-foreground">
           いま取り組んでいることをまとめたページです。
-          <time dateTime={now.lastUpdated}>{formatDate(now.lastUpdated)}</time>時点
+          <time dateTime={now.lastUpdated}>{formatJapaneseDate(now.lastUpdated)}</time>時点
           {now.location && <>・{now.location}</>}
         </p>
 
         {now.sections.map((section) => (
-          <section key={section.heading}>
-            <h2 className="mb-3 text-xl font-semibold">{section.heading}</h2>
-            <ul className="list-disc space-y-1.5 pl-5">
-              {section.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
+          <Section key={section.heading} title={section.heading}>
+            <BulletList items={section.items} />
+          </Section>
         ))}
 
         {now.availability && (
-          <p className="border-l-4 border-primary pl-4">{now.availability}</p>
+          <Callout variant="emphasis">
+            <p>{now.availability}</p>
+          </Callout>
         )}
 
         <p className="text-sm text-muted-foreground">
-          このページは{" "}
-          <a
-            href="https://nownownow.com/about"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            nownownow.com/about
-          </a>{" "}
-          の考え方にならっています。
+          このページは <TextLink href="https://nownownow.com/about">nownownow.com/about</TextLink> の考え方にならっています。
         </p>
       </div>
     </PageTemplate>

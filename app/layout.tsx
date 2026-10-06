@@ -2,11 +2,12 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { BackgroundScene } from "@/components/background-scene"
-import { AnnouncementBanner } from "../components/announcement-banner"
+import { ThemeProvider } from "@/components/layout/theme-provider"
+import { AnnouncementBanner } from "@/components/layout/announcement-banner"
+import { BackgroundScene } from "@/components/features/background/background-scene"
 
-const inter = Inter({ subsets: ["latin"] })
+// globals.css の --font-sans から参照するため CSS 変数として読み込む
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
   title: "Ryuki Tobita's Portfolio",
@@ -20,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.variable}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <BackgroundScene />
           <div className="relative min-h-screen">

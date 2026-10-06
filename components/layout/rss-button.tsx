@@ -1,9 +1,6 @@
-"use client"
-
-import * as React from "react"
 import { RssIcon } from "lucide-react"
 import Link from "next/link"
-import { cn } from "../lib/utils"
+import { cn } from "@/lib/utils"
 
 interface RssButtonProps {
   className?: string
@@ -14,8 +11,8 @@ export function RssButton({ className }: RssButtonProps) {
     <Link
       href="/rss.xml"
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors hover:bg-background hover:text-orange-500",
-        className
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors hover:bg-background hover:text-rss",
+        className,
       )}
       aria-label="RSSフィード"
       title="RSSフィードを購読"

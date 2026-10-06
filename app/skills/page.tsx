@@ -1,5 +1,5 @@
-import { PageTemplate } from "@/components/page-template"
-import { SkillsVisualization } from "@/components/skills-visualization"
+import { PageTemplate } from "@/components/layout/page-template"
+import { SkillsVisualization } from "@/components/features/skills/skills-visualization"
 
 export default function SkillsPage() {
   return (

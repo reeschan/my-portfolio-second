@@ -6,7 +6,7 @@
 
 ## 0. 前提を読む
 
-1. `AGENTS.md`
+1. `AGENTS.md` (PBI 駆動の開発手順 `docs/agents/development-flow.md` のうち、巡回は PBI 不要)
 2. `testing/e2e-policy.yml`。観点と `patrol:` の上限を確認する
 3. `docs/adr/` の一覧と、状態が `提案中` のもの
 
@@ -56,6 +56,8 @@ pnpm test:e2e --repeat-each=3 <追加・変更したファイル>   # patrol.req
 pnpm test:e2e                                             # 全体も通ること
 pnpm test:coverage-map -- --write
 ```
+
+コミットは `commit-gate` スキル (`git add` → `pnpm commit-gate` → `git commit`) を通す。巡回はテストだけの変更なので E2E 追加の条件には引っかからないが、全テストの合格は確かめられる。
 
 - 3 回中 1 回でも落ちるテストはフレークとして PR に含めない (直せるなら直す)
 - 本番ビルドが Google Fonts を取りに行けない環境では、playwright.config.ts が自動で dev サーバーを使う。そのまま回してよい

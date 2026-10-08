@@ -12,6 +12,7 @@ export const navItems: readonly NavItem[] = [
   { label: "ワーク", href: "/works" },
   { label: "Now", href: "/now" },
   { label: "チャット", href: "/chat" },
+  { label: "テーマ", href: "/theme" },
 ]
 
 // アドレスバーに出すホスト名。実際のドメインとは別の「見た目上の URL」

@@ -47,15 +47,16 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 
 ## 構成
 
-- `app/`: ページ (`/overview` `/career` `/skills` `/works` `/now` `/chat`) と API (`/api/chat` `/rss.xml`)。ページは部品を組み立てるだけにする
+- `app/`: ページ (`/overview` `/career` `/skills` `/works` `/now` `/chat` `/theme`) と API (`/api/chat` `/rss.xml`)。ページは部品を組み立てるだけにする
 - `components/`: UI。層と依存の向きは **[docs/design/components.md](docs/design/components.md)**
   - `ui/`: shadcn/ui の基本部品 (Button, Badge, Dialog, Tabs …)
   - `common/`: 画面をまたいで使う部品 (GlassPanel, Section, Callout, TagList, BulletList, TextLink)。`@/components/common` から import する
   - `layout/`: 全ページ共通の枠 (`page-template.tsx`、`browser-tabs.tsx` など)
-  - `features/<機能>/`: ページ・機能ごとの部品 (career, skills, works, chat, background)
+  - `features/<機能>/`: ページ・機能ごとの部品 (career, skills, works, chat, background, theme)
+    - 3D 背景のシーンは `features/background/themes/<id>.tsx` に 1 テーマ 1 ファイル。一覧と選択のストアは `lib/background-theme.ts` (ADR 0012)
 - `data/`: 表示データ (`career.ts` `skills.ts` `works.ts` `now.ts`)
   - `resume.md` と `profile-freelance.md` はチャットのサーバー側でのみ読む。`public/` には置かない
-- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`format.ts`、`chat/` (システムプロンプト・伏せ字・レート制限)
+- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`chat/` (システムプロンプト・伏せ字・レート制限)
 - `hooks/`: `use-media-query.ts`、`use-is-client.ts`
 - `evals/privacy/`: チャットのプライバシー eval。合格した結果は `success/` に残す
 - `docs/`: `adr/` (設計判断)、`pbi/` (PBI と WORK)、`design/` (テーマと部品)、`agents/` (エージェントの手順)、`testing/`
@@ -66,6 +67,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 
 - 色・質感はトークンだけを使う。正本は `app/globals.css`、一覧は **[docs/design/theme.md](docs/design/theme.md)**
   - 生の色 (`bg-blue-500`、`#3399ff`) を書かない。足りなければトークンを足し、ADR 0004 を更新する
+  - 例外は 3D 背景のテーマ (`features/background/themes/`)。シーンの配色はテーマのファイルが持つ (ADR 0012)
   - ガラス調の面は `GlassPanel` (`glass-panel`)、帯は `glass-bar`
 - 押せるものは `button` / `a` にする。`div` に `onClick` を付けない
 - 名前のない領域には `aria-label` を付け、E2E が `getByRole` で取れるようにする

@@ -8,6 +8,7 @@ export const pages = [
   { path: "/works", tab: "ワーク", heading: "ワーク" },
   { path: "/now", tab: "Now", heading: "Now" },
   { path: "/chat", tab: "チャット", heading: "チャット" },
+  { path: "/theme", tab: "テーマ", heading: "テーマ" },
 ] as const
 
 // テストの対象ルートを示す annotation。scripts/e2e-coverage.mjs がこれを読んでルート×観点の表を作る

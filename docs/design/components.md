@@ -66,7 +66,8 @@ flowchart TD
 | skills | `SkillsVisualization`, `SkillRadar` | `data/skills.ts` |
 | works | `WorkGallery`, `WorkCard`, `WorkDetailDialog`, `ArchitectureDiagram` | `data/works.ts` |
 | chat | `ResumeChat`, `ChatBubble`, `SuggestionList` | — (API から) |
-| background | `BackgroundScene`, `Scene` | `lib/theme.ts` の色 |
+| background | `BackgroundScene`, `Scene`, `themes/*` (テーマごとのシーン) | `lib/background-theme.ts` (選択中のテーマ)、`lib/theme.ts` の色 (グリッドのみ) |
+| theme | `ThemePicker` | `lib/background-theme.ts` |
 
 ## 部品を作るときの約束
 

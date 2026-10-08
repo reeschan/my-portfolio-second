@@ -17,7 +17,7 @@ test.describe("ナビゲーション", () => {
     }
   })
 
-  test("タブの並び順が 概要→経歴→スキル→ワーク→Now→チャット になっている", { tag: "@navigation", annotation: routes("/overview") }, async ({ page }) => {
+  test("タブの並び順が 概要→経歴→スキル→ワーク→Now→チャット→テーマ になっている", { tag: "@navigation", annotation: routes("/overview") }, async ({ page }) => {
     await page.goto("/overview")
     const names = pages.map((p) => p.tab)
     const tabLinks = page.getByRole("link").filter({ hasText: new RegExp(`^(${names.join("|")})$`) })

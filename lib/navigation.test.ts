@@ -1,5 +1,5 @@
 // @perspectives navigation
-// @routes /overview /career /skills /works /now /chat
+// @routes /overview /career /skills /works /now /chat /theme
 import { readdirSync, existsSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"

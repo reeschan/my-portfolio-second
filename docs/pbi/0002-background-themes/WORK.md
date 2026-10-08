@@ -142,5 +142,8 @@ PBI: [PBI.md](PBI.md)
 最後に実行したコマンドと結果。
 
 ```
-VERIFY
+pnpm commit-gate
+  lint / 型チェック / ユニット (8 ファイル 61 件) / 必須観点の穴なし / E2E 100 件 (desktop + mobile) — すべて合格
 ```
+
+各シーンの見た目は、ヘッドレス Chromium (SwiftShader) で「素の画面」「本文パネルの模型を重ねた画面」「スマホ縦長」を撮影して確かめた。

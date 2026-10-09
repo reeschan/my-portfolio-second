@@ -8,18 +8,22 @@ test.describe("スモーク: 全ページが表示できる", () => {
   })
 
   for (const p of pages) {
-    test(`${p.path} が見出し・タブ・アドレスバー付きで表示される`, { tag: ["@smoke", "@responsive"], annotation: routes(p.path) }, async ({ page }) => {
-      const res = await page.goto(p.path)
-      expect(res?.status()).toBe(200)
+    test(
+      `${p.path} が見出し・タブ・アドレスバー付きで表示される`,
+      { tag: ["@smoke", "@responsive"], annotation: routes(p.path) },
+      async ({ page }) => {
+        const res = await page.goto(p.path)
+        expect(res?.status()).toBe(200)
 
-      await expect(page.getByRole("heading", { level: 1, name: p.heading })).toBeVisible()
-      // 全タブが並んでいる
-      for (const q of pages) {
-        await expect(page.getByRole("link", { name: q.tab, exact: true })).toBeAttached()
-      }
-      // アドレスバーに現在のパスが出る
-      await expect(page.getByText(`myportfolio.vercel.app${p.path}`)).toBeVisible()
-    })
+        await expect(page.getByRole("heading", { level: 1, name: p.heading })).toBeVisible()
+        // 全タブが並んでいる
+        for (const q of pages) {
+          await expect(page.getByRole("link", { name: q.tab, exact: true })).toBeAttached()
+        }
+        // アドレスバーに現在のパスが出る
+        await expect(page.getByText(`myportfolio.vercel.app${p.path}`)).toBeVisible()
+      },
+    )
   }
 
   test("RSS フィードが XML で返る", { tag: ["@smoke", "@api-contract"], annotation: routes("/rss.xml") }, async ({ request }) => {

@@ -67,15 +67,21 @@ const unitTests = files.filter((f) => /\.test\.tsx?$/.test(f))
 
 const problems = []
 if (uiFiles.length && !e2eSpecs.length && !waiveReason) {
-  problems.push(`画面のコードを変更していますが、E2E テスト (e2e/*.spec.ts) がステージされていません:\n${uiFiles.map((f) => `    - ${f}`).join("\n")}`)
+  problems.push(
+    `画面のコードを変更していますが、E2E テスト (e2e/*.spec.ts) がステージされていません:\n${uiFiles.map((f) => `    - ${f}`).join("\n")}`,
+  )
 }
 if (logicFiles.length && !e2eSpecs.length && !unitTests.length && !waiveReason) {
-  problems.push(`処理のコードを変更していますが、テスト (e2e/*.spec.ts か *.test.ts) がステージされていません:\n${logicFiles.map((f) => `    - ${f}`).join("\n")}`)
+  problems.push(
+    `処理のコードを変更していますが、テスト (e2e/*.spec.ts か *.test.ts) がステージされていません:\n${logicFiles.map((f) => `    - ${f}`).join("\n")}`,
+  )
 }
 if (problems.length) {
-  console.error(`commit-gate: 不合格\n\n${problems.join("\n\n")}\n\n` +
-    "テストを足して git add してから、もう一度実行してください。\n" +
-    '振る舞いを変えないリファクタなどで本当に不要な場合だけ --waive "理由" を付けます (理由はコミットメッセージにも書く)')
+  console.error(
+    `commit-gate: 不合格\n\n${problems.join("\n\n")}\n\n` +
+      "テストを足して git add してから、もう一度実行してください。\n" +
+      '振る舞いを変えないリファクタなどで本当に不要な場合だけ --waive "理由" を付けます (理由はコミットメッセージにも書く)',
+  )
   process.exit(1)
 }
 
@@ -84,7 +90,9 @@ const tree = stagedTree()
 // ステージしていない変更があると「検査したもの」と「コミットするもの」がずれるので止める
 const unstaged = git("diff", "--name-only")
 if (unstaged) {
-  console.error(`commit-gate: ステージしていない変更があります。検査対象をそろえるため、ステージするか退避 (git stash -k) してください:\n${unstaged}`)
+  console.error(
+    `commit-gate: ステージしていない変更があります。検査対象をそろえるため、ステージするか退避 (git stash -k) してください:\n${unstaged}`,
+  )
   process.exit(1)
 }
 

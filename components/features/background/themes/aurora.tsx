@@ -548,7 +548,7 @@ function buildSnow(): THREE.BufferGeometry {
     position[i * 3] = rand()
     position[i * 3 + 1] = rand()
     // 落下は画面高さに対する割合。遅めにして、雪が漂うように見せる (720p で約 9〜22px/s)
-    speed[i] = bokeh ? 0.010 + rand() * 0.008 : 0.012 + rand() * 0.018
+    speed[i] = bokeh ? 0.01 + rand() * 0.008 : 0.012 + rand() * 0.018
     // 大半は 1 px 前後の粒。玉ボケは近いものとして大きく、ごく薄く
     size[i] = bokeh ? 28 + rand() * 12 : 1.0 + rand() * 1.4
     blur[i] = bokeh ? 1 : 0
@@ -581,14 +581,14 @@ export function AuroraTheme() {
       uRes: { value: new THREE.Vector2(1, 1) },
       uPointer: { value: new THREE.Vector2() },
     }),
-    []
+    [],
   )
   const snowUniforms = useMemo<SnowUniforms>(
     () => ({
       uTime: { value: 0 },
       uRes: { value: new THREE.Vector2(1, 1) },
     }),
-    []
+    [],
   )
   const snowGeometry = useMemo(() => buildSnow(), [])
   // 更新は材質の ref 経由で行う。useMemo の値を直接書き換えると React Compiler の lint に引っかかる。

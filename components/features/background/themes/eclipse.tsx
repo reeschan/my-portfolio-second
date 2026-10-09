@@ -385,23 +385,25 @@ export function EclipseTheme() {
       uAspect: { value: 1 },
       uShift: { value: new THREE.Vector2() },
     }),
-    []
+    [],
   )
 
   useFrame((state, delta) => {
     const mat = matRef.current
     if (!mat) return
+    // 材質が持つ uniforms は Record<string, IUniform> 型なので、作ったときの形に戻して使う
+    const u = mat.uniforms as typeof uniforms
     const { size, viewport, pointer, clock } = state
     // 描画バッファの実ピクセル数で渡す。dpr を掛けないと縁がぼやけて見える。
     // 縦横比もその場で更新し、リサイズや画面の回転で月が楕円にならないようにする
-    mat.uniforms.uResolution.value.set(size.width * viewport.dpr, size.height * viewport.dpr)
-    mat.uniforms.uAspect.value = size.width / size.height
-    mat.uniforms.uTime.value = clock.elapsedTime
+    u.uResolution.value.set(size.width * viewport.dpr, size.height * viewport.dpr)
+    u.uAspect.value = size.width / size.height
+    u.uTime.value = clock.elapsedTime
 
     // マウス視差は月の位置だけを少しずらす。ゆっくり追従させて落ち着いた動きにする
     target.set(pointer.x * 0.012, pointer.y * 0.008)
     const k = 1 - Math.exp(-delta * 1.5)
-    mat.uniforms.uShift.value.lerp(target, k)
+    u.uShift.value.lerp(target, k)
   })
 
   return (

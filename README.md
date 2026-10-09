@@ -91,6 +91,7 @@ pnpm dev                     # http://localhost:3000
 | 目的 | コマンド |
 | --- | --- |
 | lint / 型チェック | `pnpm lint` / `pnpm typecheck` |
+| 書式 | `pnpm format` / `pnpm format:check` |
 | ユニットテスト (Vitest) | `pnpm test:unit` |
 | E2E テスト (Playwright、デスクトップ + スマホ幅) | `pnpm test:e2e` |
 | ルート × 観点のカバレッジ表 | `pnpm test:coverage-map` |

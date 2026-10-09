@@ -24,17 +24,11 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             >
-              <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Ryuki Tobita
-              </span>
+              <span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">Ryuki Tobita</span>
               <span className="block mt-2">Portfolio</span>
             </motion.h1>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}>
               <Link
                 href="/overview"
                 className="group relative inline-block text-2xl font-medium text-primary transition-colors hover:text-primary/90"
@@ -49,4 +43,3 @@ export default function Home() {
     </main>
   )
 }
-

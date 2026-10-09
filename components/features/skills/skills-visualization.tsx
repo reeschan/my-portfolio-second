@@ -6,11 +6,18 @@ import { certifications, radarData, skillCategories } from "@/data/skills"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { SkillRadar } from "./skill-radar"
 
+// data/ のカテゴリを名前で引く。並び順に依存せず、名前が変わったら空のタブを出す前にビルド時の描画で気づけるよう例外にする
+function categoryOf(name: string) {
+  const category = skillCategories.find((c) => c.name === name)
+  if (!category) throw new Error(`スキルのカテゴリ「${name}」が data/skills.ts にありません`)
+  return category
+}
+
 // カテゴリ別のタブ。label はスマホ幅で shortLabel に切り替える
 const categoryTabs = [
-  { value: "frontend", category: skillCategories[0], label: "フロントエンド", shortLabel: "FE" },
-  { value: "backend", category: skillCategories[1], label: "バックエンド", shortLabel: "BE" },
-  { value: "aws", category: skillCategories[2], label: "AWS", shortLabel: "AWS" },
+  { value: "frontend", category: categoryOf("フロントエンド"), label: "フロントエンド", shortLabel: "FE" },
+  { value: "backend", category: categoryOf("バックエンド"), label: "バックエンド", shortLabel: "BE" },
+  { value: "aws", category: categoryOf("AWS"), label: "AWS", shortLabel: "AWS" },
 ] as const
 
 export function SkillsVisualization() {

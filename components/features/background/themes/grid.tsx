@@ -78,13 +78,7 @@ function FloatingObject({ position, scale, rotation, color = COLORS.primary }: F
 
 // グリッド
 function Grid() {
-  return (
-    <gridHelper
-      args={[30, 30, COLORS.gridCenter, COLORS.grid]}
-      position={[0, -3, 0]}
-      rotation={[0, 0, 0]}
-    />
-  )
+  return <gridHelper args={[30, 30, COLORS.gridCenter, COLORS.grid]} position={[0, -3, 0]} rotation={[0, 0, 0]} />
 }
 
 // マウス追従エフェクト
@@ -104,13 +98,7 @@ function MouseFollower() {
   return (
     <mesh position={[(smoothMouseX.get() * viewport.width) / 4, (-smoothMouseY.get() * viewport.height) / 4, -2]}>
       <sphereGeometry args={[0.5, 16, 16]} />
-      <meshStandardMaterial
-        color={COLORS.primary}
-        emissive={COLORS.primary}
-        emissiveIntensity={0.3}
-        transparent
-        opacity={0.4}
-      />
+      <meshStandardMaterial color={COLORS.primary} emissive={COLORS.primary} emissiveIntensity={0.3} transparent opacity={0.4} />
     </mesh>
   )
 }

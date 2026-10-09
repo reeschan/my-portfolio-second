@@ -1,0 +1,31 @@
+# 依存の更新 PR を週に 1 回まとめて出す (ADR 0014)。CI の ci-ok が緑ならマージしてよい
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # パッチ・マイナーは 1 本にまとめる。メジャーは影響が大きいので個別に出す
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # ESLint 10 系は eslint-plugin-react と非互換 (AGENTS.md)
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
+  - package-ecosystem: github-actions
+    directories: [/, /.github/actions/setup]
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: Asia/Tokyo
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        patterns: ["*"]

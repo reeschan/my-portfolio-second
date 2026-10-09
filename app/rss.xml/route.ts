@@ -1,4 +1,4 @@
-export async function GET() {
+export function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://myportfolio.vercel.app"
 
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>

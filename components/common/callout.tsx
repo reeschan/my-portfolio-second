@@ -13,12 +13,7 @@ type CalloutProps = {
 // 本文から一段目立たせたい情報の囲み
 export function Callout({ variant = "tinted", title, className, children }: CalloutProps) {
   return (
-    <div
-      className={cn(
-        variant === "emphasis" ? "border-l-4 border-primary pl-4" : "rounded-lg bg-primary/5 p-4",
-        className,
-      )}
-    >
+    <div className={cn(variant === "emphasis" ? "border-l-4 border-primary pl-4" : "rounded-lg bg-primary/5 p-4", className)}>
       {title && <h2 className="mb-2 text-xl font-semibold">{title}</h2>}
       {children}
     </div>

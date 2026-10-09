@@ -35,7 +35,8 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 | 目的 | コマンド |
 | --- | --- |
 | 開発サーバー | `pnpm dev` |
-| lint | `pnpm lint` (ESLint 9。10 系は eslint-plugin-react と非互換なので上げない) |
+| lint | `pnpm lint` (ESLint 9。10 系は eslint-plugin-react と非互換なので上げない)。循環的複雑度 10 を超える関数はエラー (ADR 0013) |
+| 書式 | `pnpm format` で整形、`pnpm format:check` で検査 (Prettier。CI でも検査する) |
 | 型チェック | `pnpm typecheck` |
 | ユニットテスト (Vitest) | `pnpm test:unit` |
 | E2E テスト (Playwright) | `pnpm test:e2e` (手元では dev サーバー、CI では本番ビルドを起動する) |

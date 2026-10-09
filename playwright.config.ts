@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test"
+import { nowPostToken } from "./e2e/fixtures"
 
 const port = Number(process.env.E2E_PORT ?? 3100)
 const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${port}`
@@ -31,6 +32,15 @@ export default defineConfig({
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,
         // E2E では本物の LLM を絶対に呼ばない (testing/e2e-policy.yml の external-mock 観点)
-        env: { MOONSHOT_API_KEY: "" },
+        // /now の投稿はプロセス内のメモリに保存し、本物の Redis に書かない (e2e/now.spec.ts)
+        env: {
+          MOONSHOT_API_KEY: "",
+          NOW_POST_TOKEN: nowPostToken,
+          NOW_POSTS_STORE: "memory",
+          UPSTASH_REDIS_REST_URL: "",
+          UPSTASH_REDIS_REST_TOKEN: "",
+          KV_REST_API_URL: "",
+          KV_REST_API_TOKEN: "",
+        },
       },
 })

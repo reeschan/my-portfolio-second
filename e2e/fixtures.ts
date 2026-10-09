@@ -16,6 +16,9 @@ export function routes(...paths: string[]) {
   return paths.map((description) => ({ type: "route", description }))
 }
 
+// E2E が POST /api/now で記事を仕込むときのトークン。playwright.config.ts が webServer に渡す。本番のトークンとは無関係
+export const nowPostToken = "e2e-now-post-token"
+
 // ヘッドレス環境で避けられない既知のノイズ。増やすときは理由をコメントで残す
 // (例: ヘッドレス Chromium で WebGL がソフトウェア描画になったときの警告が CI で error として出るようになった場合)
 const ignoredConsoleErrors: RegExp[] = []

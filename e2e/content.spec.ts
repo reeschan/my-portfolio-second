@@ -2,7 +2,6 @@ import { expect, routes, test } from "./fixtures"
 import { careerData } from "../data/career"
 import { certifications } from "../data/skills"
 import { works } from "../data/works"
-import { now } from "../data/now"
 
 // testing/e2e-policy.yml の content 観点。data/ に書いた内容が、漏れなく画面に出ることを確かめる
 // (文言そのものは data/ が正本なので、テストは data/ から読んで突き合わせる)
@@ -57,15 +56,6 @@ test.describe("表示内容", () => {
       }
     },
   )
-
-  test("Now: 更新日が日本語の日付で出る", { tag: "@content", annotation: routes("/now") }, async ({ page }) => {
-    await page.goto("/now")
-    const [y, m, d] = now.lastUpdated.split("-").map(Number)
-    await expect(page.getByText(`${y}年${m}月${d}日`)).toBeVisible()
-    for (const section of now.sections) {
-      await expect(page.getByRole("heading", { level: 2, name: section.heading })).toBeVisible()
-    }
-  })
 
   test("チャット: 最初の挨拶と注意書きが出る", { tag: "@content", annotation: routes("/chat") }, async ({ page }) => {
     await page.goto("/chat")

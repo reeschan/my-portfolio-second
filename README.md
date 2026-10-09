@@ -12,7 +12,8 @@
 | `/career` | 経歴のタイムライン。フリーランス期は参画案件の詳細をダイアログで見られる |
 | `/skills` | スキルのレーダーチャート (概要 / フロントエンド / バックエンド / AWS) と資格 |
 | `/works` | 制作物。カードから詳細とアーキテクチャを開ける |
-| `/now` | いま取り組んでいること ([nownownow.com](https://nownownow.com/about) の考え方) |
+| `/now` | いま取り組んでいること ([nownownow.com](https://nownownow.com/about) の考え方)。記事を新しい順のカードで並べ、押すと Markdown・Mermaid の全文をモーダルで読める |
+| `/api/now` | /now の記事の投稿 (POST) と削除 (DELETE `/api/now/[id]`)。トークンが要る |
 | `/chat` | 職務経歴について答える AI チャット (Moonshot / Kimi) |
 | `/theme` | 背景の 3D シーンを選ぶ (グリッド / オーロラ / 月夜の海 / 蛍の森 / 月面 / 皆既日食) |
 | `/rss.xml` | RSS フィード |
@@ -37,7 +38,11 @@ flowchart LR
     Docs[("data/resume.md<br/>data/profile-freelance.md<br/>(サーバーのみ)")]
     Redact["伏せ字<br/>lib/chat/redact.ts"]
     RSS["/rss.xml"]
+    NowAPI["/api/now<br/>トークンの検証"]
   end
+
+  Redis[("Upstash Redis<br/>/now の記事")]
+  Author["本人 (curl)"]
 
   LLM["Moonshot API<br/>(Kimi)"]
 
@@ -50,6 +55,9 @@ flowchart LR
   ChatAPI -- "ストリーム" --> LLM
   LLM -- "回答 (思考過程は捨てる)" --> Redact
   Redact -- "テキストのストリーム" --> ChatUI
+  Author -- "POST + Bearer トークン" --> NowAPI
+  NowAPI --> Redis
+  RSC -- "/now の記事を読む" --> Redis
 ```
 
 ### 画面の部品の層
@@ -77,6 +85,7 @@ flowchart TD
 | 部品の構成 | ui / common / layout / features + data | [ADR 0005](docs/adr/0005-component-architecture.md)、[docs/design/components.md](docs/design/components.md) |
 | 可視化・3D | React Three Fiber、Recharts | [ADR 0006](docs/adr/0006-visualization-and-3d.md) |
 | AI チャット | Moonshot / Kimi、自前のプロンプト + 伏せ字 + プライバシー eval | [ADR 0008](docs/adr/0008-chat-llm-and-privacy-eval.md) |
+| Now の記事 | Upstash Redis (REST)、react-markdown + remark-gfm、Mermaid | [ADR 0015](docs/adr/0015-now-posts-storage-and-markdown.md) |
 | テスト | Playwright (E2E)、Vitest、axe | [ADR 0001](docs/adr/0001-testing-strategy.md) |
 | 品質ゲート | ESLint、GitHub Actions (`ci-ok`)、コミットゲート | [ADR 0007](docs/adr/0007-ci-quality-gate.md)、[ADR 0009](docs/adr/0009-commit-gate.md) |
 
@@ -101,6 +110,23 @@ pnpm dev                     # http://localhost:3000
 
 - テストの観点は [testing/e2e-policy.yml](testing/e2e-policy.yml)、網羅状況は [docs/testing/coverage-map.md](docs/testing/coverage-map.md)
 - E2E・ユニットは LLM を必ずモックする。本物の LLM を呼ぶのは eval だけ ([evals/privacy/](evals/privacy/README.md))
+
+## Now の記事を投稿する
+
+/now の記事は API で足す。トークン (`NOW_POST_TOKEN`) と保存先 (Upstash Redis) は Vercel の環境変数に入れる ([ADR 0015](docs/adr/0015-now-posts-storage-and-markdown.md))。
+
+```bash
+# 足す (publishedAt は省略すると今の時刻。本文は Markdown、```mermaid のコードブロックは図になる)
+curl -X POST https://<ドメイン>/api/now \
+  -H "Authorization: Bearer $NOW_POST_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "近況", "body": "## やっていること\n\n- Next.js 16 への移行", "publishedAt": "2026-10-09T12:00:00+09:00"}'
+
+# 消す (id は投稿したときのレスポンスにある)
+curl -X DELETE https://<ドメイン>/api/now/<id> -H "Authorization: Bearer $NOW_POST_TOKEN"
+```
+
+Markdown のファイルから投稿するなら `jq -n --arg title "近況" --rawfile body post.md '{title: $title, body: $body}' | curl ... -d @-` のように JSON にする。
 
 ## 開発の進め方
 

@@ -35,6 +35,21 @@ export type SkillRadarProps = {
   children?: ReactNode; // 子要素（資格ハイライトなど）
 };
 
+// 極端に小さい画面で使う名前。スラッシュがある短縮名は最初の部分だけ、なければ先頭 2 文字にする
+function shortestLabel(item: SkillData) {
+  return (
+    item.shortName?.split("/")[0] ||
+    item.shortName ||
+    item.name?.substring(0, 2) ||
+    item.subject?.substring(0, 2)
+  );
+}
+
+// スマホ幅で使う短縮名。角度軸のキーに合わせて shortName か shortSubject を選ぶ
+function shortLabel(item: SkillData, angleDataKey: string) {
+  return angleDataKey === "name" ? item.shortName || item.name : item.shortSubject || item.subject;
+}
+
 // スキルレーダーコンポーネント
 export function SkillRadar({
   title,
@@ -49,37 +64,11 @@ export function SkillRadar({
   // recharts はサーバーでは大きさを測れないため、マウント後にだけ描く (それまでは同じ高さの枠を出す)
   const isMounted = useIsClient();
 
-  // データにモバイル用の短縮名がある場合は使用する
+  // データにモバイル用の短縮名がある場合は使用する。デスクトップではそのまま
   const processedData = useMemo(() => {
     return data.map((item) => {
-      // 極端に小さい画面の場合はより短い名前を使用
-      if (isSmallerMobile) {
-        const shortestName =
-          item.shortName?.split("/")[0] || // スラッシュがある場合は最初の部分だけ
-          item.shortName ||
-          item.name?.substring(0, 2) ||
-          item.subject?.substring(0, 2);
-
-        return {
-          ...item,
-          [angleDataKey]: shortestName,
-        };
-      }
-
-      // モバイル画面ではshortNameかshortSubjectを使用
-      if (isMobile) {
-        const shortName =
-          angleDataKey === "name"
-            ? item.shortName || item.name
-            : item.shortSubject || item.subject;
-
-        return {
-          ...item,
-          [angleDataKey]: shortName,
-        };
-      }
-
-      // デスクトップではそのまま
+      if (isSmallerMobile) return { ...item, [angleDataKey]: shortestLabel(item) };
+      if (isMobile) return { ...item, [angleDataKey]: shortLabel(item, angleDataKey) };
       return item;
     });
   }, [data, isMobile, isSmallerMobile, angleDataKey]);

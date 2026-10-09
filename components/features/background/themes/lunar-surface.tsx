@@ -441,20 +441,21 @@ function periodicNoise(lat: Float32Array, cells: number, x: number, y: number): 
   const ix1 = (ix0 + 1) % cells
   const iy0 = ((y0 % cells) + cells) % cells
   const iy1 = (iy0 + 1) % cells
-  const a = lat[iy0 * cells + ix0]
-  const b = lat[iy0 * cells + ix1]
-  const c = lat[iy1 * cells + ix0]
-  const d = lat[iy1 * cells + ix1]
+  // 添字は剰余で範囲内に収めてあるので、?? 0 は型のためだけ
+  const a = lat[iy0 * cells + ix0] ?? 0
+  const b = lat[iy0 * cells + ix1] ?? 0
+  const c = lat[iy1 * cells + ix0] ?? 0
+  const d = lat[iy1 * cells + ix1] ?? 0
   return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy
 }
 
-// 地形を CPU で一度だけ焼く。高さは R、アルベドは G
-function buildTerrain(): THREE.DataTexture {
-  const rnd = mulberry32(1969)
-  const h = new Float32Array(N * N)
-  const alb = new Float32Array(N * N)
+// 型付き配列の k 番目に v を足す。noUncheckedIndexedAccess では arr[k] += v と書けないため
+function addAt(arr: Float32Array, k: number, v: number) {
+  arr[k] = (arr[k] ?? 0) + v
+}
 
-  // 大きなうねり (周波数ごとの振幅)
+// 大きなうねり (周波数ごとの振幅) を高さに足す
+function addRelief(h: Float32Array, rnd: () => number) {
   const octaves: [number, number][] = [
     [4, 0.9],
     [8, 0.45],
@@ -468,12 +469,14 @@ function buildTerrain(): THREE.DataTexture {
     for (let j = 0; j < N; j++) {
       for (let i = 0; i < N; i++) {
         const v = periodicNoise(lat, cells, ((i + 0.5) / N) * cells, ((j + 0.5) / N) * cells)
-        h[j * N + i] += amp * v
+        addAt(h, j * N + i, amp * v)
       }
     }
   }
+}
 
-  // 高地と海 (マリア) の明るさ差
+// 高地と海 (マリア) の明るさ差をアルベドに描く
+function paintMaria(alb: Float32Array, rnd: () => number) {
   const latA = new Float32Array(9)
   const latB = new Float32Array(36)
   for (let i = 0; i < latA.length; i++) latA[i] = rnd() * 2 - 1
@@ -488,33 +491,37 @@ function buildTerrain(): THREE.DataTexture {
       alb[j * N + i] = 0.03 + (0.075 - 0.03) * t * t * (3 - 2 * t)
     }
   }
+}
 
-  // クレーター。大・中・小の 3 段。縁は盛り上がり、床は少し暗くする
-  const stamp = (cx: number, cy: number, r: number, depthK: number, rimK = 0.07) => {
-    const reach = Math.ceil((r * 1.3) / TEXEL)
-    const ci = Math.floor(cx / TEXEL)
-    const cj = Math.floor(cy / TEXEL)
-    for (let dj = -reach; dj <= reach; dj++) {
-      for (let di = -reach; di <= reach; di++) {
-        const i = (((ci + di) % N) + N) % N
-        const j = (((cj + dj) % N) + N) % N
-        let dx = (i + 0.5) * TEXEL - cx
-        let dy = (j + 0.5) * TEXEL - cy
-        dx -= DOMAIN * Math.round(dx / DOMAIN)
-        dy -= DOMAIN * Math.round(dy / DOMAIN)
-        const d = Math.hypot(dx, dy) / r
-        if (d > 1.3) continue
-        const k = j * N + i
-        if (d < 1) {
-          h[k] -= depthK * r * (1 - d * d)
-          alb[k] -= 0.015 * (1 - d * d)
-        }
-        const rim = Math.exp(-(((d - 1) / 0.14) ** 2))
-        h[k] += rimK * r * rim
-        alb[k] += 0.02 * rim
+// クレーターを 1 つ押す。縁は盛り上がり、床は少し暗くする
+function stampCrater(h: Float32Array, alb: Float32Array, cx: number, cy: number, r: number, depthK: number, rimK = 0.07) {
+  const reach = Math.ceil((r * 1.3) / TEXEL)
+  const ci = Math.floor(cx / TEXEL)
+  const cj = Math.floor(cy / TEXEL)
+  for (let dj = -reach; dj <= reach; dj++) {
+    for (let di = -reach; di <= reach; di++) {
+      const i = (((ci + di) % N) + N) % N
+      const j = (((cj + dj) % N) + N) % N
+      let dx = (i + 0.5) * TEXEL - cx
+      let dy = (j + 0.5) * TEXEL - cy
+      dx -= DOMAIN * Math.round(dx / DOMAIN)
+      dy -= DOMAIN * Math.round(dy / DOMAIN)
+      const d = Math.hypot(dx, dy) / r
+      if (d > 1.3) continue
+      const k = j * N + i
+      if (d < 1) {
+        addAt(h, k, -depthK * r * (1 - d * d))
+        addAt(alb, k, -0.015 * (1 - d * d))
       }
+      const rim = Math.exp(-(((d - 1) / 0.14) ** 2))
+      addAt(h, k, rimK * r * rim)
+      addAt(alb, k, 0.02 * rim)
     }
   }
+}
+
+// クレーターを大・中・小の 3 段と、中景の見せ場の 2 つ押す
+function addCraters(h: Float32Array, alb: Float32Array, rnd: () => number) {
   // 深さは直径の比率で決める。浅すぎると影が出ず月の凹凸が平らに見える
   const craterSets: [number, number, number, number][] = [
     [70, 2.0, 7.0, 0.32],
@@ -526,7 +533,7 @@ function buildTerrain(): THREE.DataTexture {
       const cx = rnd() * DOMAIN
       const cy = rnd() * DOMAIN
       const r = rMin + (rMax - rMin) * rnd() * rnd()
-      stamp(cx, cy, r, depthK)
+      stampCrater(h, alb, cx, cy, r, depthK)
     }
   }
   // 中景の見せ場。縁を高くし、平らな床に輪郭を出す。座標はワールド xz (負は剰余で正に回す)
@@ -535,14 +542,17 @@ function buildTerrain(): THREE.DataTexture {
     [4.2, -15.5, 2.8, 0.34],
   ]
   for (const [x, z, r, depthK] of heroes) {
-    stamp(((x % DOMAIN) + DOMAIN) % DOMAIN, ((z % DOMAIN) + DOMAIN) % DOMAIN, r, depthK, 0.16)
+    stampCrater(h, alb, ((x % DOMAIN) + DOMAIN) % DOMAIN, ((z % DOMAIN) + DOMAIN) % DOMAIN, r, depthK, 0.16)
   }
+}
 
+// 高さとアルベドを 1 枚のテクスチャに詰める
+function packTerrain(h: Float32Array, alb: Float32Array): THREE.DataTexture {
   // HalfFloat で詰める。線形補間が効き、かつ 8bit より段差が出にくい
   const data = new Uint16Array(N * N * 4)
   for (let k = 0; k < N * N; k++) {
-    data[k * 4] = THREE.DataUtils.toHalfFloat(h[k])
-    data[k * 4 + 1] = THREE.DataUtils.toHalfFloat(alb[k])
+    data[k * 4] = THREE.DataUtils.toHalfFloat(h[k] ?? 0)
+    data[k * 4 + 1] = THREE.DataUtils.toHalfFloat(alb[k] ?? 0)
     data[k * 4 + 2] = THREE.DataUtils.toHalfFloat(0)
     data[k * 4 + 3] = THREE.DataUtils.toHalfFloat(1)
   }
@@ -554,6 +564,17 @@ function buildTerrain(): THREE.DataTexture {
   tex.generateMipmaps = false
   tex.needsUpdate = true
   return tex
+}
+
+// 地形を CPU で一度だけ焼く。高さは R、アルベドは G。乱数を引く順番で地形が決まるので、呼ぶ順は変えない
+function buildTerrain(): THREE.DataTexture {
+  const rnd = mulberry32(1969)
+  const h = new Float32Array(N * N)
+  const alb = new Float32Array(N * N)
+  addRelief(h, rnd)
+  paintMaria(alb, rnd)
+  addCraters(h, alb, rnd)
+  return packTerrain(h, alb)
 }
 
 // 地球の中心 (NDC)。画面右上に置き、中央の文字域にはかからないようにする

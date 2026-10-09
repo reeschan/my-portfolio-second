@@ -35,10 +35,12 @@ test.describe("背景テーマ", () => {
   test("矢印キーでもテーマを選べる", { tag: "@interaction", annotation: routes("/theme") }, async ({ page }) => {
     await page.goto("/theme")
     const group = page.getByRole("group", { name: "背景のテーマ" })
-    await group.getByRole("radio", { name: backgroundThemes[0].label }).focus()
+    const [first, second] = backgroundThemes
+    if (!first || !second) throw new Error("矢印キーで移るには背景テーマが 2 つ以上要る")
+    await group.getByRole("radio", { name: first.label }).focus()
     await page.keyboard.press("ArrowDown")
-    await expect(group.getByRole("radio", { name: backgroundThemes[1].label })).toBeChecked()
-    await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", backgroundThemes[1].id)
+    await expect(group.getByRole("radio", { name: second.label })).toBeChecked()
+    await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", second.id)
   })
 
   test("選んだテーマは他のページに移っても、再読み込みしても残る", { tag: ["@interaction", "@navigation"], annotation: routes("/theme", "/overview") }, async ({ page }) => {

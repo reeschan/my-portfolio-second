@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { parseArgs } from "node:util"
 import YAML from "yaml"
+import { z } from "zod"
 import { redact } from "../../lib/chat/redact"
 import { buildSystemPrompt } from "../../lib/chat/system-prompt"
 import { promptLeakLines, scoreAnswer, summarize, type CaseSummary, type Criteria, type EvalCase } from "./score"
@@ -45,8 +46,16 @@ if (!dryRun && !apiKey) {
 }
 
 const forbiddenPath = path.join(dir, "forbidden.local.yml")
-const forbiddenTerms: string[] = existsSync(forbiddenPath) ? (YAML.parse(readFileSync(forbiddenPath, "utf8"))?.terms ?? []) : []
+const forbiddenFileSchema = z.object({ terms: z.array(z.string()).optional() }).nullish()
+const forbiddenTerms: string[] = existsSync(forbiddenPath)
+  ? (forbiddenFileSchema.parse(YAML.parse(readFileSync(forbiddenPath, "utf8")))?.terms ?? [])
+  : []
 if (!forbiddenTerms.length) console.warn("forbidden.local.yml がないため、本人固有の語の検査は行いません (forbidden.example.yml を参照)")
+
+// 非ストリームの応答のうち、採点に使う本文だけの形
+const completionSchema = z.object({
+  choices: z.array(z.object({ message: z.object({ content: z.string().nullish() }).nullish() })).optional(),
+})
 
 async function ask(systemPrompt: string, messages: EvalCase["messages"]): Promise<string> {
   if (dryRun) return "申し訳ありませんが、その情報はお答えできません。詳しくは LinkedIn からメッセージをお送りください。"
@@ -59,43 +68,63 @@ async function ask(systemPrompt: string, messages: EvalCase["messages"]): Promis
   })
   if (!res.ok) throw new Error(`LLM API error ${res.status}: ${await res.text()}`)
   // 思考過程 (reasoning_content) は画面に出さないので採点対象外。本文だけを見る
-  return (await res.json()).choices?.[0]?.message?.content ?? ""
+  const body = completionSchema.parse(await res.json())
+  return body.choices?.[0]?.message?.content ?? ""
 }
 
 // 同時実行数を抑えて順に処理する (レート制限対策)
 async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const out: R[] = new Array(items.length)
+  const out = new Array<R>(items.length)
   let next = 0
   await Promise.all(
     Array.from({ length: Math.min(limit, items.length) }, async () => {
       while (next < items.length) {
         const i = next++
-        out[i] = await fn(items[i])
+        // i は items.length 未満なので要素は必ずある
+        out[i] = await fn(items[i] as T)
       }
     }),
   )
   return out
 }
 
-// tsconfig の target が ES6 でトップレベル await を使えないため main にまとめる
+// 1 ケースを 1 回試して採点する
+async function runTrial(systemPrompt: string, leakLines: string[], c: EvalCase, t: number) {
+  const raw = await ask(systemPrompt, c.messages)
+  const result = scoreAnswer(raw, c, { forbiddenTerms, leakLines })
+  // 伏せ字のあとに残ったものは、利用者の画面に実際に出てしまう重大な漏れ
+  const leakedAfterRedaction = !scoreAnswer(redact(raw), { expect_refusal: c.expect_refusal }, { forbiddenTerms, leakLines: [] }).passed
+  const checks = result.findings.length ? `  ${result.findings.map((f) => f.check).join(",")}` : ""
+  process.stdout.write(`${result.passed ? "✓" : "✗"} ${c.id} #${t + 1}${checks}\n`)
+  // 不合格の回答には個人情報が入りうるので、ファイルには合格した回答の冒頭だけを残す
+  return { id: c.id, trial: t + 1, ...result, leakedAfterRedaction, answerExcerpt: result.passed ? raw.slice(0, 300) : null }
+}
+
+// 基準を満たした全ケース・本番モデルの結果だけを success/ に残す
+function saveSuccess(report: object, success: boolean, stamp: string, promptHash: string) {
+  // 一部のケースだけ回した結果や dry-run は、プロンプトの成績として残さない
+  const partial = !!args.case || criteria.trials < spec.pass_criteria.trials
+  if (success && !dryRun && !partial) {
+    const file = path.join(dir, "success", `${stamp.slice(0, 10)}-${model}-${promptHash}.json`)
+    writeFileSync(file, JSON.stringify(report, null, 2) + "\n")
+    console.log(`Success: ${path.relative(root, file)} に保存しました。コミットして成績を残してください`)
+    return
+  }
+  console.log(success ? "基準は満たしましたが、dry-run / 一部実行のため Success には保存しません" : "基準を満たさなかったため Success には保存しません")
+  if (!success) process.exitCode = 1
+}
+
+// 処理の流れを main にまとめ、最後に 1 か所で失敗を拾う
 async function main() {
   const systemPrompt = await buildSystemPrompt()
   const leakLines = promptLeakLines(systemPrompt)
   const sha = (s: string) => createHash("sha256").update(s).digest("hex")
   // 指示文 (資料より前) のハッシュ。プロンプトを直したら変わるので、どの版の成績かを辿れる
-  const promptHash = sha(systemPrompt.split("<resume>")[0]).slice(0, 12)
+  const promptHash = sha(systemPrompt.split("<resume>")[0] ?? "").slice(0, 12)
 
 
   const jobs = cases.flatMap((c) => Array.from({ length: criteria.trials }, (_, t) => ({ c, t })))
-  const answers = await mapLimit(jobs, Number(args.concurrency), async ({ c, t }) => {
-    const raw = await ask(systemPrompt, c.messages)
-    const result = scoreAnswer(raw, c, { forbiddenTerms, leakLines })
-    // 伏せ字のあとに残ったものは、利用者の画面に実際に出てしまう重大な漏れ
-    const leakedAfterRedaction = !scoreAnswer(redact(raw), { expect_refusal: c.expect_refusal }, { forbiddenTerms, leakLines: [] }).passed
-    process.stdout.write(`${result.passed ? "✓" : "✗"} ${c.id} #${t + 1}${result.findings.length ? `  ${result.findings.map((f) => f.check).join(",")}` : ""}\n`)
-    // 不合格の回答には個人情報が入りうるので、ファイルには合格した回答の冒頭だけを残す
-    return { id: c.id, trial: t + 1, ...result, leakedAfterRedaction, answerExcerpt: result.passed ? raw.slice(0, 300) : null }
-  })
+  const answers = await mapLimit(jobs, Number(args.concurrency), ({ c, t }) => runTrial(systemPrompt, leakLines, c, t))
 
   const caseSummaries: CaseSummary[] = cases.map((c) => ({ id: c.id, severity: c.severity, trials: answers.filter((a) => a.id === c.id) }))
   const summary = summarize(caseSummaries, criteria)
@@ -125,16 +154,7 @@ async function main() {
 
   console.log(`\n合格 ${summary.passed}/${summary.total} (${(summary.passRate * 100).toFixed(1)}%)  critical の不合格: ${summary.criticalFailures.join(", ") || "なし"}`)
 
-  // 一部のケースだけ回した結果や dry-run は、プロンプトの成績として残さない
-  const partial = !!args.case || criteria.trials < spec.pass_criteria.trials
-  if (summary.success && !dryRun && !partial) {
-    const file = path.join(dir, "success", `${stamp.slice(0, 10)}-${model}-${promptHash}.json`)
-    writeFileSync(file, JSON.stringify(report, null, 2) + "\n")
-    console.log(`Success: ${path.relative(root, file)} に保存しました。コミットして成績を残してください`)
-  } else {
-    console.log(summary.success ? "基準は満たしましたが、dry-run / 一部実行のため Success には保存しません" : "基準を満たさなかったため Success には保存しません")
-    if (!summary.success) process.exitCode = 1
-  }
+  saveSuccess(report, summary.success, stamp, promptHash)
 }
 
 main().catch((e) => {

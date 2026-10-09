@@ -16,6 +16,25 @@ const suggestions = [
   "AWS の経験と資格は？",
 ]
 
+// API が返したエラー文 ({ error: string }) を取り出す。形が違えば決まった文言にする
+async function errorMessageOf(res: Response): Promise<string> {
+  const data: unknown = await res.json().catch(() => null)
+  if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string") return data.error
+  return "回答の取得に失敗しました。"
+}
+
+// ストリームを読み切り、途中経過を onProgress に渡す。読み終えた全文を返す
+async function readStream(body: NonNullable<Response["body"]>, onProgress: (partial: string) => void): Promise<string> {
+  const reader = body.pipeThrough(new TextDecoderStream()).getReader()
+  let answer = ""
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) return answer
+    answer += value
+    onProgress(answer)
+  }
+}
+
 export function ResumeChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -44,20 +63,11 @@ export function ResumeChat() {
         body: JSON.stringify({ messages: history }),
       })
 
-      if (!res.ok || !res.body) {
-        const data = await res.json().catch(() => null)
-        throw new Error(data?.error ?? "回答の取得に失敗しました。")
-      }
+      if (!res.ok || !res.body) throw new Error(await errorMessageOf(res))
 
-      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
-      let answer = ""
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        answer += value
-        setMessages([...history, { role: "assistant", content: answer }])
-      }
-
+      const answer = await readStream(res.body, (partial) => {
+        setMessages([...history, { role: "assistant", content: partial }])
+      })
       if (!answer) throw new Error("回答が空でした。もう一度お試しください。")
     } catch (e) {
       // 失敗した質問は入力欄に戻して、再送しやすくする
@@ -71,7 +81,8 @@ export function ResumeChat() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    send(input)
+    // 失敗は send の中で画面に出すので、ここでは待たない
+    void send(input)
   }
 
   // 日本語入力の変換確定の Enter で送信されないようにする
@@ -96,7 +107,7 @@ export function ResumeChat() {
           </ChatBubble>
         ))}
 
-        {messages.length === 0 && <SuggestionList suggestions={suggestions} onSelect={send} />}
+        {messages.length === 0 && <SuggestionList suggestions={suggestions} onSelect={(text) => void send(text)} />}
       </div>
 
       {error && (

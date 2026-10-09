@@ -69,11 +69,11 @@ test.describe("チャット", () => {
 
 test.describe("チャット (会話の流れ)", () => {
   test("2 問目を送ると、1 問目とその回答も履歴として API に渡る", { tag: ["@chat", "@external-mock"], annotation: routes("/chat") }, async ({ page }) => {
-    const answers = ["1 つ目の回答です。", "2 つ目の回答です。"]
+    const answers = ["1 つ目の回答です。", "2 つ目の回答です。"] as const
     const sent: unknown[] = []
     await page.route("**/api/chat", async (route) => {
       sent.push(route.request().postDataJSON())
-      await route.fulfill({ status: 200, contentType: "text/plain; charset=utf-8", body: answers[sent.length - 1] })
+      await route.fulfill({ status: 200, contentType: "text/plain; charset=utf-8", body: answers[sent.length - 1] ?? "" })
     })
     await page.goto("/chat")
 

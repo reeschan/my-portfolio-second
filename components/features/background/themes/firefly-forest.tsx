@@ -651,7 +651,8 @@ export function FireflyForestTheme() {
   useFrame((state, delta) => {
     const mat = matRef.current
     if (!mat) return
-    const u = mat.uniforms
+    // 材質が持つ uniforms は Record<string, IUniform> 型なので、作ったときの形に戻して使う
+    const u = mat.uniforms as typeof uniforms
     const { size, viewport, pointer, clock } = state
     u.uTime.value = clock.elapsedTime
     u.uRes.value.set(size.width * viewport.dpr, size.height * viewport.dpr)

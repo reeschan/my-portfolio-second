@@ -1,5 +1,6 @@
 import { createRedactingStream } from "@/lib/chat/redact"
 import { isRateLimited } from "@/lib/chat/rate-limit"
+import { chatRequestSchema, sseChunkSchema } from "@/lib/chat/schema"
 import { buildSystemPrompt } from "@/lib/chat/system-prompt"
 import type { ChatMessage } from "@/types/chat-types"
 
@@ -10,31 +11,28 @@ export const maxDuration = 60
 const baseUrl = process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1"
 const model = process.env.MOONSHOT_MODEL ?? "kimi-k2.6"
 
-const maxMessages = 20
-// 訪問者の入力は画面側と同じ 1000 字まで。AI の過去の回答は長くなるため、弾かずに切り詰めて送る
-const maxUserMessageLength = 1000
-const maxAssistantMessageLength = 4000
+const truncatedNotice = "\n\n（回答が長くなったため、ここで区切りました。続きは質問を絞ってお尋ねください）"
 
-function parseMessages(body: unknown): ChatMessage[] | null {
-  if (typeof body !== "object" || body === null || !("messages" in body)) return null
-  const { messages } = body as { messages: unknown }
-  if (!Array.isArray(messages) || messages.length === 0) return null
+// SSE の 1 行から JSON の部分を取り出す。data 行でないもの・終わりの印は null
+function payloadOfSseLine(line: string): string | null {
+  const data = line.trim()
+  if (!data.startsWith("data:")) return null
+  const payload = data.slice(5).trim()
+  return payload === "[DONE]" ? null : payload
+}
 
-  const parsed: ChatMessage[] = []
-  for (const m of messages.slice(-maxMessages)) {
-    if (typeof m !== "object" || m === null) return null
-    const { role, content } = m as Record<string, unknown>
-    if ((role !== "user" && role !== "assistant") || typeof content !== "string") return null
-    if (content.length === 0) return null
-    if (role === "user") {
-      if (content.length > maxUserMessageLength) return null
-      parsed.push({ role, content })
-    } else {
-      parsed.push({ role, content: content.slice(0, maxAssistantMessageLength) })
-    }
+// 1 イベントから、画面に流す文字列を取り出す。本文 (delta.content) と、上限で切れたときの断り書きだけを返す
+function textOfSsePayload(payload: string): string {
+  let json: unknown
+  try {
+    json = JSON.parse(payload)
+  } catch {
+    // 途中で壊れた行は無視する
+    return ""
   }
-
-  return parsed.at(-1)?.role === "user" ? parsed : null
+  const choice = sseChunkSchema.safeParse(json).data?.choices?.[0]
+  const content = choice?.delta?.content ?? ""
+  return choice?.finish_reason === "length" ? content + truncatedNotice : content
 }
 
 // OpenAI 互換の SSE から回答本文 (delta.content) だけを取り出す。思考過程 (reasoning_content) は返さない
@@ -48,42 +46,16 @@ function createSseContentStream() {
       buffer = lines.pop() ?? ""
 
       for (const line of lines) {
-        const data = line.trim()
-        if (!data.startsWith("data:")) continue
-        const payload = data.slice(5).trim()
-        if (payload === "[DONE]") continue
-
-        try {
-          const choice = JSON.parse(payload).choices?.[0]
-          const content = choice?.delta?.content
-          if (typeof content === "string" && content) controller.enqueue(content)
-          if (choice?.finish_reason === "length") {
-            controller.enqueue("\n\n（回答が長くなったため、ここで区切りました。続きは質問を絞ってお尋ねください）")
-          }
-        } catch {
-          // 途中で壊れた行は無視する
-        }
+        const payload = payloadOfSseLine(line)
+        const text = payload === null ? "" : textOfSsePayload(payload)
+        if (text) controller.enqueue(text)
       }
     },
   })
 }
 
-export async function POST(request: Request) {
-  const apiKey = process.env.MOONSHOT_API_KEY
-  if (!apiKey) {
-    return Response.json({ error: "チャット機能は現在ご利用いただけません。" }, { status: 503 })
-  }
-
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-  if (isRateLimited(ip)) {
-    return Response.json({ error: "リクエストが多すぎます。しばらく時間をおいてからお試しください。" }, { status: 429 })
-  }
-
-  const messages = parseMessages(await request.json().catch(() => null))
-  if (!messages) {
-    return Response.json({ error: "メッセージの形式が正しくありません。" }, { status: 400 })
-  }
-
+// 上流 (Moonshot) に会話を渡し、SSE のレスポンスを返す。失敗したら null
+async function requestCompletion(messages: ChatMessage[], apiKey: string, signal: AbortSignal) {
   const upstream = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -97,15 +69,36 @@ export async function POST(request: Request) {
       max_tokens: 8192,
       messages: [{ role: "system", content: await buildSystemPrompt() }, ...messages],
     }),
-    signal: request.signal,
+    signal,
   }).catch(() => null)
 
-  if (!upstream?.ok || !upstream.body) {
-    if (upstream) console.error("Kimi API error", upstream.status, await upstream.text().catch(() => ""))
+  if (upstream?.ok && upstream.body) return upstream.body
+  if (upstream) console.error("Kimi API error", upstream.status, await upstream.text().catch(() => ""))
+  return null
+}
+
+export async function POST(request: Request) {
+  const apiKey = process.env.MOONSHOT_API_KEY
+  if (!apiKey) {
+    return Response.json({ error: "チャット機能は現在ご利用いただけません。" }, { status: 503 })
+  }
+
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+  if (isRateLimited(ip)) {
+    return Response.json({ error: "リクエストが多すぎます。しばらく時間をおいてからお試しください。" }, { status: 429 })
+  }
+
+  const parsed = chatRequestSchema.safeParse(await request.json().catch(() => null))
+  if (!parsed.success) {
+    return Response.json({ error: "メッセージの形式が正しくありません。" }, { status: 400 })
+  }
+
+  const upstream = await requestCompletion(parsed.data, apiKey, request.signal)
+  if (!upstream) {
     return Response.json({ error: "回答の生成に失敗しました。時間をおいて再度お試しください。" }, { status: 502 })
   }
 
-  const stream = upstream.body
+  const stream = upstream
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(createSseContentStream())
     .pipeThrough(createRedactingStream())

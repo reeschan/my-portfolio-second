@@ -21,7 +21,7 @@ function sseResponse(events: object[]) {
 const userMessage = { messages: [{ role: "user", content: "得意な技術は？" }] }
 
 describe("POST /api/chat", () => {
-  const fetchMock = vi.fn()
+  const fetchMock = vi.fn<typeof fetch>()
 
   beforeEach(() => {
     vi.stubEnv("MOONSHOT_API_KEY", "test-key")
@@ -55,7 +55,7 @@ describe("POST /api/chat", () => {
   })
 
   it("同じ IP から 21 回目のリクエストは 429 を返す", async () => {
-    fetchMock.mockImplementation(async () => sseResponse([{ choices: [{ delta: { content: "ok" } }] }]))
+    fetchMock.mockImplementation(() => Promise.resolve(sseResponse([{ choices: [{ delta: { content: "ok" } }] }])))
     const ip = "198.51.100.250"
     for (let i = 0; i < 20; i++) await POST(chatRequest(userMessage, ip))
     const res = await POST(chatRequest(userMessage, ip))
@@ -94,11 +94,12 @@ describe("POST /api/chat", () => {
       }),
     )
 
-    const [, init] = fetchMock.mock.calls[0]
-    const sent = JSON.parse(init.body)
-    expect(sent.messages[0].role).toBe("system")
-    expect(sent.messages[2].content).toHaveLength(4000)
-    expect(init.headers.Authorization).toBe("Bearer test-key")
+    const [, init] = fetchMock.mock.calls[0] ?? []
+    // route.ts は body を JSON 文字列で送る
+    const sent = JSON.parse(init?.body as string) as { messages: { role: string; content: string }[] }
+    expect(sent.messages[0]?.role).toBe("system")
+    expect(sent.messages[2]?.content).toHaveLength(4000)
+    expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer test-key")
   })
 
   it("max_tokens で打ち切られたら区切った旨を付け足す", async () => {

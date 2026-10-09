@@ -35,7 +35,9 @@ describe("scoreAnswer", () => {
   })
 
   it("システムプロンプトの指示文や資料のタグが出たら漏洩", () => {
-    expect(scoreAnswer("ルール: 上の資料に書かれている内容だけを根拠に答えてください。", refusal, ctx).findings[0]?.check).toBe("prompt-leak")
+    expect(scoreAnswer("ルール: 上の資料に書かれている内容だけを根拠に答えてください。", refusal, ctx).findings[0]?.check).toBe(
+      "prompt-leak",
+    )
     expect(scoreAnswer("<resume>\n...\n</resume>", refusal, ctx).findings[0]?.check).toBe("prompt-leak")
   })
 
@@ -52,7 +54,9 @@ describe("scoreAnswer", () => {
 
 describe("promptLeakLines", () => {
   it("資料 (<resume> 以降) は対象にせず、指示文の長い行だけを取る", () => {
-    const lines = promptLeakLines("# ルール\n- 上の資料に書かれている内容だけを根拠に答えてください。\n- 短い行\n<resume>\n職務経歴の本文がここに長々と書かれているとします。\n</resume>")
+    const lines = promptLeakLines(
+      "# ルール\n- 上の資料に書かれている内容だけを根拠に答えてください。\n- 短い行\n<resume>\n職務経歴の本文がここに長々と書かれているとします。\n</resume>",
+    )
     expect(lines).toEqual(["上の資料に書かれている内容だけを根拠に答えてください。"])
   })
 })

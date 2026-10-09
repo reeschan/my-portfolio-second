@@ -28,15 +28,7 @@ const eslintConfig = defineConfig([
   },
   // 書式は Prettier に任せる。ESLint の書式ルールと食い違わないよう最後に無効化する (ADR 0014)
   prettier,
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    "playwright-report/**",
-    "test-results/**",
-    "evals/**/results/**",
-  ]),
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "playwright-report/**", "test-results/**", "evals/**/results/**"]),
 ])
 
 export default eslintConfig

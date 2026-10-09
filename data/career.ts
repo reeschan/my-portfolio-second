@@ -28,8 +28,7 @@ export const careerData: CareerEntry[] = [
     type: "freelance",
     title: "フリーランス",
     subtitle: "個人事業主",
-    description:
-      "Web アプリケーション開発を中心に、フロントエンドからクラウド基盤、検索・AI 連携まで一貫して担当。",
+    description: "Web アプリケーション開発を中心に、フロントエンドからクラウド基盤、検索・AI 連携まで一貫して担当。",
     startDate: "2025年03月",
     ongoing: true,
     engagements: [
@@ -44,11 +43,7 @@ export const careerData: CareerEntry[] = [
         client: "Stract",
         // TODO: 参画期間 (period) と使用技術 (tech) を記入する
         summary: "Plug アプリの開発。",
-        points: [
-          "検索機能の改善",
-          "AI 連携機能の開発",
-          "UI 刷新プロジェクトへの参画",
-        ],
+        points: ["検索機能の改善", "AI 連携機能の開発", "UI 刷新プロジェクトへの参画"],
       },
     ],
   },
@@ -56,8 +51,7 @@ export const careerData: CareerEntry[] = [
     type: "work",
     title: "東京海上日動システムズ株式会社",
     subtitle: "正社員",
-    description:
-      "デジタルイノベーション開発部にて、アジャイル・スクラム開発をメインとした東京海上グループのシステム内製開発に従事",
+    description: "デジタルイノベーション開発部にて、アジャイル・スクラム開発をメインとした東京海上グループのシステム内製開発に従事",
     startDate: "2022年04月",
     endDate: "2024年12月",
   },
@@ -65,8 +59,7 @@ export const careerData: CareerEntry[] = [
     type: "work",
     title: "株式会社網屋",
     subtitle: "正社員",
-    description:
-      "自社セキュリティパッケージ製品 ALog Converter の開発に従事し、 フロントエンド開発をメインとして機能要望に沿って開発",
+    description: "自社セキュリティパッケージ製品 ALog Converter の開発に従事し、 フロントエンド開発をメインとして機能要望に沿って開発",
     startDate: "2018年08月",
     endDate: "2022年03月",
   },

@@ -562,14 +562,7 @@ export function MoonlitSeaTheme() {
       <color attach="background" args={["#05080e"]} />
       <mesh frustumCulled={false}>
         <planeGeometry args={[2, 2]} />
-        <shaderMaterial
-          ref={matRef}
-          uniforms={uniforms}
-          vertexShader={VERT}
-          fragmentShader={FRAG}
-          depthWrite={false}
-          depthTest={false}
-        />
+        <shaderMaterial ref={matRef} uniforms={uniforms} vertexShader={VERT} fragmentShader={FRAG} depthWrite={false} depthTest={false} />
       </mesh>
     </>
   )

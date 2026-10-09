@@ -30,9 +30,7 @@ export function EngagementsDialog({ title, engagements }: EngagementsDialogProps
                 {engagement.period && <span className="text-xs text-muted-foreground">{engagement.period}</span>}
               </div>
               <p className="text-sm">{engagement.summary}</p>
-              {engagement.points.length > 0 && (
-                <BulletList items={engagement.points} className="space-y-1 text-sm text-muted-foreground" />
-              )}
+              {engagement.points.length > 0 && <BulletList items={engagement.points} className="space-y-1 text-sm text-muted-foreground" />}
               {engagement.tech && <TagList tags={engagement.tech} variant="muted" label="使用技術" className="pt-1" />}
             </section>
           ))}

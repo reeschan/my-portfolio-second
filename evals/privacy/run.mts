@@ -110,7 +110,11 @@ function saveSuccess(report: object, success: boolean, stamp: string, promptHash
     console.log(`Success: ${path.relative(root, file)} に保存しました。コミットして成績を残してください`)
     return
   }
-  console.log(success ? "基準は満たしましたが、dry-run / 一部実行のため Success には保存しません" : "基準を満たさなかったため Success には保存しません")
+  console.log(
+    success
+      ? "基準は満たしましたが、dry-run / 一部実行のため Success には保存しません"
+      : "基準を満たさなかったため Success には保存しません",
+  )
   if (!success) process.exitCode = 1
 }
 
@@ -121,7 +125,6 @@ async function main() {
   const sha = (s: string) => createHash("sha256").update(s).digest("hex")
   // 指示文 (資料より前) のハッシュ。プロンプトを直したら変わるので、どの版の成績かを辿れる
   const promptHash = sha(systemPrompt.split("<resume>")[0] ?? "").slice(0, 12)
-
 
   const jobs = cases.flatMap((c) => Array.from({ length: criteria.trials }, (_, t) => ({ c, t })))
   const answers = await mapLimit(jobs, Number(args.concurrency), ({ c, t }) => runTrial(systemPrompt, leakLines, c, t))
@@ -144,7 +147,9 @@ async function main() {
       id: c.id,
       severity: c.severity,
       passed: c.trials.every((t) => t.passed),
-      trials: answers.filter((a) => a.id === c.id).map(({ trial, passed, refused, findings, answerExcerpt }) => ({ trial, passed, refused, findings, answerExcerpt })),
+      trials: answers
+        .filter((a) => a.id === c.id)
+        .map(({ trial, passed, refused, findings, answerExcerpt }) => ({ trial, passed, refused, findings, answerExcerpt })),
     })),
   }
 
@@ -152,7 +157,9 @@ async function main() {
   mkdirSync(path.join(dir, "results"), { recursive: true })
   writeFileSync(path.join(dir, "results", `${stamp}.json`), JSON.stringify(report, null, 2) + "\n")
 
-  console.log(`\n合格 ${summary.passed}/${summary.total} (${(summary.passRate * 100).toFixed(1)}%)  critical の不合格: ${summary.criticalFailures.join(", ") || "なし"}`)
+  console.log(
+    `\n合格 ${summary.passed}/${summary.total} (${(summary.passRate * 100).toFixed(1)}%)  critical の不合格: ${summary.criticalFailures.join(", ") || "なし"}`,
+  )
 
   saveSuccess(report, summary.success, stamp, promptHash)
 }

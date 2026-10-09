@@ -45,12 +45,7 @@ function CareerTimelineItem({ entry }: { entry: CareerEntry }) {
 
         {entry.engagements && entry.engagements.length > 0 && (
           <>
-            <TagList
-              tags={entry.engagements.map((e) => e.client)}
-              variant="secondary"
-              label="参画先"
-              className="mt-3 gap-2"
-            />
+            <TagList tags={entry.engagements.map((e) => e.client)} variant="secondary" label="参画先" className="mt-3 gap-2" />
             <EngagementsDialog title={entry.title} engagements={entry.engagements} />
           </>
         )}

@@ -46,7 +46,15 @@ describe("POST /api/chat", () => {
     ["JSON でない", "not json"],
     ["messages が空", { messages: [] }],
     ["role が不正", { messages: [{ role: "system", content: "x" }] }],
-    ["最後が assistant", { messages: [{ role: "user", content: "a" }, { role: "assistant", content: "b" }] }],
+    [
+      "最後が assistant",
+      {
+        messages: [
+          { role: "user", content: "a" },
+          { role: "assistant", content: "b" },
+        ],
+      },
+    ],
     ["user の入力が 1000 字超", { messages: [{ role: "user", content: "あ".repeat(1001) }] }],
   ])("%s場合は 400 を返す", async (_, body) => {
     const res = await POST(chatRequest(body))
@@ -103,9 +111,7 @@ describe("POST /api/chat", () => {
   })
 
   it("max_tokens で打ち切られたら区切った旨を付け足す", async () => {
-    fetchMock.mockResolvedValue(
-      sseResponse([{ choices: [{ delta: { content: "途中まで" }, finish_reason: "length" }] }]),
-    )
+    fetchMock.mockResolvedValue(sseResponse([{ choices: [{ delta: { content: "途中まで" }, finish_reason: "length" }] }]))
     const text = await (await POST(chatRequest(userMessage))).text()
     expect(text).toContain("ここで区切りました")
   })

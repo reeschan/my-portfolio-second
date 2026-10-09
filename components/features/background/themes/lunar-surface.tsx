@@ -610,7 +610,7 @@ export function LunarSurfaceTheme() {
       uSun: { value: SUN_DIR.clone() },
       uHeight: { value: height },
     }),
-    [height]
+    [height],
   )
 
   const matRef = useRef<THREE.ShaderMaterial>(null)

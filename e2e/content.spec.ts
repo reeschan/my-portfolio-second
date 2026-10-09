@@ -13,14 +13,18 @@ test.describe("表示内容", () => {
     await expect(page.getByRole("heading", { level: 2, name: "プロフィール" })).toBeVisible()
   })
 
-  test("経歴: すべての経歴が新しい順に、期間付きで並ぶ", { tag: ["@content", "@responsive"], annotation: routes("/career") }, async ({ page }) => {
-    await page.goto("/career")
-    const headings = page.getByRole("main").getByRole("heading", { level: 3 })
-    await expect(headings).toHaveText(careerData.map((e) => e.title))
-    for (const entry of careerData) {
-      await expect(page.getByText(`${entry.startDate} - ${entry.endDate ?? "現在"}`)).toBeVisible()
-    }
-  })
+  test(
+    "経歴: すべての経歴が新しい順に、期間付きで並ぶ",
+    { tag: ["@content", "@responsive"], annotation: routes("/career") },
+    async ({ page }) => {
+      await page.goto("/career")
+      const headings = page.getByRole("main").getByRole("heading", { level: 3 })
+      await expect(headings).toHaveText(careerData.map((e) => e.title))
+      for (const entry of careerData) {
+        await expect(page.getByText(`${entry.startDate} - ${entry.endDate ?? "現在"}`)).toBeVisible()
+      }
+    },
+  )
 
   test("経歴: 参画先の一覧が出る", { tag: "@content", annotation: routes("/career") }, async ({ page }) => {
     await page.goto("/career")
@@ -41,14 +45,18 @@ test.describe("表示内容", () => {
     await expect(page.getByText("スキルレベル (5段階評価)")).toBeVisible()
   })
 
-  test("ワーク: すべての作品がカードで並び、画像に代替テキストがある", { tag: ["@content", "@responsive"], annotation: routes("/works") }, async ({ page }) => {
-    await page.goto("/works")
-    for (const work of works) {
-      const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: work.title }) })
-      await expect(card).toBeVisible()
-      await expect(card.getByRole("img", { name: work.image.alt })).toBeVisible()
-    }
-  })
+  test(
+    "ワーク: すべての作品がカードで並び、画像に代替テキストがある",
+    { tag: ["@content", "@responsive"], annotation: routes("/works") },
+    async ({ page }) => {
+      await page.goto("/works")
+      for (const work of works) {
+        const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: work.title }) })
+        await expect(card).toBeVisible()
+        await expect(card.getByRole("img", { name: work.image.alt })).toBeVisible()
+      }
+    },
+  )
 
   test("Now: 更新日が日本語の日付で出る", { tag: "@content", annotation: routes("/now") }, async ({ page }) => {
     await page.goto("/now")

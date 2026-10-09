@@ -385,7 +385,7 @@ export function EclipseTheme() {
       uAspect: { value: 1 },
       uShift: { value: new THREE.Vector2() },
     }),
-    []
+    [],
   )
 
   useFrame((state, delta) => {

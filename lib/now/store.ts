@@ -1,3 +1,5 @@
+import { apiFetchJson } from "@/lib/api/client"
+import { HttpError } from "@/lib/api/errors"
 import { nowPostSchema, sortNewestFirst, type NowPost } from "./schema"
 
 // /now の投稿の保存先。本番は Upstash Redis (Vercel Marketplace)、開発と E2E はプロセス内のメモリ (ADR 0015)
@@ -12,17 +14,20 @@ export interface NowPostStore {
 
 const hashKey = "now:posts"
 
-// Upstash の REST API を fetch で直接呼ぶ。使うコマンドは 4 つだけなので SDK は入れない
+// Upstash の REST API を apiFetch で呼ぶ。使うコマンドは 4 つだけなので SDK は入れない
+// 失敗は apiFetch が ApiError を投げる。利用者への文言は上位 (Route Handler・ページ) が決める
 export function createUpstashStore(url: string, token: string): NowPostStore {
   async function command<T>(...args: string[]): Promise<T> {
-    const res = await fetch(url, {
+    const data = await apiFetchJson(url, {
+      service: `Upstash ${args[0]}`,
+      // 応答しないときもページを空の一覧で出し、書き込み API は 502 を返せるよう、待つ時間に上限を付ける
+      timeoutMs: 5_000,
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(args),
       cache: "no-store",
     })
-    if (!res.ok) throw new Error(`Upstash ${args[0]} failed: ${res.status}`)
-    return ((await res.json()) as { result: T }).result
+    return (data as { result: T }).result
   }
 
   return {
@@ -85,14 +90,9 @@ export function getNowStore(env: NodeJS.ProcessEnv = process.env): NowPostStore 
   return null
 }
 
-// ページから使う読み取り。保存先が落ちていてもページは出したいので、失敗は空の一覧として扱う
-export async function listNowPosts(): Promise<NowPost[]> {
+// 書き込み API が使う保存先。本番で Redis が未設定なら 503 の HttpError を投げる
+export function requireNowStore(): NowPostStore {
   const store = getNowStore()
-  if (!store) return []
-  try {
-    return await store.list()
-  } catch (error) {
-    console.error("Failed to load now posts", error)
-    return []
-  }
+  if (!store) throw new HttpError(503, "投稿の保存先が設定されていません。")
+  return store
 }

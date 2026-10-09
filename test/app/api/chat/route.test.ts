@@ -1,7 +1,10 @@
 // @perspectives api-contract external-mock privacy
 // @routes /api/chat
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { POST } from "@/app/api/chat/route"
+import { POST as handler } from "@/app/api/chat/route"
+
+// Route Handler は第 2 引数 (context) を受け取る形なので、空の params を渡す
+const POST = (request: Request) => handler(request, { params: Promise.resolve({}) })
 
 // 本物の Moonshot API は呼ばない (testing/e2e-policy.yml の external-mock 観点)
 let ipSeq = 0

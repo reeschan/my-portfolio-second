@@ -8,6 +8,8 @@ PBI: [PBI.md](PBI.md)
 - [x] トークンの検証をデコレータにする — test/decorator/with-bearer-auth.test.ts
 - [x] `POST /api/now`・`PUT /api/now/[id]`・`DELETE /api/now/[id]` — test/app/api/now/
 - [x] 既存のユニットテストを test/ に移す — pnpm test:unit
+- [x] API の呼び出しを apiFetch に集める — test/lib/api/client.test.ts
+- [x] エラーのデコレータを作り、すべての API に付ける — test/decorator/with-error-handling.test.ts
 - [x] /now のカード一覧と詳細ダイアログ (Markdown + Mermaid) — e2e/now.spec.ts
 - [x] E2E の webServer にテスト用トークンとメモリの保存先を渡す — playwright.config.ts
 - [x] 部品一覧・README・環境変数の例を更新する
@@ -16,6 +18,7 @@ PBI: [PBI.md](PBI.md)
 
 - [0015](../../adr/0015-now-posts-storage-and-markdown.md): 保存先 (Upstash Redis) と Markdown・Mermaid のライブラリの採用
 - [0016](../../adr/0016-test-directory-and-auth-decorator.md): ユニットテストの置き場所 (test/) と認証のデコレータ (decorator/)
+- [0017](../../adr/0017-api-client-and-error-decorator.md): API の呼び出し (apiFetch) とエラーのデコレータ
 
 ## 記録
 
@@ -32,6 +35,9 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-09: 依頼者の要望で、あとから直せるよう PUT を足した。題名と本文はまるごと置き換え、公開日は省くと元のまま (並び順を変えずに誤字を直せる)。`updatedAt` を持たせ、ダイアログに「（…更新）」と出す
 - 2026-10-09: 依頼者の要望で、認証を `decorator/with-bearer-auth.ts` のデコレータにまとめた。JS の `@` デコレータはクラス専用なので、Route Handler を包む高階関数にした。`lib/now/auth.ts` は「どの環境変数のトークンか」の設定だけを持つ
 - 2026-10-09: 依頼者の要望で、ユニットテストを `test/` に同じ階層で移した。`src/` を作るかは依頼者に確認し、作らないことにした。ルートのテストは `test/app/api/now/route.test.ts` (POST) と `test/app/api/now/[id]/route.test.ts` (PUT・DELETE) に分けた
+- 2026-10-09: 依頼者の要望で、API の呼び出しを `lib/api/client.ts` の `apiFetch` に集めた。Upstash・Moonshot・チャット画面・eval のすべてがここを通る。上限時間を付けたので、PR のレビュー (CodeRabbit) で指摘された「Upstash が応答しないと /now が止まる」も直った (Upstash は 5 秒)
+- 2026-10-09: 依頼者の要望で、エラーの扱いを `decorator/with-error-handling.ts` のデコレータにし、/api/chat と /api/now のすべてに付けた。下の層 (保存先・apiFetch・認証のデコレータ) は投げるだけにして、利用者向けの文言は上位 (ルートの `withErrorHandling` の引数・画面) が決める。これに合わせ、保存先が利用者向けの文言を返していた `lib/now/responses.ts` をやめた
+- 2026-10-09: /now のページは保存先の失敗を受け取り、一覧の代わりに「記事を読み込めませんでした」を出すようにした (これまでは黙って空の一覧)。メモリの保存先は失敗しないので、この表示の E2E は書いていない
 - 見送り: 記事ごとの URL (`/now#id` で開く)、RSS への反映
 
 ## 検証

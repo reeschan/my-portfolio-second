@@ -5,7 +5,8 @@ import { NowPostList } from "@/components/features/now/now-post-list"
 import { PageTemplate } from "@/components/layout/page-template"
 import { now } from "@/data/now"
 import { formatJapaneseDateTime } from "@/lib/format"
-import { listNowPosts } from "@/lib/now/store"
+import type { NowPost } from "@/lib/now/schema"
+import { getNowStore } from "@/lib/now/store"
 
 export const metadata: Metadata = {
   title: "Now | Ryuki Tobita's Portfolio",
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export default async function NowPage() {
   // 記事は POST /api/now でいつでも増えるので、ビルド時に固めずリクエストごとに読む
   await connection()
-  const posts = await listNowPosts()
+  const { posts, loadError } = await loadPosts()
   const latest = posts[0]
 
   return (
@@ -31,7 +32,13 @@ export default async function NowPage() {
           {now.location && <>・{now.location}</>}
         </p>
 
-        <NowPostList posts={posts} />
+        {loadError ? (
+          <Callout variant="tinted">
+            <p>{loadError}</p>
+          </Callout>
+        ) : (
+          <NowPostList posts={posts} />
+        )}
 
         {now.availability && (
           <Callout variant="emphasis">
@@ -45,4 +52,16 @@ export default async function NowPage() {
       </div>
     </PageTemplate>
   )
+}
+
+// 記事を読む。保存先が落ちていても (ApiError) ページは出し、文言はここ (上位) で決める
+async function loadPosts(): Promise<{ posts: NowPost[]; loadError: string | null }> {
+  const store = getNowStore()
+  if (!store) return { posts: [], loadError: null }
+  try {
+    return { posts: await store.list(), loadError: null }
+  } catch (error) {
+    console.error("Failed to load now posts", error)
+    return { posts: [], loadError: "記事を読み込めませんでした。時間をおいて再度お試しください。" }
+  }
 }

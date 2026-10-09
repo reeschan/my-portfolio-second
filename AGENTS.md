@@ -57,9 +57,9 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
     - 3D 背景のシーンは `features/background/themes/<id>.tsx` に 1 テーマ 1 ファイル。一覧と選択のストアは `lib/background-theme.ts` (ADR 0012)
 - `data/`: 表示データ (`career.ts` `skills.ts` `works.ts` `now.ts`)。/now の記事は `data/` ではなく `POST /api/now` で投稿する
   - `resume.md` と `profile-freelance.md` はチャットのサーバー側でのみ読む。`public/` には置かない
-- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)
+- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)
 - `hooks/`: `use-media-query.ts`、`use-is-client.ts`
-- `decorator/`: Route Handler を包むデコレータ。認証が要る API は `withBearerAuth` で包む (ADR 0016)
+- `decorator/`: Route Handler を包むデコレータ。すべての API は `withErrorHandling` で包み、認証が要るものはその内側を `withBearerAuth` で包む (ADR 0016、0017)
 - `test/`: ユニットテスト (Vitest)。ソースと同じ階層に置く (`lib/now/store.ts` → `test/lib/now/store.test.ts`)
 - `evals/privacy/`: チャットのプライバシー eval。合格した結果は `success/` に残す
 - `docs/`: `adr/` (設計判断)、`pbi/` (PBI と WORK)、`design/` (テーマと部品)、`agents/` (エージェントの手順)、`testing/`
@@ -73,6 +73,8 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
   - 例外は 3D 背景のテーマ (`features/background/themes/`)。シーンの配色はテーマのファイルが持つ (ADR 0012)
   - ガラス調の面は `GlassPanel` (`glass-panel`)、帯は `glass-bar`
 - 押せるものは `button` / `a` にする。`div` に `onClick` を付けない
+- API を呼ぶときは `fetch` を直接書かず `apiFetch` (`lib/api/client.ts`) を通す。失敗は `ApiError` で投げられるので、利用者に見せる文言は呼び出し側 (上位) で決める (ADR 0017)
+- Route Handler の失敗は `HttpError` を投げる。レスポンスにするのは `withErrorHandling`
 - 名前のない領域には `aria-label` を付け、E2E が `getByRole` で取れるようにする
 - ブラウザでしか描けないものは `useIsClient()` で出し分ける。`useEffect` の中で `setState` しない
 

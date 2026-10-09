@@ -41,3 +41,4 @@
 | [0014](0014-formatter-and-repo-automation.md) | 書式とリポジトリの自動化: Prettier・Dependabot・CodeQL・CI の共通化 | 採用 |
 | [0015](0015-now-posts-storage-and-markdown.md) | /now の投稿: Upstash Redis に保存し、Markdown と Mermaid で描く | 提案中 |
 | [0016](0016-test-directory-and-auth-decorator.md) | ユニットテストは test/ に同じ階層で置き、API の認証は decorator/ のデコレータで掛ける | 提案中 |
+| [0017](0017-api-client-and-error-decorator.md) | API の呼び出しは apiFetch に集め、エラーはデコレータで上位がレスポンスにする | 提案中 |

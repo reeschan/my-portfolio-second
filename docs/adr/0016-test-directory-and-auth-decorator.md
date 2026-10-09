@@ -17,7 +17,7 @@
   - テスト用の道具 (テストではないもの) は `*.test.ts` にしない名前で隣に置く (例 `test/app/api/now/helpers.ts`)
   - `src/` は作らない。E2E (`e2e/`) と eval (`evals/`) の置き場所は変えない
 - **認証の要る API は `decorator/` のデコレータで Route Handler を包む**
-  - `withBearerAuth({ tokenEnv, realm }, handler)` が `Authorization: Bearer <トークン>` を環境変数の値と定数時間で比べ、通ったときだけ `handler` を呼ぶ。トークン未設定は 503、不一致は 401
+  - `withBearerAuth({ tokenEnv, realm }, handler)` が `Authorization: Bearer <トークン>` を環境変数の値と定数時間で比べ、通ったときだけ `handler` を呼ぶ。トークン未設定は 503、不一致は 401 (どちらも `HttpError` を投げ、外側の `withErrorHandling` がレスポンスにする。[ADR 0017](0017-api-client-and-error-decorator.md))
   - JS のデコレータ構文 (`@`) はクラスにしか付かないので、関数を包む高階関数にする
   - 機能ごとの設定 (どの環境変数か) は機能の側に置く (例 `lib/now/auth.ts` の `nowWriteAuth`)
 

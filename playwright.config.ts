@@ -37,6 +37,8 @@ export default defineConfig({
           MOONSHOT_API_KEY: "",
           NOW_POST_TOKEN: nowPostToken,
           NOW_POSTS_STORE: "memory",
+          // E2E から本物の Slack に通知しない
+          SLACK_WEBHOOK_URL: "",
           UPSTASH_REDIS_REST_URL: "",
           UPSTASH_REDIS_REST_TOKEN: "",
           KV_REST_API_URL: "",

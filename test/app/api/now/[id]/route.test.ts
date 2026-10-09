@@ -5,7 +5,12 @@ import { DELETE, PUT } from "@/app/api/now/[id]/route"
 import { POST } from "@/app/api/now/route"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
-import { jsonRequest, paramsOf, useMemoryStoreEnv } from "../helpers"
+import { jsonRequest, paramsOf, useMemoryStoreEnv, useSlackMock } from "../helpers"
+
+// after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
+const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
+vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }))
+const runAfterTasks = () => Promise.all(afterTasks.splice(0).map((task) => task()))
 
 async function create(title = "元の題名"): Promise<NowPost> {
   const res = await POST(jsonRequest("POST", "/api/now", { title, body: "元の本文", publishedAt: "2026-01-01T00:00:00Z" }), paramsOf({}))
@@ -20,7 +25,9 @@ describe("PUT /api/now/[id]", () => {
   beforeEach(useMemoryStoreEnv)
   afterEach(() => {
     vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
     vi.useRealTimers()
+    afterTasks.length = 0
   })
 
   it("題名と本文を置き換え、公開日を省略したら元のまま、更新日時を付ける", async () => {
@@ -44,6 +51,17 @@ describe("PUT /api/now/[id]", () => {
     const { id } = await create()
     const res = await put(id, { title: "t", body: "b", publishedAt: "2026-02-01T09:00:00+09:00" })
     expect(((await res.json()) as NowPost).publishedAt).toBe("2026-02-01T00:00:00.000Z")
+  })
+
+  it("更新できたら Slack に送り、ない記事なら送らない", async () => {
+    const { id } = await create()
+    const slack = useSlackMock()
+
+    expect((await put(id, { title: "直した題名", body: "直した本文" })).status).toBe(200)
+    expect((await put("missing", { title: "t", body: "b" })).status).toBe(404)
+    await runAfterTasks()
+
+    expect(slack.sent().map((m) => m.text)).toEqual([":pencil2: /now の記事を更新しました: 直した題名"])
   })
 
   it("ない記事なら 404 で、新しく作らない", async () => {

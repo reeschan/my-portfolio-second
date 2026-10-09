@@ -57,9 +57,10 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
     - 3D 背景のシーンは `features/background/themes/<id>.tsx` に 1 テーマ 1 ファイル。一覧と選択のストアは `lib/background-theme.ts` (ADR 0012)
 - `data/`: 表示データ (`career.ts` `skills.ts` `works.ts` `now.ts`)。/now の記事は `data/` ではなく `POST /api/now` で投稿する
   - `resume.md` と `profile-freelance.md` はチャットのサーバー側でのみ読む。`public/` には置かない
-- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)
+- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)、`slack/` (Slack への通知 `notifySlack`、ADR 0018)
 - `hooks/`: `use-media-query.ts`、`use-is-client.ts`
 - `decorator/`: Route Handler を包むデコレータ。すべての API は `withErrorHandling` で包み、認証が要るものはその内側を `withBearerAuth` で包む (ADR 0016、0017)
+  - Slack に知らせたい API は `withErrorHandling` と `withBearerAuth` の間を `withSlackNotify` で包む。送る中身は `lib/<機能>/notify.ts` で組み立てる (ADR 0018)
 - `test/`: ユニットテスト (Vitest)。ソースと同じ階層に置く (`lib/now/store.ts` → `test/lib/now/store.test.ts`)
 - `evals/privacy/`: チャットのプライバシー eval。合格した結果は `success/` に残す
 - `docs/`: `adr/` (設計判断)、`pbi/` (PBI と WORK)、`design/` (テーマと部品)、`agents/` (エージェントの手順)、`testing/`
@@ -103,6 +104,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
   - E2E は `page.route("**/api/chat", ...)` でモックする
   - ユニットは `fetch` をモックする
   - 本物の LLM を呼ぶのは `evals/privacy/` だけ。CI からは呼ばない
+- **本物の Slack にも通知しない**。テストは `SLACK_WEBHOOK_URL` を空にするか、設定するときは `fetch` をモックする。`after()` は `vi.mock("next/server", ...)` で差し替える
 - 固定の `waitForTimeout` を使わない。Web-first アサーション (`await expect(...).toBeVisible()`) で待つ
 - ページを足したら `lib/navigation.ts` と `e2e/fixtures.ts` の `pages` の両方に足す
 - チャットのシステムプロンプトを変えたら、`pnpm eval:privacy` で Success を出してもらい、その記録を同じ PR に入れる

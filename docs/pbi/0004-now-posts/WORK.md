@@ -26,12 +26,14 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-09: `data/now.ts` の `lastUpdated` と `sections` は記事に置き換わるので消した。更新日は最新の記事の公開日から出す。拠点と受付状況は残した
 - 2026-10-09: E2E は並列で同じサーバーに投稿するので、題名を毎回一意にし、件数や先頭の記事には頼らない書き方にした
 - 2026-10-09: スクリーンショットで、カードの抜粋に `[x]` と表の `---` が残るのに気づき直した。チェックリストが混ざった箇条書きで黒丸が消えていたのも直した
+- 2026-10-09: コミットゲートの E2E で `e2e/background-theme.spec.ts` (テーマ切り替え) がときどき落ちた。main の本番ビルドでも 36 回中 1 回落ちるので既存のフレーク (3D シーンの描画でクリックが待たされる)。この PBI では直さない。ゲートは本番ビルドを立てて `E2E_BASE_URL` を向けて実行し、合格した
 - 見送り: 記事ごとの URL (`/now#id` で開く)、RSS への反映、編集 API
 
 ## 検証
 
 ```
 pnpm lint && pnpm typecheck && pnpm test:unit   # 97 passed
-pnpm build && CI=1 pnpm test:e2e                # 105 passed
 CI=1 pnpm test:e2e e2e/now.spec.ts --repeat-each 3   # 18 passed
+pnpm build && NOW_POST_TOKEN=e2e-now-post-token NOW_POSTS_STORE=memory pnpm start --port 3100
+E2E_BASE_URL=http://localhost:3100 pnpm commit-gate  # 105 passed、合格
 ```

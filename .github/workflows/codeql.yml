@@ -1,0 +1,41 @@
+name: codeql
+
+# GitHub の静的解析 (CodeQL) で、JavaScript / TypeScript と GitHub Actions のセキュリティ上の問題を探す (ADR 0014)
+# 結果はリポジトリの Security タブに出る。ci-ok の必須チェックには含めない (誤検知でマージを止めないため)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # 依存や解析ルールの更新で新しく見つかるものを拾う (月曜 9:00 JST)
+    - cron: "0 0 * * 1"
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, actions]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          category: /language:${{ matrix.language }}

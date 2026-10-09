@@ -38,3 +38,4 @@
 | [0011](0011-self-marketplace.md) | 共有スキルを Self 組織のプラグインマーケットプレイスで配る | 採用 |
 | [0012](0012-background-themes.md) | 3D 背景のテーマ: 選べるシーンをテーマごとのファイルに分け、色はシーンが持つ | 採用 |
 | [0013](0013-typescript-strictness-and-complexity.md) | TypeScript の厳格化: 添字アクセスの検査・型情報つき lint・循環的複雑度の上限・外部入力のスキーマ | 採用 |
+| [0014](0014-formatter-and-repo-automation.md) | 書式とリポジトリの自動化: Prettier・Dependabot・CodeQL・CI の共通化 | 採用 |

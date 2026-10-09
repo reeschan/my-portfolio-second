@@ -1,7 +1,7 @@
 // @perspectives api-contract
 // @routes /api/chat
 import { describe, expect, it } from "vitest"
-import { chatRequestSchema, sseChunkSchema } from "./schema"
+import { chatRequestSchema, sseChunkSchema } from "@/lib/chat/schema"
 
 describe("chatRequestSchema", () => {
   it("直近 20 件だけを残し、古い発言の形は問わない", () => {

@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 // ストアはモジュール内に状態 (購読者・メモリ上の選択) を持つので、テストごとに読み込み直す
 async function loadStore() {
   vi.resetModules()
-  return import("./background-theme")
+  return import("@/lib/background-theme")
 }
 
 function fakeStorage(): Storage {
@@ -35,7 +35,7 @@ describe("backgroundThemes", () => {
   it("どのテーマにも 3D シーンのファイルがある", async () => {
     const { backgroundThemes } = await loadStore()
     for (const t of backgroundThemes) {
-      const file = path.resolve(__dirname, "../components/features/background/themes", `${t.id}.tsx`)
+      const file = path.resolve(__dirname, "../../components/features/background/themes", `${t.id}.tsx`)
       expect(existsSync(file), file).toBe(true)
     }
   })

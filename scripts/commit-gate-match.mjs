@@ -1,5 +1,5 @@
 // commit-gate フック (.claude/hooks/commit-gate.mjs) が「このコマンドはコミットか」を判定する部分。
-// 判定を誤ると、関係ないコマンドが止まったりゲートをすり抜けたりするので、scripts/commit-gate-match.test.ts で検証する
+// 判定を誤ると、関係ないコマンドが止まったりゲートをすり抜けたりするので、test/scripts/commit-gate-match.test.ts で検証する
 
 // ヒアドキュメントの本文と引用符の中身は「実行されるコマンド」ではないので除く
 // (ドキュメントやコミットメッセージに "git commit" と書いただけで止めないため)

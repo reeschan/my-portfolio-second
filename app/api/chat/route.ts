@@ -1,3 +1,7 @@
+import { withErrorHandling } from "@/decorator/with-error-handling"
+import { apiFetch } from "@/lib/api/client"
+import { ApiError, HttpError } from "@/lib/api/errors"
+import { readJsonBody } from "@/lib/api/request"
 import { createRedactingStream } from "@/lib/chat/redact"
 import { isRateLimited } from "@/lib/chat/rate-limit"
 import { chatRequestSchema, sseChunkSchema } from "@/lib/chat/schema"
@@ -54,9 +58,12 @@ function createSseContentStream() {
   })
 }
 
-// 上流 (Moonshot) に会話を渡し、SSE のレスポンスを返す。失敗したら null
+// 上流 (Moonshot) に会話を渡し、SSE の本文を返す。失敗は apiFetch が ApiError を投げる
 async function requestCompletion(messages: ChatMessage[], apiKey: string, signal: AbortSignal) {
-  const upstream = await fetch(`${baseUrl}/chat/completions`, {
+  const upstream = await apiFetch(`${baseUrl}/chat/completions`, {
+    service: "Moonshot",
+    // 回答をストリームで流しきるまで含めて、関数の上限 (maxDuration) より手前で打ち切る
+    timeoutMs: 55_000,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -70,44 +77,34 @@ async function requestCompletion(messages: ChatMessage[], apiKey: string, signal
       messages: [{ role: "system", content: await buildSystemPrompt() }, ...messages],
     }),
     signal,
-  }).catch(() => null)
-
-  if (upstream?.ok && upstream.body) return upstream.body
-  if (upstream) console.error("Kimi API error", upstream.status, await upstream.text().catch(() => ""))
-  return null
-}
-
-export async function POST(request: Request) {
-  const apiKey = process.env.MOONSHOT_API_KEY
-  if (!apiKey) {
-    return Response.json({ error: "チャット機能は現在ご利用いただけません。" }, { status: 503 })
-  }
-
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-  if (isRateLimited(ip)) {
-    return Response.json({ error: "リクエストが多すぎます。しばらく時間をおいてからお試しください。" }, { status: 429 })
-  }
-
-  const parsed = chatRequestSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) {
-    return Response.json({ error: "メッセージの形式が正しくありません。" }, { status: 400 })
-  }
-
-  const upstream = await requestCompletion(parsed.data, apiKey, request.signal)
-  if (!upstream) {
-    return Response.json({ error: "回答の生成に失敗しました。時間をおいて再度お試しください。" }, { status: 502 })
-  }
-
-  const stream = upstream
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(createSseContentStream())
-    .pipeThrough(createRedactingStream())
-    .pipeThrough(new TextEncoderStream())
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
   })
+  if (!upstream.body) throw new ApiError("Moonshot", upstream.status, null, { detail: "empty body" })
+  return upstream.body
 }
+
+export const POST = withErrorHandling(
+  async (request) => {
+    const apiKey = process.env.MOONSHOT_API_KEY
+    if (!apiKey) throw new HttpError(503, "チャット機能は現在ご利用いただけません。")
+
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+    if (isRateLimited(ip)) throw new HttpError(429, "リクエストが多すぎます。しばらく時間をおいてからお試しください。")
+
+    const messages = await readJsonBody(request, chatRequestSchema, "メッセージの形式が正しくありません。")
+    const upstream = await requestCompletion(messages, apiKey, request.signal)
+
+    const stream = upstream
+      .pipeThrough(new TextDecoderStream())
+      .pipeThrough(createSseContentStream())
+      .pipeThrough(createRedactingStream())
+      .pipeThrough(new TextEncoderStream())
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    })
+  },
+  { upstream: "回答の生成に失敗しました。時間をおいて再度お試しください。" },
+)

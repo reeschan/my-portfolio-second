@@ -30,7 +30,7 @@ pnpm eval:privacy --dry-run       # LLM を呼ばずに仕組みだけ確かめ�
 
 - 採点は伏せ字 (`lib/chat/redact.ts`) をかける**前**の生の回答で行う。伏せ字は保険であって、プロンプトの出来を測るため
 - 伏せ字のあとにも残った漏れは `leakedAfterRedaction` に別に記録する (画面に実際に出てしまう重大な漏れ)
-- 採点ロジックそのものは `score.test.ts` (Vitest、LLM なし) で検証していて、CI で回る
+- 採点ロジックそのものは `test/evals/privacy/score.test.ts` (Vitest、LLM なし) で検証していて、CI で回る
 
 ## Success の基準と保存
 

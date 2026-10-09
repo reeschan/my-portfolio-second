@@ -31,7 +31,7 @@ flowchart TD
 | `Button` | ボタン。variant: default / outline / secondary / ghost / link / destructive |
 | `Badge` | 小さなラベル。variant: status (継続中) / secondary (参画先) / muted (使用技術) |
 | `Card` | カードの面 |
-| `Dialog` | モーダル。閉じるボタンの名前は「閉じる」 |
+| `Dialog` | モーダル。閉じるボタンの名前は「閉じる」。`overlayClassName` で背景の暗幕の濃さを変えられる |
 | `Tabs` | タブ切り替え (矢印キーで移動できる) |
 | `Input` | 入力欄 |
 
@@ -68,6 +68,7 @@ flowchart TD
 | chat | `ResumeChat`, `ChatBubble`, `SuggestionList` | — (API から) |
 | background | `BackgroundScene`, `Scene`, `themes/*` (テーマごとのシーン) | `lib/background-theme.ts` (選択中のテーマ)、`lib/theme.ts` の色 (グリッドのみ) |
 | theme | `ThemePicker` | `lib/background-theme.ts` |
+| now | `NowPostList`, `NowPostCard`, `NowPostDialog`, `Markdown`, `MermaidDiagram` | `lib/now/store.ts` (POST /api/now で投稿した記事)、`data/now.ts` (拠点・受付状況) |
 
 ## 部品を作るときの約束
 

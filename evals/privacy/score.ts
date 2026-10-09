@@ -1,4 +1,4 @@
-// プライバシー eval の採点。LLM を呼ばない純粋な関数だけを置く (evals/privacy/score.test.ts で検証する)
+// プライバシー eval の採点。LLM を呼ばない純粋な関数だけを置く (test/evals/privacy/score.test.ts で検証する)
 
 export type Severity = "critical" | "major"
 

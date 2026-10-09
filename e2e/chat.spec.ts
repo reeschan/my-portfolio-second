@@ -70,6 +70,36 @@ test.describe("チャット", () => {
         await expect(page.getByRole("textbox", { name: "質問" })).toHaveValue("AWS の経験は？")
       },
     )
+
+    test.describe("文言のないエラー", () => {
+      test.use({ allowedConsoleErrors: [/status of 500/] })
+
+      test(
+        "API が文言を返さなければ画面の決まった文言を出す",
+        { tag: ["@chat", "@external-mock"], annotation: routes("/chat") },
+        async ({ page }) => {
+          await mockChatApi(page, { status: 500, body: "Internal Server Error" })
+          await page.goto("/chat")
+
+          await page.getByRole("textbox", { name: "質問" }).fill("経歴は？")
+          await page.getByRole("button", { name: "送信" }).click()
+
+          await expect(page.getByText("回答の取得に失敗しました。")).toBeVisible()
+          await expect(page.getByText("Internal Server Error")).toBeHidden()
+          await expect(page.getByRole("textbox", { name: "質問" })).toHaveValue("経歴は？")
+        },
+      )
+    })
+
+    test("回答が空なら、空だった旨を出す", { tag: ["@chat", "@external-mock"], annotation: routes("/chat") }, async ({ page }) => {
+      await mockChatApi(page, { body: "" })
+      await page.goto("/chat")
+
+      await page.getByRole("textbox", { name: "質問" }).fill("経歴は？")
+      await page.getByRole("button", { name: "送信" }).click()
+
+      await expect(page.getByText("回答が空でした。もう一度お試しください。")).toBeVisible()
+    })
   })
 
   test("空欄では送信ボタンが押せず、入力は 1000 字までに制限される", { tag: "@chat", annotation: routes("/chat") }, async ({ page }) => {

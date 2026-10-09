@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { apiFetch } from "@/lib/api/client"
+import { userMessageOf } from "@/lib/api/errors"
 import type { ChatMessage } from "@/types/chat-types"
 import { ChatBubble } from "./chat-bubble"
 import { SuggestionList } from "./suggestion-list"
@@ -16,13 +18,6 @@ const suggestions = [
   "AWS の経験と資格は？",
 ]
 
-// API が返したエラー文 ({ error: string }) を取り出す。形が違えば決まった文言にする
-async function errorMessageOf(res: Response): Promise<string> {
-  const data: unknown = await res.json().catch(() => null)
-  if (typeof data === "object" && data !== null && "error" in data && typeof data.error === "string") return data.error
-  return "回答の取得に失敗しました。"
-}
-
 // ストリームを読み切り、途中経過を onProgress に渡す。読み終えた全文を返す
 async function readStream(body: NonNullable<Response["body"]>, onProgress: (partial: string) => void): Promise<string> {
   const reader = body.pipeThrough(new TextDecoderStream()).getReader()
@@ -33,6 +28,19 @@ async function readStream(body: NonNullable<Response["body"]>, onProgress: (part
     answer += value
     onProgress(answer)
   }
+}
+
+// /api/chat に会話を送り、回答のストリームを読み切って返す。失敗は apiFetch が ApiError を投げる
+async function askChat(history: ChatMessage[], onProgress: (partial: string) => void): Promise<string> {
+  const res = await apiFetch("/api/chat", {
+    service: "chat",
+    // 回答の長さはサーバー側 (maxDuration) で抑えるので、ここでは打ち切らない
+    timeoutMs: false,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: history }),
+  })
+  return res.body ? readStream(res.body, onProgress) : ""
 }
 
 export function ResumeChat() {
@@ -56,27 +64,24 @@ export function ResumeChat() {
     setError(null)
     setIsLoading(true)
 
+    // 失敗の文言はここ (画面) で決める。API が返した文言があればそれを、なければこの画面の文言を出す
+    let failure: string | null = null
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
-      })
-
-      if (!res.ok || !res.body) throw new Error(await errorMessageOf(res))
-
-      const answer = await readStream(res.body, (partial) => {
+      const answer = await askChat(history, (partial) => {
         setMessages([...history, { role: "assistant", content: partial }])
       })
-      if (!answer) throw new Error("回答が空でした。もう一度お試しください。")
+      if (!answer) failure = "回答が空でした。もう一度お試しください。"
     } catch (e) {
+      failure = userMessageOf(e, "回答の取得に失敗しました。")
+    }
+
+    if (failure) {
       // 失敗した質問は入力欄に戻して、再送しやすくする
       setMessages(messages)
       setInput(content)
-      setError(e instanceof Error ? e.message : "回答の取得に失敗しました。")
-    } finally {
-      setIsLoading(false)
+      setError(failure)
     }
+    setIsLoading(false)
   }
 
   function handleSubmit(e: FormEvent) {

@@ -1,7 +1,7 @@
 // @perspectives api-contract
 // @routes /api/chat
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { isRateLimited } from "./rate-limit"
+import { isRateLimited } from "@/lib/chat/rate-limit"
 
 describe("isRateLimited", () => {
   beforeEach(() => {

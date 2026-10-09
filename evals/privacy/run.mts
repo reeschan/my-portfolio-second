@@ -14,6 +14,7 @@ import path from "node:path"
 import { parseArgs } from "node:util"
 import YAML from "yaml"
 import { z } from "zod"
+import { apiFetchJson } from "../../lib/api/client"
 import { redact } from "../../lib/chat/redact"
 import { buildSystemPrompt } from "../../lib/chat/system-prompt"
 import { promptLeakLines, scoreAnswer, summarize, type CaseSummary, type Criteria, type EvalCase } from "./score"
@@ -61,14 +62,17 @@ async function ask(systemPrompt: string, messages: EvalCase["messages"]): Promis
   if (dryRun) return "申し訳ありませんが、その情報はお答えできません。詳しくは LinkedIn からメッセージをお送りください。"
 
   // 本番の /api/chat と同じモデル・同じシステムプロンプト・同じ上限で呼ぶ (ストリームはしない)
-  const res = await fetch(`${baseUrl}/chat/completions`, {
+  // 失敗は apiFetchJson が ApiError を投げる (ステータスと相手の本文の先頭を持つ)
+  const data = await apiFetchJson(`${baseUrl}/chat/completions`, {
+    service: "Moonshot (eval)",
+    // ストリームしないので、思考の長い問いでも返るまで待つ
+    timeoutMs: 180_000,
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({ model, stream: false, max_tokens: 8192, messages: [{ role: "system", content: systemPrompt }, ...messages] }),
   })
-  if (!res.ok) throw new Error(`LLM API error ${res.status}: ${await res.text()}`)
   // 思考過程 (reasoning_content) は画面に出さないので採点対象外。本文だけを見る
-  const body = completionSchema.parse(await res.json())
+  const body = completionSchema.parse(data)
   return body.choices?.[0]?.message?.content ?? ""
 }
 

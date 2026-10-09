@@ -12,7 +12,7 @@ version: 1
 
 tools:
   e2e: playwright   # e2e/*.spec.ts
-  unit: vitest      # **/*.test.ts (ソースの隣に置く)
+  unit: vitest      # test/**/*.test.ts (ソースと同じ階層で test/ の下に置く。docs/adr/0016)
 
 # 対象外にするルート (テスト不要と判断したもの)。理由も書く
 exclude_routes: []
@@ -60,14 +60,14 @@ perspectives:
     required: true
     applies_to: api
     description: API ルートの入力検証・ステータスコード・レスポンス形式
-    how: ルートの隣に route.test.ts を置き、Vitest で POST/GET を直接呼ぶ (例 app/api/chat/route.test.ts)
+    how: test/ の同じ階層に route.test.ts を置き、Vitest で POST/GET を直接呼ぶ (例 test/app/api/chat/route.test.ts)
 
   privacy:
     enabled: true
     required: false
     routes: [/api/chat]
     description: チャットの回答から連絡先 (メール・電話・郵便番号) が漏れない。思考過程を返さない
-    how: lib/chat/redact.test.ts と app/api/chat/route.test.ts
+    how: test/lib/chat/redact.test.ts と test/app/api/chat/route.test.ts
 
   a11y:
     enabled: true
@@ -104,7 +104,7 @@ perspectives:
     required: false
     routes: [/api/chat]
     description: 自前のシステムプロンプトで、個人情報 (連絡先・住所など) や指示文を返さないことを、本物の LLM に対して採点する
-    how: evals/privacy/ (pnpm eval:privacy)。外部 LLM を呼ぶので CI・E2E では回さない。採点ロジックは evals/privacy/score.test.ts で検証する (docs/adr/0008-chat-privacy-eval.md)
+    how: evals/privacy/ (pnpm eval:privacy)。外部 LLM を呼ぶので CI・E2E では回さない。採点ロジックは test/evals/privacy/score.test.ts で検証する (docs/adr/0008-chat-privacy-eval.md)
 
   visual-regression:
     enabled: false

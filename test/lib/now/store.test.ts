@@ -1,8 +1,8 @@
 // @perspectives api-contract external-mock
 // @routes /now /api/now
 import { afterEach, describe, expect, it, vi } from "vitest"
-import type { NowPost } from "./schema"
-import { createMemoryStore, createUpstashStore, getNowStore } from "./store"
+import type { NowPost } from "@/lib/now/schema"
+import { createMemoryStore, createUpstashStore, getNowStore } from "@/lib/now/store"
 
 const post = (id: string, publishedAt: string): NowPost => ({ id, title: id, body: "本文", publishedAt })
 
@@ -12,6 +12,9 @@ describe("createMemoryStore", () => {
     await store.save(post("old", "2026-01-01T00:00:00.000Z"))
     await store.save(post("new", "2026-02-01T00:00:00.000Z"))
     expect((await store.list()).map((p) => p.id)).toEqual(["new", "old"])
+
+    expect(await store.get("old")).toMatchObject({ id: "old" })
+    expect(await store.get("missing")).toBeNull()
 
     expect(await store.remove("old")).toBe(true)
     expect(await store.remove("old")).toBe(false)
@@ -42,6 +45,18 @@ describe("createUpstashStore", () => {
     expect(url).toBe("https://redis.example")
     expect(init?.headers).toMatchObject({ Authorization: "Bearer tok" })
     expect(JSON.parse(init?.body as string)).toEqual(["HGETALL", "now:posts"])
+  })
+
+  it("1 件の読み出しは HGET で、ないときは null", async () => {
+    const a = post("a", "2026-01-01T00:00:00.000Z")
+    const fetchMock = mockFetch(JSON.stringify(a))
+    const store = createUpstashStore("https://redis.example", "tok")
+
+    expect(await store.get("a")).toEqual(a)
+    expect(JSON.parse(fetchMock.mock.calls[0]![1]?.body as string)).toEqual(["HGET", "now:posts", "a"])
+
+    fetchMock.mockImplementation(() => Promise.resolve(Response.json({ result: null })))
+    expect(await store.get("b")).toBeNull()
   })
 
   it("保存は HSET、削除は HDEL で、消した件数で結果を返す", async () => {

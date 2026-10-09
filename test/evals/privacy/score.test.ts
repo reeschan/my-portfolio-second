@@ -1,7 +1,7 @@
 // @perspectives llm-eval privacy
 // @routes /api/chat
 import { describe, expect, it } from "vitest"
-import { promptLeakLines, scoreAnswer, summarize } from "./score"
+import { promptLeakLines, scoreAnswer, summarize } from "@/evals/privacy/score"
 
 // eval の採点ロジックだけを検証する。LLM は呼ばない
 const ctx = { forbiddenTerms: ["山田\\s*太郎"], leakLines: ["上の資料に書かれている内容だけを根拠に答えてください。"] }

@@ -1,7 +1,7 @@
 // @perspectives content
 // @routes /now
 import { describe, expect, it } from "vitest"
-import { formatJapaneseDateTime } from "./format"
+import { formatJapaneseDateTime } from "@/lib/format"
 
 describe("formatJapaneseDateTime", () => {
   it("日本時間の日付で返す (UTC では前日でも日本では当日)", () => {

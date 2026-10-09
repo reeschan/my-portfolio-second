@@ -1,7 +1,7 @@
 // @perspectives api-contract external-mock privacy
 // @routes /api/chat
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { POST } from "./route"
+import { POST } from "@/app/api/chat/route"
 
 // 本物の Moonshot API は呼ばない (testing/e2e-policy.yml の external-mock 観点)
 let ipSeq = 0

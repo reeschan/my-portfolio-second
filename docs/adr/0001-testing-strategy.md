@@ -16,7 +16,7 @@
 ## 決定
 
 1. **E2E は Playwright、ユニット・API は Vitest** を使う
-   - E2E は `e2e/`、ユニットはソースの隣 (`*.test.ts`) に置く
+   - E2E は `e2e/`、ユニットはソースの隣 (`*.test.ts`) に置く (→ ユニットの置き場所は [ADR 0016](0016-test-directory-and-auth-decorator.md) で `test/` に変えた)
 2. **テスト観点の正本を `testing/e2e-policy.yml` に置く**
    - 観点ごとに `enabled` / `required` / 対象ルートを宣言する
    - 観点の追加・無効化はこのファイルの変更で行う

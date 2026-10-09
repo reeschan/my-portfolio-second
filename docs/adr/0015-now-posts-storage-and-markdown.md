@@ -14,11 +14,11 @@ Vercel のサーバーレス関数はファイルに書いても残らないの�
 ## 決定
 
 - **保存先は Upstash Redis** (Vercel Marketplace から追加する)。記事は 1 つのハッシュ `now:posts` に `id → JSON` で入れる
-  - SDK は入れず、REST API (`HGETALL` / `HSET` / `HDEL`) を `fetch` で直接呼ぶ (`lib/now/store.ts`)
+  - SDK は入れず、REST API (`HGETALL` / `HGET` / `HSET` / `HDEL`) を `fetch` で直接呼ぶ (`lib/now/store.ts`)
   - 環境変数は `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`、または Vercel KV の名前 `KV_REST_API_URL` / `KV_REST_API_TOKEN`
   - Redis が未設定なら、開発中と `NOW_POSTS_STORE=memory` (E2E) のときだけプロセス内のメモリに保存する。本番で未設定なら投稿は 503 にし、一覧は空にする
 - **認可は固定のトークン**。`Authorization: Bearer <NOW_POST_TOKEN>` と定数時間で比べる。未設定なら誰も投稿できない
-- **API**: `POST /api/now` (足す)、`DELETE /api/now/[id]` (消す)。編集は「消して足し直す」で済ませる
+- **API**: `POST /api/now` (足す)、`PUT /api/now/[id]` (書き換える。公開日を省くと元のまま)、`DELETE /api/now/[id]` (消す)。認証は `decorator/` のデコレータで掛ける ([ADR 0016](0016-test-directory-and-auth-decorator.md))
 - **描画**: `react-markdown` + `remark-gfm`。生の HTML は描かない。` ```mermaid ` のコードブロックだけ `mermaid` で SVG にする
   - mermaid は大きいので、図を開いたときに動的 import する。`securityLevel: "strict"`
 - /now はリクエストごとに保存先から読む (`connection()`)。書き込み後のキャッシュ破棄は要らない
@@ -39,5 +39,5 @@ Vercel のサーバーレス関数はファイルに書いても残らないの�
 - 記事はトークンを持つ本人だけが、デプロイなしで足せる。保存先が落ちてもページは出る (一覧が空になる)
 - 依存に `react-markdown` / `remark-gfm` / `mermaid` が増える。mermaid は記事のダイアログを開いたときだけ読み込む
 - E2E は webServer にテスト専用のトークンとメモリの保存先を渡し、本物の Redis に書かない (`playwright.config.ts`)
-- 新しい API ルート `/api/now` は `api-contract` 観点の対象。`app/api/now/route.test.ts` で検証する
+- 新しい API ルート `/api/now` は `api-contract` 観点の対象。`test/app/api/now/` で検証する
 - 画像の埋め込み・下書き・編集画面は扱わない。必要になったら別の PBI で考える

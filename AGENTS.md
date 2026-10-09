@@ -57,8 +57,10 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
     - 3D 背景のシーンは `features/background/themes/<id>.tsx` に 1 テーマ 1 ファイル。一覧と選択のストアは `lib/background-theme.ts` (ADR 0012)
 - `data/`: 表示データ (`career.ts` `skills.ts` `works.ts` `now.ts`)。/now の記事は `data/` ではなく `POST /api/now` で投稿する
   - `resume.md` と `profile-freelance.md` はチャットのサーバー側でのみ読む。`public/` には置かない
-- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・投稿トークンの検証、ADR 0015)
+- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)
 - `hooks/`: `use-media-query.ts`、`use-is-client.ts`
+- `decorator/`: Route Handler を包むデコレータ。認証が要る API は `withBearerAuth` で包む (ADR 0016)
+- `test/`: ユニットテスト (Vitest)。ソースと同じ階層に置く (`lib/now/store.ts` → `test/lib/now/store.test.ts`)
 - `evals/privacy/`: チャットのプライバシー eval。合格した結果は `success/` に残す
 - `docs/`: `adr/` (設計判断)、`pbi/` (PBI と WORK)、`design/` (テーマと部品)、`agents/` (エージェントの手順)、`testing/`
 - `plugins/self-base/` + `.claude-plugin/marketplace.json`: Self 組織の共通スキル (`start-pbi`、`create-pr`)
@@ -90,6 +92,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 - 各テストに観点タグと対象ルートを付ける。付けないとカバレッジ表に載らない
   - 観点タグは方針ファイルのキー名を使う (`tag: ["@smoke"]` など)
   - 対象ルートは `annotation: routes("/chat")` のように書く
+- ユニットテストは `test/` の下に、ソースと同じ階層で置く。ソースは `@/` で import する (ADR 0016)
 - Vitest のファイルは先頭に `// @perspectives <観点...>` と `// @routes <ルート...>` を書く
   - ルートに紐づかない道具のテストは `// @coverage-map ignore <理由>` を書く
 - 要素はロールとアクセシブルネームで取る (`getByRole`)。CSS クラスや DOM 構造に依存しない

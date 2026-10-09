@@ -22,6 +22,11 @@ export function NowPostDialog({ post, open, onOpenChange }: NowPostDialogProps) 
               <DialogTitle className="pr-6 text-2xl">{post.title}</DialogTitle>
               <DialogDescription>
                 <time dateTime={post.publishedAt}>{formatJapaneseDateTime(post.publishedAt)}</time>
+                {post.updatedAt && (
+                  <>
+                    （<time dateTime={post.updatedAt}>{formatJapaneseDateTime(post.updatedAt)}</time>更新）
+                  </>
+                )}
               </DialogDescription>
             </DialogHeader>
             <Markdown>{post.body}</Markdown>

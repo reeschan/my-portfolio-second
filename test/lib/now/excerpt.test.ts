@@ -1,7 +1,7 @@
 // @perspectives content
 // @routes /now
 import { describe, expect, it } from "vitest"
-import { excerptOf } from "./excerpt"
+import { excerptOf } from "@/lib/now/excerpt"
 
 describe("excerptOf", () => {
   it("Markdown の記号を落として平文にする", () => {

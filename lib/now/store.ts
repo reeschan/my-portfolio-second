@@ -3,6 +3,8 @@ import { nowPostSchema, sortNewestFirst, type NowPost } from "./schema"
 // /now の投稿の保存先。本番は Upstash Redis (Vercel Marketplace)、開発と E2E はプロセス内のメモリ (ADR 0015)
 export interface NowPostStore {
   list(): Promise<NowPost[]>
+  // 見つからなければ null
+  get(id: string): Promise<NowPost | null>
   save(post: NowPost): Promise<void>
   // 消せたら true、見つからなければ false
   remove(id: string): Promise<boolean>
@@ -10,7 +12,7 @@ export interface NowPostStore {
 
 const hashKey = "now:posts"
 
-// Upstash の REST API を fetch で直接呼ぶ。使うコマンドは 3 つだけなので SDK は入れない
+// Upstash の REST API を fetch で直接呼ぶ。使うコマンドは 4 つだけなので SDK は入れない
 export function createUpstashStore(url: string, token: string): NowPostStore {
   async function command<T>(...args: string[]): Promise<T> {
     const res = await fetch(url, {
@@ -29,6 +31,10 @@ export function createUpstashStore(url: string, token: string): NowPostStore {
       const flat = (await command<string[] | null>("HGETALL", hashKey)) ?? []
       const values = flat.filter((_, i) => i % 2 === 1)
       return sortNewestFirst(values.flatMap(parsePost))
+    },
+    async get(id) {
+      const raw = await command<string | null>("HGET", hashKey, id)
+      return raw === null ? null : (parsePost(raw)[0] ?? null)
     },
     async save(post) {
       await command("HSET", hashKey, post.id, JSON.stringify(post))
@@ -53,6 +59,7 @@ export function createMemoryStore(): NowPostStore {
   const posts = new Map<string, NowPost>()
   return {
     list: () => Promise.resolve(sortNewestFirst([...posts.values()])),
+    get: (id) => Promise.resolve(posts.get(id) ?? null),
     save: (post) => {
       posts.set(post.id, post)
       return Promise.resolve()

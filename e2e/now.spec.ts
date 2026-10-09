@@ -1,5 +1,6 @@
 import type { APIRequestContext } from "@playwright/test"
 import { expect, nowPostToken, routes, test } from "./fixtures"
+import { formatJapaneseDateTime } from "../lib/format"
 
 // /now の記事 (PBI-0004)。記事は POST /api/now で仕込む (保存先は webServer のメモリ。playwright.config.ts)
 // 並列のテストが同じサーバーに投稿するので、題名は毎回一意にし、件数や先頭の記事には頼らない
@@ -8,12 +9,15 @@ type Post = { title: string; body: string; publishedAt?: string }
 
 const uniqueTitle = (label: string) => `${label} ${crypto.randomUUID().slice(0, 8)}`
 
-async function createPost(request: APIRequestContext, post: Post) {
+const auth = { Authorization: `Bearer ${nowPostToken}` }
+
+async function createPost(request: APIRequestContext, post: Post): Promise<{ id: string }> {
   const res = await request.post("/api/now", {
-    headers: { Authorization: `Bearer ${nowPostToken}` },
+    headers: auth,
     data: post,
   })
   expect(res.status(), await res.text()).toBe(201)
+  return (await res.json()) as { id: string }
 }
 
 test.describe("Now の記事", () => {
@@ -102,6 +106,45 @@ test.describe("Now の記事", () => {
       expect(res.status()).toBe(401)
 
       await page.goto("/now")
+      await expect(page.getByRole("heading", { name: title })).toHaveCount(0)
+    },
+  )
+
+  test(
+    "PUT で直した記事は題名と本文が変わり、更新日が出る",
+    { tag: "@interaction", annotation: routes("/now", "/api/now/[id]") },
+    async ({ page, request }) => {
+      const before = uniqueTitle("直す前")
+      const after = uniqueTitle("直した後")
+      const { id } = await createPost(request, { title: before, body: "誤字あり", publishedAt: "2026-01-01T00:00:00+09:00" })
+
+      const res = await request.put(`/api/now/${id}`, { headers: auth, data: { title: after, body: "誤字なし" } })
+      expect(res.status()).toBe(200)
+      const { updatedAt } = (await res.json()) as { updatedAt: string }
+
+      await page.goto("/now")
+      await expect(page.getByRole("heading", { name: before })).toHaveCount(0)
+      await page.getByRole("button", { name: after }).click()
+
+      const dialog = page.getByRole("dialog", { name: after })
+      await expect(dialog.getByText("誤字なし")).toBeVisible()
+      // 公開日は元のまま、更新日が添えられる
+      await expect(dialog).toHaveAccessibleDescription(`2026年1月1日（${formatJapaneseDateTime(updatedAt)}更新）`)
+    },
+  )
+
+  test(
+    "DELETE で消した記事は一覧から消える",
+    { tag: "@interaction", annotation: routes("/now", "/api/now/[id]") },
+    async ({ page, request }) => {
+      const title = uniqueTitle("消す記事")
+      const { id } = await createPost(request, { title, body: "本文" })
+
+      await page.goto("/now")
+      await expect(page.getByRole("heading", { name: title })).toBeVisible()
+
+      expect((await request.delete(`/api/now/${id}`, { headers: auth })).status()).toBe(204)
+      await page.reload()
       await expect(page.getByRole("heading", { name: title })).toHaveCount(0)
     },
   )

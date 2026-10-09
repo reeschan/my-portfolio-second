@@ -1,7 +1,7 @@
 // @perspectives privacy
 // @routes /api/chat
 import { describe, expect, it } from "vitest"
-import { createRedactingStream, redact } from "./redact"
+import { createRedactingStream, redact } from "@/lib/chat/redact"
 
 async function runThroughStream(chunks: string[]) {
   const stream = new ReadableStream<string>({

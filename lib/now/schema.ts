@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-// /now の投稿 (POST /api/now) が受け取る値の形。検証と型を 1 か所にまとめる (ADR 0013)
+// /now の投稿 (POST /api/now、PUT /api/now/[id]) が受け取る値の形。検証と型を 1 か所にまとめる (ADR 0013)
 
 const maxTitleLength = 120
 // Markdown の本文。Redis の 1 値に収まり、モーダルで読み切れる長さを上限にする
@@ -9,7 +9,7 @@ const maxBodyLength = 20000
 export const nowPostInputSchema = z.object({
   title: z.string().trim().min(1).max(maxTitleLength),
   body: z.string().trim().min(1).max(maxBodyLength),
-  // 公開日時。省略したら受け付けた時刻にする。過去の出来事をあとから書けるよう任意の日時を許す
+  // 公開日時。省略したら、新規は受け付けた時刻、更新は元の公開日時のままにする。過去の出来事をあとから書けるよう任意の日時を許す
   publishedAt: z.iso.datetime({ offset: true }).optional(),
 })
 
@@ -22,6 +22,8 @@ export type NowPost = {
   body: string
   // ISO 8601 (UTC)
   publishedAt: string
+  // 最後に PUT で更新した日時 (ISO 8601、UTC)。一度も更新していなければない
+  updatedAt?: string
 }
 
 // 保存先から読んだ値の検証。壊れた値が 1 件あっても一覧全体を落とさないよう、呼び出し側で捨てる
@@ -30,6 +32,7 @@ export const nowPostSchema = z.object({
   title: z.string(),
   body: z.string(),
   publishedAt: z.iso.datetime({ offset: true }),
+  updatedAt: z.iso.datetime({ offset: true }).optional(),
 })
 
 // 新しい順に並べる。同じ日時なら id で順序を固定し、表示が揺れないようにする

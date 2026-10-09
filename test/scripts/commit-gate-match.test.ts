@@ -1,7 +1,7 @@
 // @coverage-map ignore コミットゲート (開発の道具) のテストで、画面・ルートに紐づかないため
 import { describe, expect, it } from "vitest"
 // フックから Node で直接読むため JS (.mjs) のままにしている
-import { isGitCommit } from "./commit-gate-match.mjs"
+import { isGitCommit } from "@/scripts/commit-gate-match.mjs"
 
 describe("isGitCommit", () => {
   it.each([

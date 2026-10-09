@@ -13,7 +13,7 @@
 | `/skills` | スキルのレーダーチャート (概要 / フロントエンド / バックエンド / AWS) と資格 |
 | `/works` | 制作物。カードから詳細とアーキテクチャを開ける |
 | `/now` | いま取り組んでいること ([nownownow.com](https://nownownow.com/about) の考え方)。記事を新しい順のカードで並べ、押すと Markdown・Mermaid の全文をモーダルで読める |
-| `/api/now` | /now の記事の投稿 (POST) と削除 (DELETE `/api/now/[id]`)。トークンが要る |
+| `/api/now` | /now の記事の投稿 (POST)、書き換え (PUT `/api/now/[id]`)、削除 (DELETE `/api/now/[id]`)。トークンが要る |
 | `/chat` | 職務経歴について答える AI チャット (Moonshot / Kimi) |
 | `/theme` | 背景の 3D シーンを選ぶ (グリッド / オーロラ / 月夜の海 / 蛍の森 / 月面 / 皆既日食) |
 | `/rss.xml` | RSS フィード |
@@ -38,7 +38,7 @@ flowchart LR
     Docs[("data/resume.md<br/>data/profile-freelance.md<br/>(サーバーのみ)")]
     Redact["伏せ字<br/>lib/chat/redact.ts"]
     RSS["/rss.xml"]
-    NowAPI["/api/now<br/>トークンの検証"]
+    NowAPI["/api/now<br/>withBearerAuth で認証"]
   end
 
   Redis[("Upstash Redis<br/>/now の記事")]
@@ -121,6 +121,12 @@ curl -X POST https://<ドメイン>/api/now \
   -H "Authorization: Bearer $NOW_POST_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title": "近況", "body": "## やっていること\n\n- Next.js 16 への移行", "publishedAt": "2026-10-09T12:00:00+09:00"}'
+
+# 書き換える (題名と本文はまるごと置き換え。publishedAt を省くと元の公開日のまま)
+curl -X PUT https://<ドメイン>/api/now/<id> \
+  -H "Authorization: Bearer $NOW_POST_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "近況", "body": "誤字を直した本文"}'
 
 # 消す (id は投稿したときのレスポンスにある)
 curl -X DELETE https://<ドメイン>/api/now/<id> -H "Authorization: Bearer $NOW_POST_TOKEN"

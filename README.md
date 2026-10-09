@@ -45,6 +45,7 @@ flowchart LR
   Author["本人 (curl)"]
 
   LLM["Moonshot API<br/>(Kimi)"]
+  Slack["Slack<br/>(Incoming Webhook)"]
 
   UI --> RSC
   UI --- BG
@@ -58,6 +59,8 @@ flowchart LR
   Author -- "POST + Bearer トークン" --> NowAPI
   NowAPI --> Redis
   RSC -- "/now の記事を読む" --> Redis
+  NowAPI -. "投稿・更新を通知 (withSlackNotify)" .-> Slack
+  ChatAPI -. "質問を通知 (withSlackNotify)" .-> Slack
 ```
 
 ### 画面の部品の層
@@ -86,6 +89,7 @@ flowchart TD
 | 可視化・3D | React Three Fiber、Recharts | [ADR 0006](docs/adr/0006-visualization-and-3d.md) |
 | AI チャット | Moonshot / Kimi、自前のプロンプト + 伏せ字 + プライバシー eval | [ADR 0008](docs/adr/0008-chat-llm-and-privacy-eval.md) |
 | Now の記事 | Upstash Redis (REST)、react-markdown + remark-gfm、Mermaid | [ADR 0015](docs/adr/0015-now-posts-storage-and-markdown.md) |
+| 通知 | Slack (Incoming Webhook)。`withSlackNotify` デコレータで、/now の投稿・更新と AI チャットへの質問を知らせる | [ADR 0018](docs/adr/0018-slack-notify-decorator.md) |
 | テスト | Playwright (E2E)、Vitest、axe | [ADR 0001](docs/adr/0001-testing-strategy.md) |
 | 品質ゲート | ESLint、GitHub Actions (`ci-ok`)、コミットゲート | [ADR 0007](docs/adr/0007-ci-quality-gate.md)、[ADR 0009](docs/adr/0009-commit-gate.md) |
 
@@ -131,6 +135,8 @@ curl -X PUT https://<ドメイン>/api/now/<id> \
 # 消す (id は投稿したときのレスポンスにある)
 curl -X DELETE https://<ドメイン>/api/now/<id> -H "Authorization: Bearer $NOW_POST_TOKEN"
 ```
+
+`SLACK_WEBHOOK_URL` (Slack の Incoming Webhook の URL) を設定すると、投稿・更新したときと AI チャットに質問が来たときに、その Webhook のチャンネルへ通知が届く ([ADR 0018](docs/adr/0018-slack-notify-decorator.md))。
 
 Markdown のファイルから投稿するなら `jq -n --arg title "近況" --rawfile body post.md '{title: $title, body: $body}' | curl ... -d @-` のように JSON にする。
 

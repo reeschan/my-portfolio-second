@@ -1,6 +1,8 @@
 import { withErrorHandling } from "@/decorator/with-error-handling"
+import { withSlackNotify } from "@/decorator/with-slack-notify"
 import { apiFetch } from "@/lib/api/client"
 import { ApiError, HttpError } from "@/lib/api/errors"
+import { chatNotification } from "@/lib/chat/notify"
 import { readJsonBody } from "@/lib/api/request"
 import { createRedactingStream } from "@/lib/chat/redact"
 import { isRateLimited } from "@/lib/chat/rate-limit"
@@ -82,8 +84,9 @@ async function requestCompletion(messages: ChatMessage[], apiKey: string, signal
   return upstream.body
 }
 
+// 回答を返し始めたら、質問が来たことを Slack に知らせる (SLACK_WEBHOOK_URL を設定したときだけ)
 export const POST = withErrorHandling(
-  async (request) => {
+  withSlackNotify(chatNotification, async (request) => {
     const apiKey = process.env.MOONSHOT_API_KEY
     if (!apiKey) throw new HttpError(503, "チャット機能は現在ご利用いただけません。")
 
@@ -105,6 +108,6 @@ export const POST = withErrorHandling(
         "Cache-Control": "no-store",
       },
     })
-  },
+  }),
   { upstream: "回答の生成に失敗しました。時間をおいて再度お試しください。" },
 )

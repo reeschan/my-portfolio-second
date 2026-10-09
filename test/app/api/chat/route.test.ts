@@ -3,6 +3,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { POST as handler } from "@/app/api/chat/route"
 
+// after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
+const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
+vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }))
+const runAfterTasks = () => Promise.all(afterTasks.splice(0).map((task) => task()))
+
 // Route Handler は第 2 引数 (context) を受け取る形なので、空の params を渡す
 const POST = (request: Request) => handler(request, { params: Promise.resolve({}) })
 
@@ -28,6 +33,7 @@ describe("POST /api/chat", () => {
 
   beforeEach(() => {
     vi.stubEnv("MOONSHOT_API_KEY", "test-key")
+    vi.stubEnv("SLACK_WEBHOOK_URL", "")
     vi.stubGlobal("fetch", fetchMock)
     fetchMock.mockReset()
     vi.spyOn(console, "error").mockImplementation(() => {})
@@ -123,5 +129,51 @@ describe("POST /api/chat", () => {
     fetchMock.mockResolvedValue(new Response("boom", { status: 500 }))
     const res = await POST(chatRequest(userMessage))
     expect(res.status).toBe(502)
+  })
+
+  describe("Slack への通知", () => {
+    const webhook = "https://hooks.slack.com/services/T000/B000/secret"
+    const slackBodies = () =>
+      fetchMock.mock.calls.filter(([url]) => url === webhook).map(([, init]) => JSON.parse(init?.body as string) as { text: string })
+
+    beforeEach(() => {
+      vi.stubEnv("SLACK_WEBHOOK_URL", webhook)
+      afterTasks.length = 0
+    })
+
+    it("回答を返したら、最新の質問だけを Slack に送る (回答・IP は送らない)", async () => {
+      fetchMock.mockImplementation((url) =>
+        Promise.resolve(url === webhook ? new Response("ok") : sseResponse([{ choices: [{ delta: { content: "React です。" } }] }])),
+      )
+      const res = await POST(
+        chatRequest(
+          {
+            messages: [
+              { role: "user", content: "前の質問" },
+              { role: "assistant", content: "前の回答" },
+              { role: "user", content: "得意な技術は？" },
+            ],
+          },
+          "203.0.113.9",
+        ),
+      )
+      expect(await res.text()).toContain("React です。")
+      await runAfterTasks()
+
+      const sent = JSON.stringify(slackBodies())
+      expect(slackBodies()).toHaveLength(1)
+      expect(sent).toContain("得意な技術は？")
+      expect(sent).not.toContain("前の質問")
+      expect(sent).not.toContain("React です。")
+      expect(sent).not.toContain("203.0.113.9")
+    })
+
+    it("上流が失敗した・入力が不正なら送らない", async () => {
+      fetchMock.mockResolvedValue(new Response("boom", { status: 500 }))
+      expect((await POST(chatRequest(userMessage))).status).toBe(502)
+      expect((await POST(chatRequest({ messages: [] }))).status).toBe(400)
+      await runAfterTasks()
+      expect(slackBodies()).toEqual([])
+    })
   })
 })

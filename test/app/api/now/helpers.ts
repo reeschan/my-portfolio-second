@@ -9,6 +9,23 @@ export function useMemoryStoreEnv() {
   vi.stubEnv("NODE_ENV", "test")
   vi.stubEnv("UPSTASH_REDIS_REST_URL", "")
   vi.stubEnv("KV_REST_API_URL", "")
+  // Slack への通知は、確かめるテストだけが設定する (手元の .env の値で本物に送らない)
+  vi.stubEnv("SLACK_WEBHOOK_URL", "")
+}
+
+export const slackWebhook = "https://hooks.slack.com/services/T000/B000/secret"
+
+// Slack への通知を確かめる準備。Webhook を設定し、fetch をモックして送った本文を返す
+export function useSlackMock() {
+  vi.stubEnv("SLACK_WEBHOOK_URL", slackWebhook)
+  const fetchMock = vi.fn<typeof fetch>(() => Promise.resolve(new Response("ok")))
+  vi.stubGlobal("fetch", fetchMock)
+  return {
+    sent: () =>
+      fetchMock.mock.calls
+        .filter(([url]) => url === slackWebhook)
+        .map(([, init]) => JSON.parse(init?.body as string) as { text: string; blocks: { text: { text: string } }[] }),
+  }
 }
 
 export function jsonRequest(method: string, path: string, body?: unknown, auth: string | null = token) {

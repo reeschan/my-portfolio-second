@@ -2,6 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config"
 import nextVitals from "eslint-config-next/core-web-vitals"
 import nextTs from "eslint-config-next/typescript"
 import tseslint from "typescript-eslint"
+import prettier from "eslint-config-prettier/flat"
 
 // Next.js 推奨 (Core Web Vitals) + TypeScript のルール。CI の lint ジョブで実行する (docs/adr/0007-ci-quality-gate.md)
 // 型情報つきのルールと循環的複雑度の上限は ADR 0013
@@ -25,6 +26,8 @@ const eslintConfig = defineConfig([
       complexity: ["error", { max: 10 }],
     },
   },
+  // 書式は Prettier に任せる。ESLint の書式ルールと食い違わないよう最後に無効化する (ADR 0014)
+  prettier,
   globalIgnores([
     ".next/**",
     "out/**",

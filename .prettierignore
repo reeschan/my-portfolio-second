@@ -1,0 +1,10 @@
+# 生成物とロックファイルは整形しない
+.next/
+out/
+build/
+node_modules/
+pnpm-lock.yaml
+next-env.d.ts
+playwright-report/
+test-results/
+evals/**/results/

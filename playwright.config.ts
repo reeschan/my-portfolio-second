@@ -12,6 +12,9 @@ export default defineConfig({
   // 手元の dev サーバーは各ページを初めて開いたときにコンパイルするので、並列実行だと 30 秒を超えることがある。
   // CI は本番ビルドなので既定の 30 秒のまま
   timeout: process.env.CI ? 30_000 : 60_000,
+  // 同じ理由で、ページを移った直後の表示を待つ expect も既定の 5 秒では足りないことがある (巡回・背景テーマなどで回ごとに揺れた)。
+  // CI は既定の 5 秒のまま
+  expect: { timeout: process.env.CI ? 5_000 : 15_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

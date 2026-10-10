@@ -20,6 +20,9 @@ permissions:
 
 jobs:
   analyze:
+    # PR は作成者が持ち主・dependabot[bot]・github-actions[bot] (このリポジトリの release-pr が作るリリース PR) のときだけ解析する (public リポジトリで他人の PR に費用をかけない)。
+    # push と schedule は常に動かす
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == github.repository_owner || github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:

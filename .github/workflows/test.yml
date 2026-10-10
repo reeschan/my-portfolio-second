@@ -1,6 +1,9 @@
 name: ci
 
-# 品質ゲート。lint / 型チェック / ユニット / ビルド / E2E がすべて通らないと main にマージできない。
+# 品質ゲート。PR では lint / 型チェック / ユニット / ビルドが通らないとマージできない (E2E は PR では回さない)。
+# E2E は develop への push (PR のマージ後) で回す。成功したら release-pr ワークフローがリリース PR を作る。
+# main への push では回さない (main に入る内容は、リリース PR の head = develop の先頭コミットで E2E 込みの ci-ok が通ったもの。Squash でマージするのでツリーは同じ)。
+# PR の CI は作成者が持ち主か Dependabot のときだけ動かす (public リポジトリで他人の PR に費用をかけない)。
 # ブランチ保護 (ルールセット) は .github/rulesets/main.json を GitHub に取り込んで有効にする
 # (CI の必須チェックは最後の「ci-ok」1 つだけ (もう 1 つの必須チェック main-source は main-source.yml)。ジョブを増やしても needs に足せばルールセットは変えなくてよい)
 # 経緯: docs/adr/0007-ci-quality-gate.md
@@ -9,7 +12,7 @@ name: ci
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [develop]
   merge_group:
 
 concurrency:
@@ -20,7 +23,18 @@ permissions:
   contents: read
 
 jobs:
+  # 他人の PR で費用のかかるジョブを動かさないための関門。
+  # PR の作成者が持ち主・dependabot[bot]・github-actions[bot] (このリポジトリの release-pr が作るリリース PR) でなければこのジョブがスキップされ、needs で後ろのジョブもスキップされる
+  # (スキップされた ci-ok は失敗するので、他人の PR はマージできない)。push と merge_group は常に通す
+  authorized:
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == github.repository_owner || github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - run: echo "CI を回す"
+
   lint:
+    needs: authorized
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -31,6 +45,7 @@ jobs:
       - run: pnpm format:check
 
   typecheck:
+    needs: authorized
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -39,6 +54,7 @@ jobs:
       - run: pnpm typecheck
 
   unit:
+    needs: authorized
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -48,6 +64,7 @@ jobs:
       - run: pnpm test:unit
 
   build:
+    needs: authorized
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -64,7 +81,10 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
+  # E2E は PR では回さず、develop へのマージ後 (push) に回す。成功したらリリース PR が作られる。
+  # PR ごとに回すと費用がかさむため
   e2e:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -87,17 +107,29 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-  # ブランチ保護で必須にするのはこのジョブだけ。どれか 1 つでも失敗・スキップしたら落ちる
+  # ブランチ保護で必須にするのはこのジョブだけ。どれか 1 つでも失敗・取り消しになったら落ちる。
+  # スキップは、PR で e2e だけがスキップされた場合に限って許す。それ以外のスキップは失敗
+  # (他人の PR は authorized ごとスキップされるので、ここで落ちてマージできない)
   ci-ok:
     if: always()
-    needs: [lint, typecheck, unit, build, e2e]
+    needs: [authorized, lint, typecheck, unit, build, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: すべてのジョブが成功したか確認する
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          EVENT: ${{ github.event_name }}
         run: |
-          echo '${{ toJSON(needs) }}'
-          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "true" ]; then
-            echo "失敗したジョブがあります" >&2
-            exit 1
-          fi
+          echo "$NEEDS"
+          node -e '
+            const needs = JSON.parse(process.env.NEEDS);
+            const isPr = process.env.EVENT === "pull_request";
+            const bad = Object.entries(needs)
+              .filter(([name, job]) => job.result !== "success" && !(isPr && name === "e2e" && job.result === "skipped"))
+              .map(([name, job]) => name + ": " + job.result);
+            if (bad.length > 0) {
+              console.error("失敗またはスキップされたジョブがあります: " + bad.join(", "));
+              process.exit(1);
+            }
+          '

@@ -11,7 +11,7 @@ main は develop → main の PR (Squash のみ) でだけ更新する決まり�
 
 ## 決定
 
-- develop への push と手動実行で `release-pr` ワークフローが動き、develop → main の PR を作る。開いていれば本文とタイトルを更新する
+- develop への push の CI (E2E 込み) が成功したときと手動実行で `release-pr` ワークフローが動き、develop → main の PR を作る。開いていれば本文とタイトルを更新する
   - タイトルは `release: develop → main (YYYY-MM-DD)`
 - 本文は前回のリリース (develop → main の最後のマージ) 以降に develop にマージされた PR の一覧にする
   - 各 PR の「## 概要」の 1 行目を添える
@@ -40,3 +40,4 @@ main は develop → main の PR (Squash のみ) でだけ更新する決まり�
 - ルールセットの変更は GitHub の画面か API で取り込むまで効かない (ADR 0007 と同じ)
 - リリース PR を作り直したいときは Actions の `release-pr` を手動で実行する
 - release-pr が GITHUB_TOKEN で PR を作るには、リポジトリの Settings → Actions → General → Workflow permissions の「Allow GitHub Actions to create and approve pull requests」を有効にする必要がある (無効だと PR の作成が 403 になる)。ルールセットの承認数は 0 なので、Actions が承認できることで増える権限は実質ない
+- リリース PR を作るきっかけは ADR 0022 で「develop の CI の成功」に変えた

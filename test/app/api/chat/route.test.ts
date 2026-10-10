@@ -8,6 +8,11 @@ const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
 vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }))
 const runAfterTasks = () => Promise.all(afterTasks.splice(0).map((task) => task()))
 
+// チャットの資料は Vercel Blob に置き、リポジトリには無い (ADR 0019)。テストは手元の data/*.md の有無や Blob に左右されないよう、決まった資料を返す
+vi.mock("@/lib/chat/documents", () => ({
+  loadChatDocuments: () => Promise.resolve({ resume: "# 職務経歴書 (テスト用)", profile: "# 補足資料 (テスト用)" }),
+}))
+
 // Route Handler は第 2 引数 (context) を受け取る形なので、空の params を渡す
 const POST = (request: Request) => handler(request, { params: Promise.resolve({}) })
 

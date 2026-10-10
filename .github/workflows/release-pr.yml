@@ -1,8 +1,12 @@
 name: release-pr
-# develop に PR がマージされるたびに、develop → main のリリース PR を作る・本文を更新する (scripts/release-pr.mjs、ADR 0021)
+# develop の CI (ワークフロー ci、E2E 込み) が成功したときだけ、develop → main のリリース PR を作る・本文を更新する (scripts/release-pr.mjs、ADR 0021)
 # main は develop → main の PR でだけ更新する運用なので、その PR を手で作る手間と、含まれる PR の書き漏れをなくすため
+# CI の結果を待つのは、E2E を develop へのマージ後に回すので、通っていない develop をリリース PR に載せないため。失敗したときは何もしない (直して develop に入れ直し、成功したら更新される)
+# 古い CI の成功で動かないよう、CI が検証したコミットがいまの develop の先頭か確かめ、先に進んでいたら新しい CI の結果を待つ
 on:
-  push:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
     branches: [develop]
   # 本文を作り直したいときに手で動かせるようにする
   workflow_dispatch:
@@ -16,16 +20,47 @@ permissions:
   pull-requests: write
 jobs:
   release-pr:
+    # 手動実行なら常に動く。CI の成功でも、PR の CI ではなく develop への push の CI のときだけ動く
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # CI が検証したコミットがいまの develop の先頭でなければ、古い結果なので以降を動かさない (ジョブは成功のまま終える)。手動実行では確認しない
+      - name: CI が検証したコミットが develop の先頭か確かめる
+        id: head
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          develop_sha=$(gh api "repos/$REPO/commits/develop" --jq .sha)
+          if [ "$develop_sha" = "$CI_SHA" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+            echo "develop が先に進んでいるので、新しい CI の結果を待つ (CI: $CI_SHA、develop: $develop_sha)"
+          fi
       # アクションは書き換えられても中身が変わらないよう、test.yml と同じコミット SHA に固定する
+      # workflow_run の既定のチェックアウト先は既定のブランチなので、develop を明示する
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.head.outputs.latest == 'true'
+        with:
+          ref: develop
       # スクリプトは依存なし (Node 22 の fetch) なので、pnpm install はしない
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        if: steps.head.outputs.latest == 'true'
         with:
           node-version: 22
       - run: node scripts/release-pr.mjs
+        if: steps.head.outputs.latest == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}

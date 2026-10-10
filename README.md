@@ -156,6 +156,7 @@ Markdown のファイルから投稿するなら `jq -n --arg title "近況" --r
 
 - 実装は **PBI ありき**: PBI (何を・なぜ・完了条件) → WORK (計画と記録) → 必要なら ADR → 実装とテスト → コミットゲート → PR。手順は [docs/agents/development-flow.md](docs/agents/development-flow.md)
 - `main` には `develop` からのリリース PR (自動で作られる) だけを Squash でマージする。CI の `ci-ok` (lint・型・ユニット・ビルド・E2E) と `main-source` (develop からの PR か) が緑であることが条件 ([.github/rulesets/main.json](.github/rulesets/main.json)、ADR 0021)
+- PR の CI は lint・型・ユニット・ビルドだけを回し、E2E は `develop` へのマージ後に回す。成功したときだけリリース PR が作られる。持ち主と Dependabot 以外の PR は自動で閉じる ([ADR 0022](docs/adr/0022-ci-cost-and-owner-only-prs.md))
 - AI エージェント向けの指示は [AGENTS.md](AGENTS.md)。Self 組織の共通スキル (PBI の起票・PR の作成) は [plugins/self-base/](plugins/self-base/README.md)
 
 ## ライセンス

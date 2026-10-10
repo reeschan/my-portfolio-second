@@ -116,6 +116,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 
 ## 変更のしかた
 
-- ブランチは `develop` から切り、`develop` に PR を出す。`main` は `develop` → `main` のリリース PR (Squash and merge のみ) でだけ更新する。リリース PR は develop への push のたびに `release-pr` ワークフローが作り、含まれる PR の一覧を本文に書く。main への PR は必須チェック `main-source` が develop からのものだけ通す (ADR 0021)。squash 後は `main` を `develop` にマージして揃える (直接 push はルールセットで禁止している。本番 (Vercel) は `main` から出る)
+- ブランチは `develop` から切り、`develop` に PR を出す。`main` は `develop` → `main` のリリース PR (Squash and merge のみ) でだけ更新する。リリース PR は develop への push の CI (E2E 込み) が成功するたびに `release-pr` ワークフローが作り、含まれる PR の一覧を本文に書く。main への PR は必須チェック `main-source` が develop からのものだけ通す (ADR 0021)。squash 後は `main` を `develop` にマージして揃える (直接 push はルールセットで禁止している。本番 (Vercel) は `main` から出る)
+- PR (develop 向け) の CI は lint・型・ユニット・ビルドだけ。E2E は develop へのマージ後に回り、失敗したらリリース PR は作られないので、直す PR を develop に出す。持ち主と Dependabot 以外の PR は自動で閉じる (リリース PR は除く。ADR 0022)
 - UI の文言は日本語で書く
 - コードのコメントも日本語で、理由 (なぜそうするか) を書く

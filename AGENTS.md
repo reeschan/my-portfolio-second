@@ -115,6 +115,6 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 
 ## 変更のしかた
 
-- ブランチは `develop` から切り、`develop` に PR を出す。`main` は `develop` → `main` の PR でだけ更新する (直接 push はルールセットで禁止している。本番 (Vercel) は `main` から出る)
+- ブランチは `develop` から切り、`develop` に PR を出す。`main` は `develop` → `main` の PR (Squash and merge のみ) でだけ更新する (直接 push はルールセットで禁止している。本番 (Vercel) は `main` から出る)
 - UI の文言は日本語で書く
 - コードのコメントも日本語で、理由 (なぜそうするか) を書く

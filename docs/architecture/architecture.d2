@@ -80,11 +80,6 @@ vercel: "Vercel (Next.js App Router)" {
     class: svc
     icon: https://cdn.simpleicons.org/nextdotjs/__MONO__
   }
-  docs: "resume.md\n(サーバーのみ)" {
-    shape: page
-  }
-
-  chatapi -> docs: プロンプトに使う
 }
 
 saas: 外部サービス {
@@ -103,6 +98,11 @@ saas: 外部サービス {
     class: ext
     icon: https://cdn.simpleicons.org/moonshotai/__MONO__
   }
+  # チャットの資料はリポジトリに置かず、private の Blob から読む (ADR 0019)。Blob 専用のロゴは無いので Vercel のロゴを使う
+  blob: "Vercel Blob (private)\n職務経歴書・補足資料" {
+    class: ext
+    icon: https://cdn.simpleicons.org/vercel/__MONO__
+  }
 }
 
 visitor -> browser.ui
@@ -110,6 +110,7 @@ browser.chat -> vercel.chatapi: 会話履歴
 browser.ui -> vercel.rsc
 author -> vercel.nowapi: 投稿・更新
 vercel.chatapi <-> saas.llm: ストリーム
+vercel.chatapi -> saas.blob: 資料を読む
 vercel.chatapi -> saas.slack: 質問を通知 {style.stroke-dash: 4}
 vercel.nowapi -> saas.slack: 投稿を通知 {style.stroke-dash: 4}
 vercel.nowapi -> saas.redis: 保存

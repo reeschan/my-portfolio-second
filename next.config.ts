@@ -4,10 +4,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // チャット API が実行時に読み込む職務経歴書・補足資料をデプロイに含める
-  outputFileTracingIncludes: {
-    "/api/chat": ["./data/resume.md", "./data/profile-freelance.md"],
-  },
 }
 
 export default nextConfig

@@ -26,7 +26,7 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/architecture-dark.svg">
-  <img src="docs/architecture/architecture-light.svg" alt="アーキテクチャの全体像。閲覧者はブラウザで React のページと AI チャットを使い、Vercel 上の Next.js がページを描画する。/api/chat は Moonshot API (Kimi) とストリームでやり取りし、/api/now は本人が curl で投稿した記事を Upstash Redis に保存する。投稿と質問は Slack に通知される">
+  <img src="docs/architecture/architecture-light.svg" alt="アーキテクチャの全体像。閲覧者はブラウザで React のページと AI チャットを使い、Vercel 上の Next.js がページを描画する。/api/chat は Vercel Blob (private) から職務経歴書などの資料を読み、Moonshot API (Kimi) とストリームでやり取りし、/api/now は本人が curl で投稿した記事を Upstash Redis に保存する。投稿と質問は Slack に通知される">
 </picture>
 
 図のソースと描き直し方は [docs/architecture/](docs/architecture/README.md) ([ADR 0020](docs/adr/0020-readme-architecture-diagram-d2.md))。
@@ -46,7 +46,7 @@ flowchart LR
     RSC["サーバーコンポーネント<br/>data/*.ts を描画"]
     ChatAPI["/api/chat<br/>入力検証・レート制限"]
     Prompt["システムプロンプト<br/>lib/chat/system-prompt.ts"]
-    Docs[("data/resume.md<br/>data/profile-freelance.md<br/>(サーバーのみ)")]
+    Docs[("Vercel Blob (private)<br/>chat-docs/*.md<br/>(職務経歴書・補足資料)")]
     Redact["伏せ字<br/>lib/chat/redact.ts"]
     RSS["/rss.xml"]
     NowAPI["/api/now<br/>withBearerAuth で認証"]

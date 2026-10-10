@@ -45,6 +45,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 | CI と同じ確認 (E2E 以外) | `pnpm check` |
 | コミット前の検査 | `pnpm commit-gate` (詳細は `.claude/skills/commit-gate/SKILL.md`) |
 | チャットのプライバシー eval | `pnpm eval:privacy` (**本物の LLM を呼ぶ。人が手元で実行する**。エージェントは頼まれない限り実行しない) |
+| チャットの資料を Blob に上げる | `pnpm chat-docs:upload` (`vercel env pull` で .env.local に資格情報を入れてから、手元の data/*.md を Vercel Blob に上書きする。**持ち主が手元で実行する**) |
 
 ## 構成
 
@@ -56,8 +57,8 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
   - `features/<機能>/`: ページ・機能ごとの部品 (career, skills, works, chat, background, theme, now)
     - 3D 背景のシーンは `features/background/themes/<id>.tsx` に 1 テーマ 1 ファイル。一覧と選択のストアは `lib/background-theme.ts` (ADR 0012)
 - `data/`: 表示データ (`career.ts` `skills.ts` `works.ts` `now.ts`)。/now の記事は `data/` ではなく `POST /api/now` で投稿する
-  - `resume.md` と `profile-freelance.md` はチャットのサーバー側でのみ読む。`public/` には置かない
-- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)、`slack/` (Slack への通知 `notifySlack`、ADR 0018)
+  - チャットの資料 (`resume.md`・`profile-freelance.md`) はリポジトリに置かない。Vercel Blob (private) の `chat-docs/` から `lib/chat/documents.ts` で読む。手元の `data/*.md` は .gitignore 済みの写しで、`pnpm chat-docs:upload` で Blob に上げる (ADR 0019)
+- `lib/`: `navigation.ts` (タブの並び)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限・資料の読み込み)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)、`slack/` (Slack への通知 `notifySlack`、ADR 0018)
 - `hooks/`: `use-media-query.ts`、`use-is-client.ts`
 - `decorator/`: Route Handler を包むデコレータ。すべての API は `withErrorHandling` で包み、認証が要るものはその内側を `withBearerAuth` で包む (ADR 0016、0017)
   - Slack に知らせたい API は `withErrorHandling` と `withBearerAuth` の間を `withSlackNotify` で包む。送る中身は `lib/<機能>/notify.ts` で組み立てる (ADR 0018)
@@ -115,6 +116,6 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 
 ## 変更のしかた
 
-- ブランチを切って PR を出す。`main` に直接 push しない (ルールセットで禁止している)
+- ブランチは `develop` から切り、`develop` に PR を出す。`main` は `develop` → `main` のリリース PR (Squash and merge のみ) でだけ更新する。リリース PR は develop への push のたびに `release-pr` ワークフローが作り、含まれる PR の一覧を本文に書く。main への PR は必須チェック `main-source` が develop からのものだけ通す (ADR 0021)。squash 後は `main` を `develop` にマージして揃える (直接 push はルールセットで禁止している。本番 (Vercel) は `main` から出る)
 - UI の文言は日本語で書く
 - コードのコメントも日本語で、理由 (なぜそうするか) を書く

@@ -1,0 +1,40 @@
+name: main-source
+
+# main への PR は同じリポジトリの develop からだけ受け付ける。機能ブランチから main への直接の PR を止めるため。
+# このジョブ (チェック名 main-source) は main のルールセット (.github/rulesets/main.json) の必須チェック。
+# develop への push でも成功させる理由: develop → main のリリース PR は release-pr ワークフローが
+# GITHUB_TOKEN で作り、GITHUB_TOKEN で作った PR では pull_request のワークフローが起動しない。
+# チェックはコミットに付くので、develop の先頭のコミットに付いた main-source の成功で
+# リリース PR (head は develop の先頭のコミット) の必須チェックを満たし、チェック待ちで止まらないようにする。
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+  push:
+    branches: [develop]
+
+permissions: {}
+
+jobs:
+  main-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: main への PR は develop からだけ受け付ける
+        # ブランチ名によるスクリプトの差し込みを防ぐため、式は run に直接書かず env 経由で渡す
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$EVENT" = "push" ]; then
+            echo "develop への push。develop のコミットは main に入れてよい"
+            exit 0
+          fi
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "::error::main への PR は ${REPO} の develop からだけ受け付けます (今回: ${HEAD_REPO}:${HEAD_REF})。ブランチは develop に PR を出してください"
+            exit 1
+          fi
+          echo "develop からの PR"

@@ -9,6 +9,9 @@ const webServerCommand = process.env.CI ? `pnpm start --port ${port}` : `pnpm de
 
 export default defineConfig({
   testDir: "./e2e",
+  // 手元の dev サーバーは各ページを初めて開いたときにコンパイルするので、並列実行だと 30 秒を超えることがある。
+  // CI は本番ビルドなので既定の 30 秒のまま
+  timeout: process.env.CI ? 30_000 : 60_000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -35,6 +38,9 @@ export default defineConfig({
         // /now の投稿はプロセス内のメモリに保存し、本物の Redis に書かない (e2e/now.spec.ts)
         env: {
           MOONSHOT_API_KEY: "",
+          // E2E から本物の Blob を読まない (チャットは /api/chat ごとモックしている)
+          BLOB_READ_WRITE_TOKEN: "",
+          BLOB_STORE_ID: "",
           NOW_POST_TOKEN: nowPostToken,
           NOW_POSTS_STORE: "memory",
           // E2E から本物の Slack に通知しない

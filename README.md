@@ -3,6 +3,8 @@
 フロントエンドからクラウド基盤まで手がけるエンジニア、Ryuki Tobita の個人ポートフォリオサイト。
 ブラウザのタブを模した画面で経歴・スキル・作品を見せ、職務経歴について AI に質問できるチャットを備えている。
 
+[![使っている技術: Next.js, React, TypeScript, Tailwind CSS, three.js, Vercel, Redis, Vitest, GitHub Actions, pnpm](https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,threejs,vercel,redis,vitest,githubactions,pnpm)](#技術)
+
 ## ページ
 
 | パス | 内容 |
@@ -22,6 +24,15 @@
 
 ## アーキテクチャ
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/architecture-dark.svg">
+  <img src="docs/architecture/architecture-light.svg" alt="アーキテクチャの全体像。閲覧者はブラウザで React のページと AI チャットを使い、Vercel 上の Next.js がページを描画する。/api/chat は Vercel Blob (private) から職務経歴書などの資料を読み、Moonshot API (Kimi) とストリームでやり取りし、/api/now は本人が curl で投稿した記事を Upstash Redis に保存する。投稿と質問は Slack に通知される">
+</picture>
+
+図のソースと描き直し方は [docs/architecture/](docs/architecture/README.md) ([ADR 0020](docs/adr/0020-readme-architecture-diagram-d2.md))。
+
+### 詳細
+
 ```mermaid
 flowchart LR
   subgraph Browser["ブラウザ"]
@@ -35,7 +46,7 @@ flowchart LR
     RSC["サーバーコンポーネント<br/>data/*.ts を描画"]
     ChatAPI["/api/chat<br/>入力検証・レート制限"]
     Prompt["システムプロンプト<br/>lib/chat/system-prompt.ts"]
-    Docs[("data/resume.md<br/>data/profile-freelance.md<br/>(サーバーのみ)")]
+    Docs[("Vercel Blob (private)<br/>chat-docs/*.md<br/>(職務経歴書・補足資料)")]
     Redact["伏せ字<br/>lib/chat/redact.ts"]
     RSS["/rss.xml"]
     NowAPI["/api/now<br/>withBearerAuth で認証"]
@@ -92,6 +103,7 @@ flowchart TD
 | 通知 | Slack (Incoming Webhook)。`withSlackNotify` デコレータで、/now の投稿・更新と AI チャットへの質問を知らせる | [ADR 0018](docs/adr/0018-slack-notify-decorator.md) |
 | テスト | Playwright (E2E)、Vitest、axe | [ADR 0001](docs/adr/0001-testing-strategy.md) |
 | 品質ゲート | ESLint、GitHub Actions (`ci-ok`)、コミットゲート | [ADR 0007](docs/adr/0007-ci-quality-gate.md)、[ADR 0009](docs/adr/0009-commit-gate.md) |
+| README の図 | D2 (全体像)、Mermaid (詳細) | [ADR 0020](docs/adr/0020-readme-architecture-diagram-d2.md) |
 
 ## 開発
 
@@ -143,7 +155,7 @@ Markdown のファイルから投稿するなら `jq -n --arg title "近況" --r
 ## 開発の進め方
 
 - 実装は **PBI ありき**: PBI (何を・なぜ・完了条件) → WORK (計画と記録) → 必要なら ADR → 実装とテスト → コミットゲート → PR。手順は [docs/agents/development-flow.md](docs/agents/development-flow.md)
-- `main` には PR からのみマージする。CI の `ci-ok` (lint・型・ユニット・ビルド・E2E) が緑であることが条件 ([.github/rulesets/main.json](.github/rulesets/main.json))
+- `main` には `develop` からのリリース PR (自動で作られる) だけを Squash でマージする。CI の `ci-ok` (lint・型・ユニット・ビルド・E2E) と `main-source` (develop からの PR か) が緑であることが条件 ([.github/rulesets/main.json](.github/rulesets/main.json)、ADR 0021)
 - AI エージェント向けの指示は [AGENTS.md](AGENTS.md)。Self 組織の共通スキル (PBI の起票・PR の作成) は [plugins/self-base/](plugins/self-base/README.md)
 
 ## ライセンス

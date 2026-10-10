@@ -50,3 +50,6 @@ next-env.d.ts
 # eval: 本物の個人情報の一覧と、毎回の実行結果 (合格したものだけ success/ に残してコミットする)
 /evals/privacy/forbidden.local.yml
 /evals/privacy/results/
+
+# チャットの資料は Vercel Blob (private) に置く。手元の写しはコミットしない (ADR 0019)
+/data/*.md

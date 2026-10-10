@@ -1,17 +1,7 @@
-import { readFile } from "node:fs/promises"
-import path from "node:path"
-
-let cached: { resume: string; profile: string } | null = null
-
-// 職務経歴書などは public/ に置かず、サーバー側でのみ読み込む
-async function loadDocuments() {
-  const read = (file: string) => readFile(path.join(process.cwd(), "data", file), "utf8")
-  cached ??= { resume: await read("resume.md"), profile: await read("profile-freelance.md") }
-  return cached
-}
+import { loadChatDocuments } from "@/lib/chat/documents"
 
 export async function buildSystemPrompt() {
-  const { resume, profile } = await loadDocuments()
+  const { resume, profile } = await loadChatDocuments()
 
   return `あなたは、このポートフォリオサイトの持ち主 (以下「本人」) の経歴について訪問者の質問に答えるアシスタントです。
 

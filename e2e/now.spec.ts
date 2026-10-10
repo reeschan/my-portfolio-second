@@ -89,8 +89,9 @@ test.describe("Now の記事", () => {
       await expect(dialog.getByRole("checkbox")).toHaveCount(2)
       await expect(dialog.getByRole("cell", { name: "完了" })).toBeVisible()
       await expect(dialog.getByRole("link", { name: "参考リンク" })).toHaveAttribute("target", "_blank")
-      // mermaid は読み込んでから描くので、SVG が差し込まれるのを待つ
-      await expect(dialog.getByRole("figure", { name: "Mermaid の図" }).locator("svg")).toBeVisible()
+      // mermaid は読み込んでから描くので、SVG が差し込まれるのを待つ。
+      // dev サーバーは mermaid を初めて開いたときにコンパイルするため、既定の 5 秒では足りない
+      await expect(dialog.getByRole("figure", { name: "Mermaid の図" }).locator("svg")).toBeVisible({ timeout: 30_000 })
 
       await page.keyboard.press("Escape")
       await expect(dialog).toBeHidden()

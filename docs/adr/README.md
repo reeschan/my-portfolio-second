@@ -44,3 +44,4 @@
 | [0017](0017-api-client-and-error-decorator.md) | API の呼び出しは apiFetch に集め、エラーはデコレータで上位がレスポンスにする | 提案中 |
 | [0018](0018-slack-notify-decorator.md) | Slack への通知は Incoming Webhook で送り、Route Handler のデコレータで付ける | 提案中 |
 | [0019](0019-chat-docs-external-store.md) | チャットの資料: リポジトリから外し、Vercel Blob (private) から読む | 提案中 |
+| [0020](0020-readme-architecture-diagram-d2.md) | README の全体像の図は D2 で書き、ライト / ダーク用の自己完結 SVG をコミットする | 提案中 |

@@ -10,3 +10,4 @@
 | [0004](0004-now-posts/PBI.md) | /now をトークン付きの POST で投稿でき、カードとモーダルで読めるブログ風にする | 進行中 |
 | [0005](0005-slack-notify/PBI.md) | /now の投稿・更新と AI チャットへの質問を Slack に通知する | 進行中 |
 | [0006](0006-chat-docs-external-store/PBI.md) | チャットの資料をリポジトリから外し、Vercel Blob (private) から読む | 進行中 |
+| [0007](0007-readme-architecture-diagram/PBI.md) | README にロゴ入りのアーキテクチャ図を載せる | 進行中 |

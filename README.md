@@ -35,7 +35,7 @@ flowchart LR
     RSC["サーバーコンポーネント<br/>data/*.ts を描画"]
     ChatAPI["/api/chat<br/>入力検証・レート制限"]
     Prompt["システムプロンプト<br/>lib/chat/system-prompt.ts"]
-    Docs[("data/resume.md<br/>data/profile-freelance.md<br/>(サーバーのみ)")]
+    Docs[("Vercel Blob (private)<br/>chat-docs/*.md<br/>(職務経歴書・補足資料)")]
     Redact["伏せ字<br/>lib/chat/redact.ts"]
     RSS["/rss.xml"]
     NowAPI["/api/now<br/>withBearerAuth で認証"]

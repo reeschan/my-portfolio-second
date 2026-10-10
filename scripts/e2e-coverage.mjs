@@ -37,11 +37,12 @@ function toRoute(file) {
   return "/" + segments.join("/")
 }
 
+// walk は OS の区切り文字でパスを返す (Windows は \)。ファイル名の判定はどちらの区切りでも合うようにする
 const appFiles = walk(path.join(root, "app"))
 const exclude = new Set((policy.exclude_routes ?? []).map((r) => (typeof r === "string" ? r : r.path)))
 const routes = [
-  ...appFiles.filter((f) => /\/page\.(tsx|ts|jsx|js)$/.test(f)).map((f) => ({ path: toRoute(f), kind: "page" })),
-  ...appFiles.filter((f) => /\/route\.(ts|js)$/.test(f)).map((f) => ({ path: toRoute(f), kind: "api" })),
+  ...appFiles.filter((f) => /[\\/]page\.(tsx|ts|jsx|js)$/.test(f)).map((f) => ({ path: toRoute(f), kind: "page" })),
+  ...appFiles.filter((f) => /[\\/]route\.(ts|js)$/.test(f)).map((f) => ({ path: toRoute(f), kind: "api" })),
 ]
   .filter((r) => !exclude.has(r.path))
   .sort((a, b) => (a.kind === b.kind ? a.path.localeCompare(b.path) : a.kind === "page" ? -1 : 1))
@@ -49,7 +50,8 @@ const routes = [
 // --- テストの収集 ---
 const tests = []
 
-const listJson = execFileSync("npx", ["playwright", "test", "--list", "--reporter=json"], {
+// npx は Windows では npx.cmd で、シェルを通さない execFileSync からは起動できない (ENOENT)。pnpm exec ならどの OS でも動く
+const listJson = execFileSync("pnpm", ["exec", "playwright", "test", "--list", "--reporter=json"], {
   cwd: root,
   encoding: "utf8",
   stdio: ["ignore", "pipe", "inherit"],

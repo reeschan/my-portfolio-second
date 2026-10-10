@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "test:coverage-map": "node scripts/e2e-coverage.mjs",
     "eval:privacy": "tsx evals/privacy/run.mts",
+    "chat-docs:upload": "tsx --env-file-if-exists=.env.local scripts/upload-chat-docs.mts",
     "commit-gate": "node scripts/commit-gate.mjs",
     "check": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test:unit && pnpm build"
   },
@@ -24,6 +25,7 @@
     "@radix-ui/react-tabs": "^1.1.22",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
+    "@vercel/blob": "^2.8.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.52.0",

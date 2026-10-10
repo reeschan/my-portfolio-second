@@ -48,8 +48,21 @@ export function extractSummary(body) {
   const match = SUMMARY_HEADING.exec(body)
   if (!match) return ""
   // テンプレートの説明コメント (<!-- ... -->) は複数行にまたがることがあるので、行に分ける前に消す
-  const rest = body.slice(match.index + match[0].length).replace(/<!--[\s\S]*?-->/g, "")
+  const rest = stripHtmlComments(body.slice(match.index + match[0].length))
   return truncate(firstMeaningfulLine(rest).replace(/^- /, ""))
+}
+
+// 1 回の置換では「<!<!-- -->-- …」のように消したあとに新しい <!-- ができることがある (CodeQL js/incomplete-multi-character-sanitization)。
+// 変わらなくなるまで消し、それでも閉じていない <!-- が残れば、そこから後ろは本文の外として捨てる
+function stripHtmlComments(text) {
+  let current = text
+  let previous
+  do {
+    previous = current
+    current = current.replace(/<!--[\s\S]*?-->/g, "")
+  } while (current !== previous)
+  const unclosed = current.indexOf("<!--")
+  return unclosed === -1 ? current : current.slice(0, unclosed)
 }
 
 /**

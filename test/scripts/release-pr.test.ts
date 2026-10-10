@@ -37,6 +37,12 @@ describe("extractSummary", () => {
     expect(extractSummary("## 概要\r\n\r\n背景を変えた\r\n")).toBe("背景を変えた")
   })
 
+  it("入れ子や閉じていない HTML コメントを残さない", () => {
+    // 1 回の置換で消すと、間の <!-- --> が消えて新しい <!-- ができる
+    expect(extractSummary("## 概要\n\n<!<!-- x -->-- 隠したい -->本文")).toBe("本文")
+    expect(extractSummary("## 概要\n\n見える行 <!-- 閉じていない\n続き")).toBe("見える行")
+  })
+
   it("見出しが無い・中身が無い・本文が null なら空文字", () => {
     expect(extractSummary("## 変更点\n- x")).toBe("")
     expect(extractSummary("## 概要\n\n<!-- 未記入 -->\n\n## 変更点\n- x")).toBe("")

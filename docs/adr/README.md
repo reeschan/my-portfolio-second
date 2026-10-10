@@ -43,3 +43,4 @@
 | [0016](0016-test-directory-and-auth-decorator.md) | ユニットテストは test/ に同じ階層で置き、API の認証は decorator/ のデコレータで掛ける | 提案中 |
 | [0017](0017-api-client-and-error-decorator.md) | API の呼び出しは apiFetch に集め、エラーはデコレータで上位がレスポンスにする | 提案中 |
 | [0018](0018-slack-notify-decorator.md) | Slack への通知は Incoming Webhook で送り、Route Handler のデコレータで付ける | 提案中 |
+| [0020](0020-readme-architecture-diagram-d2.md) | README の全体像の図は D2 で書き、ライト / ダーク用の自己完結 SVG をコミットする | 提案中 |

@@ -3,6 +3,8 @@
 フロントエンドからクラウド基盤まで手がけるエンジニア、Ryuki Tobita の個人ポートフォリオサイト。
 ブラウザのタブを模した画面で経歴・スキル・作品を見せ、職務経歴について AI に質問できるチャットを備えている。
 
+[![使っている技術: Next.js, React, TypeScript, Tailwind CSS, three.js, Vercel, Redis, Vitest, GitHub Actions, pnpm](https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,threejs,vercel,redis,vitest,githubactions,pnpm)](#技術)
+
 ## ページ
 
 | パス | 内容 |
@@ -21,6 +23,15 @@
 全ページの背後に three.js の 3D 背景 (`/theme` で選べる) があり、その上にガラス調のパネルを重ねるデザイン (ダークテーマ既定)。
 
 ## アーキテクチャ
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/architecture-dark.svg">
+  <img src="docs/architecture/architecture-light.svg" alt="アーキテクチャの全体像。閲覧者はブラウザで React のページと AI チャットを使い、Vercel 上の Next.js がページを描画する。/api/chat は Moonshot API (Kimi) とストリームでやり取りし、/api/now は本人が curl で投稿した記事を Upstash Redis に保存する。投稿と質問は Slack に通知される">
+</picture>
+
+図のソースと描き直し方は [docs/architecture/](docs/architecture/README.md) ([ADR 0020](docs/adr/0020-readme-architecture-diagram-d2.md))。
+
+### 詳細
 
 ```mermaid
 flowchart LR
@@ -92,6 +103,7 @@ flowchart TD
 | 通知 | Slack (Incoming Webhook)。`withSlackNotify` デコレータで、/now の投稿・更新と AI チャットへの質問を知らせる | [ADR 0018](docs/adr/0018-slack-notify-decorator.md) |
 | テスト | Playwright (E2E)、Vitest、axe | [ADR 0001](docs/adr/0001-testing-strategy.md) |
 | 品質ゲート | ESLint、GitHub Actions (`ci-ok`)、コミットゲート | [ADR 0007](docs/adr/0007-ci-quality-gate.md)、[ADR 0009](docs/adr/0009-commit-gate.md) |
+| README の図 | D2 (全体像)、Mermaid (詳細) | [ADR 0020](docs/adr/0020-readme-architecture-diagram-d2.md) |
 
 ## 開発
 

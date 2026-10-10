@@ -2,7 +2,7 @@ name: ci
 
 # 品質ゲート。lint / 型チェック / ユニット / ビルド / E2E がすべて通らないと main にマージできない。
 # ブランチ保護 (ルールセット) は .github/rulesets/main.json を GitHub に取り込んで有効にする
-# (必須チェックは最後の「ci-ok」1 つだけ。ジョブを増やしても needs に足せばルールセットは変えなくてよい)
+# (CI の必須チェックは最後の「ci-ok」1 つだけ (もう 1 つの必須チェック main-source は main-source.yml)。ジョブを増やしても needs に足せばルールセットは変えなくてよい)
 # 経緯: docs/adr/0007-ci-quality-gate.md
 # 共通の準備は .github/actions/setup、アクションはタグではなくコミット SHA で固定する (ADR 0014)
 

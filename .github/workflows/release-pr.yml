@@ -1,0 +1,31 @@
+name: release-pr
+# develop に PR がマージされるたびに、develop → main のリリース PR を作る・本文を更新する (scripts/release-pr.mjs、ADR 0021)
+# main は develop → main の PR でだけ更新する運用なので、その PR を手で作る手間と、含まれる PR の書き漏れをなくすため
+on:
+  push:
+    branches: [develop]
+  # 本文を作り直したいときに手で動かせるようにする
+  workflow_dispatch:
+# 連続でマージされたときに PR を二重に作らないよう 1 本ずつ動かす。途中で止めると本文が古いまま残るので取り消さない
+concurrency:
+  group: release-pr
+  cancel-in-progress: false
+# コードは読むだけ。PR の作成・更新にだけ書き込みの権限を渡す
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # アクションは書き換えられても中身が変わらないよう、test.yml と同じコミット SHA に固定する
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # スクリプトは依存なし (Node 22 の fetch) なので、pnpm install はしない
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/release-pr.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}

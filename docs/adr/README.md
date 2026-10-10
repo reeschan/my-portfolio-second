@@ -45,3 +45,4 @@
 | [0018](0018-slack-notify-decorator.md) | Slack への通知は Incoming Webhook で送り、Route Handler のデコレータで付ける | 提案中 |
 | [0019](0019-chat-docs-external-store.md) | チャットの資料: リポジトリから外し、Vercel Blob (private) から読む | 提案中 |
 | [0020](0020-readme-architecture-diagram-d2.md) | README の全体像の図は D2 で書き、ライト / ダーク用の自己完結 SVG をコミットする | 提案中 |
+| [0021](0021-release-pr-and-main-source.md) | develop → main はリリース PR を自動で作り、main への PR は develop からだけ受け付ける | 提案中 |

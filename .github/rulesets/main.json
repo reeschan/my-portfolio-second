@@ -1,5 +1,5 @@
 {
-  "name": "main を守る (CI 必須・PR 必須)",
+  "name": "main を守る (CI 必須・PR 必須・develop からのみ)",
   "target": "branch",
   "enforcement": "active",
   "conditions": {
@@ -26,7 +26,10 @@
       "type": "required_status_checks",
       "parameters": {
         "strict_required_status_checks_policy": true,
-        "required_status_checks": [{ "context": "ci-ok" }]
+        "required_status_checks": [
+          { "context": "ci-ok" },
+          { "context": "main-source" }
+        ]
       }
     }
   ],

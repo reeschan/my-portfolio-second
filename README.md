@@ -155,7 +155,7 @@ Markdown のファイルから投稿するなら `jq -n --arg title "近況" --r
 ## 開発の進め方
 
 - 実装は **PBI ありき**: PBI (何を・なぜ・完了条件) → WORK (計画と記録) → 必要なら ADR → 実装とテスト → コミットゲート → PR。手順は [docs/agents/development-flow.md](docs/agents/development-flow.md)
-- `main` には PR からのみマージする。CI の `ci-ok` (lint・型・ユニット・ビルド・E2E) が緑であることが条件 ([.github/rulesets/main.json](.github/rulesets/main.json))
+- `main` には `develop` からのリリース PR (自動で作られる) だけを Squash でマージする。CI の `ci-ok` (lint・型・ユニット・ビルド・E2E) と `main-source` (develop からの PR か) が緑であることが条件 ([.github/rulesets/main.json](.github/rulesets/main.json)、ADR 0021)
 - AI エージェント向けの指示は [AGENTS.md](AGENTS.md)。Self 組織の共通スキル (PBI の起票・PR の作成) は [plugins/self-base/](plugins/self-base/README.md)
 
 ## ライセンス

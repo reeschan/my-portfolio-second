@@ -11,3 +11,4 @@
 | [0005](0005-slack-notify/PBI.md) | /now の投稿・更新と AI チャットへの質問を Slack に通知する | 進行中 |
 | [0006](0006-chat-docs-external-store/PBI.md) | チャットの資料をリポジトリから外し、Vercel Blob (private) から読む | 進行中 |
 | [0007](0007-readme-architecture-diagram/PBI.md) | README にロゴ入りのアーキテクチャ図を載せる | 進行中 |
+| [0008](0008-release-pr/PBI.md) | develop → main のリリース PR を自動で作り、main への PR は develop からだけ受け付ける | 進行中 |

@@ -30,6 +30,7 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-10: commit-gate の「必須観点の穴」が Windows で `spawnSync npx ENOENT` になった。`scripts/e2e-coverage.mjs` が npx をシェルなしで起動していたため。`pnpm exec playwright` に変えた (CI の Linux でも同じく動く)
 - 2026-10-10: 同じスクリプトが app/ のルートを `/\/page\./` で探していて、Windows の `\` 区切りでは 1 件も見つからなかった。`[\\/]` で両方に合うようにした。表 (docs/testing/coverage-map.md) も作り直した (今回のテストの分と、以前から反映されていなかった /api/now の行)
 - 2026-10-10: 手元の commit-gate で /now の E2E が並列実行時に回ごとに入れ替わって落ちた (単独なら通る。/now と mermaid はこのブランチで変えていない)。dev サーバーが初回アクセスでコンパイルするためで、Mermaid の SVG を待つ上限を 30 秒にし、手元 (dev サーバー) のときだけテストの上限を 60 秒にした。CI は本番ビルドなので 30 秒のまま。/now の a11y が 1 度だけ 17.6 秒で落ちた件は、修正後に再現せず原因は未確認
+- 2026-10-10: develop に入った PBI-0007 の README のアーキテクチャ図 (D2) を取り込み、資料のノードを Vercel 内の resume.md から外部サービスの Vercel Blob (private) に描き直した。README の alt 文も合わせた
 
 ## 検証
 

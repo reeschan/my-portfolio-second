@@ -6,10 +6,10 @@
 | ルート | 種別 | smoke | navigation | interaction | chat | external-mock | api-contract | privacy | a11y | responsive | content | theme | llm-eval |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `/` | page | 1 | 1 | 1 | — | — | — | — | 1 | 2 | 1 | 1 | — |
-| `/career` | page | 1 | 3 | 3 | — | — | — | — | 1 | 4 | 2 | 1 | — |
+| `/career` | page | 1 | 4 | 3 | — | — | — | — | 1 | 4 | 3 | 1 | — |
 | `/chat` | page | 1 | 4 | 1 | 11 | 10 | — | — | 1 | 4 | 1 | 1 | — |
 | `/now` | page | 1 | 3 | 4 | — | — | — | — | 1 | 4 | 4 | 1 | — |
-| `/overview` | page | 1 | 8 | 2 | — | — | — | — | 1 | 4 | 1 | 2 | — |
+| `/overview` | page | 1 | 9 | 2 | — | — | — | — | 1 | 4 | 4 | 2 | — |
 | `/skills` | page | 1 | 3 | 4 | — | — | — | — | 1 | 4 | 2 | 1 | — |
 | `/theme` | page | 7 | 4 | 4 | — | — | — | — | 1 | 4 | 1 | 2 | — |
 | `/works` | page | 1 | 3 | 4 | — | — | — | — | 1 | 4 | 2 | 1 | — |

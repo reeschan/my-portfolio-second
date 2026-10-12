@@ -1,5 +1,6 @@
 import { expect, routes, test } from "./fixtures"
 import { careerData } from "../data/career"
+import { pageGuides, profile, profileLinks } from "../data/overview"
 import { certifications } from "../data/skills"
 import { works } from "../data/works"
 
@@ -7,10 +8,41 @@ import { works } from "../data/works"
 // (文言そのものは data/ が正本なので、テストは data/ から読んで突き合わせる)
 
 test.describe("表示内容", () => {
-  test("概要: プロフィールの見出しが出る", { tag: "@content", annotation: routes("/overview") }, async ({ page }) => {
+  test("概要: プロフィールの見出しと肩書き・自己紹介が出る", { tag: "@content", annotation: routes("/overview") }, async ({ page }) => {
     await page.goto("/overview")
     await expect(page.getByRole("heading", { level: 2, name: "プロフィール" })).toBeVisible()
+    await expect(page.getByText(profile.role, { exact: true })).toBeVisible()
+    for (const paragraph of profile.summary) {
+      await expect(page.getByText(paragraph)).toBeVisible()
+    }
   })
+
+  test("概要: 外部のプロフィールへのリンクが新しいタブで開く", { tag: "@content", annotation: routes("/overview") }, async ({ page }) => {
+    await page.goto("/overview")
+    const list = page.getByRole("list", { name: "外部のプロフィール" })
+    for (const link of profileLinks) {
+      const anchor = list.getByRole("link", { name: link.label, exact: true })
+      await expect(anchor).toHaveAttribute("href", link.href)
+      await expect(anchor).toHaveAttribute("target", "_blank")
+      await expect(anchor).toHaveAttribute("rel", "noopener noreferrer")
+    }
+  })
+
+  test(
+    "概要: 各ページの案内がタブと同じ順に並び、押すとそのページへ進める",
+    { tag: ["@content", "@navigation"], annotation: routes("/overview", "/career") },
+    async ({ page }) => {
+      await page.goto("/overview")
+      const list = page.getByRole("list", { name: "各ページの案内" })
+      await expect(list.getByRole("listitem")).toHaveCount(pageGuides.length)
+      for (const guide of pageGuides) {
+        await expect(list.getByText(guide.description)).toBeVisible()
+      }
+      await list.getByRole("link", { name: "経歴", exact: true }).click()
+      await expect(page).toHaveURL(/\/career$/)
+      await expect(page.getByRole("heading", { level: 1, name: "経歴" })).toBeVisible()
+    },
+  )
 
   test(
     "経歴: すべての経歴が新しい順に、期間付きで並ぶ",

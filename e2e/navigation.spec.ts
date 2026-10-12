@@ -17,8 +17,10 @@ test.describe("ナビゲーション", () => {
     { tag: ["@navigation", "@responsive"], annotation: routes(...pages.map((p) => p.path)) },
     async ({ page }) => {
       await page.goto("/overview")
+      // 概要の本文にも各ページへのリンクがあるので、タブの帯に絞って押す
+      const nav = page.getByRole("navigation", { name: "ページ切り替え" })
       for (const p of pages) {
-        await page.getByRole("link", { name: p.tab, exact: true }).click()
+        await nav.getByRole("link", { name: p.tab, exact: true }).click()
         await expect(page).toHaveURL(new RegExp(`${p.path}$`))
         await expect(page.getByRole("heading", { level: 1, name: p.heading })).toBeVisible()
       }
@@ -31,7 +33,10 @@ test.describe("ナビゲーション", () => {
     async ({ page }) => {
       await page.goto("/overview")
       const names = pages.map((p) => p.tab)
-      const tabLinks = page.getByRole("link").filter({ hasText: new RegExp(`^(${names.join("|")})$`) })
+      const tabLinks = page
+        .getByRole("navigation", { name: "ページ切り替え" })
+        .getByRole("link")
+        .filter({ hasText: new RegExp(`^(${names.join("|")})$`) })
       await expect(tabLinks).toHaveText(names)
     },
   )

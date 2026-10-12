@@ -2,24 +2,26 @@ import { BulletList, TagList } from "@/components/common"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import type { Engagement } from "@/data/career"
+import type { Messages } from "@/data/messages"
 
 type EngagementsDialogProps = {
   title: string
   engagements: Engagement[]
+  messages: Messages["career"]
 }
 
 // 経歴カードから開く「参画案件の詳細」
-export function EngagementsDialog({ title, engagements }: EngagementsDialogProps) {
+export function EngagementsDialog({ title, engagements, messages }: EngagementsDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="mt-3">
-          参画案件の詳細
+          {messages.engagements}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>参画案件の詳細</DialogTitle>
+          <DialogTitle>{messages.engagements}</DialogTitle>
           <DialogDescription>{title}</DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
@@ -31,7 +33,7 @@ export function EngagementsDialog({ title, engagements }: EngagementsDialogProps
               </div>
               <p className="text-sm">{engagement.summary}</p>
               {engagement.points.length > 0 && <BulletList items={engagement.points} className="space-y-1 text-sm text-muted-foreground" />}
-              {engagement.tech && <TagList tags={engagement.tech} variant="muted" label="使用技術" className="pt-1" />}
+              {engagement.tech && <TagList tags={engagement.tech} variant="muted" label={messages.tech} className="pt-1" />}
             </section>
           ))}
         </div>

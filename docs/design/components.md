@@ -21,6 +21,7 @@ flowchart TD
 - 矢印の向きにだけ import してよい。逆向き (ui → common など) や features 同士の import はしない
 - ページは `PageTemplate` で包み、中身は features / common の部品を並べるだけにする
 - 表示する文言・数値は `data/` に置く。部品はデータを props か `data/` から受け取る
+- 文言は言語ごとに持つ (ADR 0026)。固定の文言は `data/messages/`、表示データの英語版は `data/en/` で、言語ごとの入口は `data/localized.ts`。Client Component は `useLocale()` / `useMessages()`、Server Component は `getLocale()` / `getMessages()` で今の言語を読む
 
 ## 一覧
 
@@ -56,7 +57,7 @@ flowchart TD
 | --- | --- |
 | `PageTemplate` | タブ + h1 + 本文パネル。全ページの枠 |
 | `BrowserTabs` | ブラウザ風のタブ (`nav`「ページ切り替え」、現在地に `aria-current="page"`) とアドレスバー。タブの中身は `lib/navigation.ts` |
-| `AnnouncementBanner` | 上部のお知らせ (`region`「お知らせ」)。閉じられる |
+| `LocaleSwitch` | 右上 (アドレスバーの右端) の EN / JP スイッチ (`group`「表示言語」、選択中に `aria-pressed`)。Cookie に言語を残す (ADR 0026) |
 | `RssButton` | RSS フィードへのリンク |
 | `ThemeProvider` | next-themes。既定はダーク |
 

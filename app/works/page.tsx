@@ -1,15 +1,19 @@
 import type { Metadata } from "next"
 import { PageTemplate } from "@/components/layout/page-template"
 import { WorkGallery } from "@/components/features/works/work-gallery"
+import { getMessages } from "@/lib/i18n/server"
+import { pageTitle } from "@/lib/metadata"
 
-export const metadata: Metadata = {
-  title: "ワーク | Ryuki Tobita's Portfolio",
-  description: "制作したもの",
+export async function generateMetadata(): Promise<Metadata> {
+  const messages = await getMessages()
+  return { title: pageTitle(messages.nav.works), description: messages.works.description }
 }
 
-export default function WorksPage() {
+export default async function WorksPage() {
+  const messages = await getMessages()
+
   return (
-    <PageTemplate title="ワーク">
+    <PageTemplate title={messages.nav.works}>
       <WorkGallery />
     </PageTemplate>
   )

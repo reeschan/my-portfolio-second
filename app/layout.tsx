@@ -3,7 +3,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/layout/theme-provider"
-import { AnnouncementBanner } from "@/components/layout/announcement-banner"
+import { LocaleProvider } from "@/lib/i18n/locale-context"
+import { getLocale } from "@/lib/i18n/server"
 import { BackgroundScene } from "@/components/features/background/background-scene"
 
 // globals.css の --font-sans から参照するため CSS 変数として読み込む
@@ -14,21 +15,23 @@ export const metadata: Metadata = {
   description: "A portfolio website showcasing my work and skills",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // 表示言語は Cookie で決まる (ADR 0026)。Client Component には LocaleProvider で配る
+  const locale = await getLocale()
+
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={inter.variable}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <BackgroundScene />
-          <div className="relative min-h-screen">
-            <AnnouncementBanner />
-            {children}
-          </div>
-        </ThemeProvider>
+        <LocaleProvider locale={locale}>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+            <BackgroundScene />
+            <div className="relative min-h-screen">{children}</div>
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

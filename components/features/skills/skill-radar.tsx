@@ -5,6 +5,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, 
 import { Card, CardContent } from "@/components/ui/card"
 import { useIsClient } from "@/hooks/use-is-client"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useMessages } from "@/lib/i18n/locale-context"
 import { chartColors } from "@/lib/theme"
 
 // スキルデータの型定義をエクスポート
@@ -44,6 +45,7 @@ export function SkillRadar({ title, data, dataKey = "value", angleDataKey = "sub
   const isSmallerMobile = useMediaQuery("(max-width: 400px)")
   // recharts はサーバーでは大きさを測れないため、マウント後にだけ描く (それまでは同じ高さの枠を出す)
   const isMounted = useIsClient()
+  const messages = useMessages().skills
 
   // データにモバイル用の短縮名がある場合は使用する。デスクトップではそのまま
   const processedData = useMemo(() => {
@@ -77,8 +79,8 @@ export function SkillRadar({ title, data, dataKey = "value", angleDataKey = "sub
                   stroke={chartColors.grid}
                   tick={{ fontSize: isMobile ? 10 : 12 }}
                 />
-                <Radar name="スキルレベル" dataKey={dataKey} stroke={chartColors.primary} fill={chartColors.primary} fillOpacity={0.6} />
-                <Legend formatter={() => "スキルレベル (5段階評価)"} wrapperStyle={{ fontSize: isMobile ? 12 : 14 }} />
+                <Radar name={messages.level} dataKey={dataKey} stroke={chartColors.primary} fill={chartColors.primary} fillOpacity={0.6} />
+                <Legend formatter={() => messages.legend} wrapperStyle={{ fontSize: isMobile ? 12 : 14 }} />
               </RadarChart>
             </ResponsiveContainer>
           ) : (

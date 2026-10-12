@@ -1,4 +1,5 @@
 // /works の内容。作品を足すときはこのファイルに 1 件足し、図を public/works/<id>/ に置く (ADR 0024)
+// 英語版は data/en/works.ts に同じ id で足す (PBI-0014)
 export type RepositoryVisibility = "public" | "private"
 
 export type Work = {
@@ -44,6 +45,7 @@ export const works: Work[] = [
 - 「いま取り組んでいること」を Markdown と Mermaid で書き、API から投稿できる
 - 背後に three.js の 3D 背景を置き、6 種類から選べる
 - 作品のカードを押すと、このダイアログでアーキテクチャ図と説明を読める
+- ページの右上で、日本語と英語を切り替えられる
 
 # 工夫したところ
 - 部品を ui・common・layout・features の層に分け、依存の向きを決めて保っている

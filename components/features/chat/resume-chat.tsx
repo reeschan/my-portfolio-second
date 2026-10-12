@@ -5,18 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { apiFetch } from "@/lib/api/client"
 import { userMessageOf } from "@/lib/api/errors"
+import { useMessages } from "@/lib/i18n/locale-context"
 import type { ChatMessage } from "@/types/chat-types"
 import { ChatBubble } from "./chat-bubble"
 import { SuggestionList } from "./suggestion-list"
-
-const greeting = "こんにちは！職務経歴やスキルについて、気になることを何でも聞いてください。"
-
-const suggestions = [
-  "これまでの経歴を簡単に教えてください",
-  "得意な技術スタックは？",
-  "リーダー経験について教えてください",
-  "AWS の経験と資格は？",
-]
 
 // ストリームを読み切り、途中経過を onProgress に渡す。読み終えた全文を返す
 async function readStream(body: NonNullable<Response["body"]>, onProgress: (partial: string) => void): Promise<string> {
@@ -49,6 +41,7 @@ export function ResumeChat() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const t = useMessages().chat
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
@@ -70,9 +63,9 @@ export function ResumeChat() {
       const answer = await askChat(history, (partial) => {
         setMessages([...history, { role: "assistant", content: partial }])
       })
-      if (!answer) failure = "回答が空でした。もう一度お試しください。"
+      if (!answer) failure = t.empty
     } catch (e) {
-      failure = userMessageOf(e, "回答の取得に失敗しました。")
+      failure = userMessageOf(e, t.failed)
     }
 
     if (failure) {
@@ -101,18 +94,18 @@ export function ResumeChat() {
       <div
         ref={scrollRef}
         role="log"
-        aria-label="会話"
+        aria-label={t.log}
         className="flex-1 space-y-4 overflow-auto rounded-md border border-border/50 bg-background/50 p-4"
       >
-        <ChatBubble role="assistant">{greeting}</ChatBubble>
+        <ChatBubble role="assistant">{t.greeting}</ChatBubble>
 
         {messages.map((m, i) => (
           <ChatBubble key={i} role={m.role}>
-            {m.content || <span className="animate-pulse text-muted-foreground">考え中…</span>}
+            {m.content || <span className="animate-pulse text-muted-foreground">{t.thinking}</span>}
           </ChatBubble>
         ))}
 
-        {messages.length === 0 && <SuggestionList suggestions={suggestions} onSelect={(text) => void send(text)} />}
+        {messages.length === 0 && <SuggestionList suggestions={t.suggestions} onSelect={(text) => void send(text)} />}
       </div>
 
       {error && (
@@ -126,21 +119,21 @@ export function ResumeChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="経歴について質問する..."
+          placeholder={t.placeholder}
           maxLength={1000}
           disabled={isLoading}
           className="flex-1"
-          aria-label="質問"
+          aria-label={t.input}
         />
         <Button type="submit" disabled={isLoading || !input.trim()}>
-          送信
+          {t.send}
         </Button>
       </form>
 
       <p className="mt-2 text-xs text-muted-foreground">
-        職務経歴や保有している知識や技術、人柄について大まかに回答します。
+        {t.note[0]}
         <br />
-        詳細については LinkedIn やメールにてメッセージをいただけると幸いです。
+        {t.note[1]}
       </p>
     </div>
   )

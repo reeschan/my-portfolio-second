@@ -2,6 +2,7 @@
 export { BulletList } from "./bullet-list"
 export { Callout } from "./callout"
 export { GlassPanel } from "./glass-panel"
+export { Markdown } from "./markdown"
 export { Section } from "./section"
 export { TagList } from "./tag-list"
 export { TextLink } from "./text-link"

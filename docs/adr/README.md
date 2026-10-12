@@ -47,3 +47,4 @@
 | [0020](0020-readme-architecture-diagram-d2.md) | README の全体像の図は D2 で書き、ライト / ダーク用の自己完結 SVG をコミットする | 提案中 |
 | [0021](0021-release-pr-and-main-source.md) | develop → main はリリース PR を自動で作り、main への PR は develop からだけ受け付ける | 提案中 |
 | [0022](0022-ci-cost-and-owner-only-prs.md) | Actions の費用を抑える: E2E は develop へのマージ後だけ、PR は持ち主と Dependabot だけ | 提案中 |
+| [0024](0024-works-detail-data-and-diagrams.md) | 作品の詳細はデータで持ち、図は各リポジトリの D2 の SVG を写して出す | 提案中 |

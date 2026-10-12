@@ -1,14 +1,14 @@
 import type { Element, ElementContent } from "hast"
 import ReactMarkdown, { type Components } from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { TextLink } from "@/components/common"
+import { TextLink } from "./text-link"
 import { MermaidDiagram } from "./mermaid-diagram"
 
 type MarkdownProps = {
   children: string
 }
 
-// /now の記事本文。GFM (表・チェックリスト・打ち消し線) と ```mermaid の図に対応する
+// /now の記事と /works の作品の詳細の本文。GFM (表・チェックリスト・打ち消し線) と ```mermaid の図に対応する
 // 生の HTML は描かない (react-markdown の既定)。画像の埋め込みは扱わない (PBI-0004)
 export function Markdown({ children }: MarkdownProps) {
   return (

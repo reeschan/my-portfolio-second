@@ -52,8 +52,10 @@ test.describe("表示内容", () => {
       for (const work of works) {
         const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: work.title }) })
         await expect(card).toBeVisible()
-        await expect(card.getByRole("img", { name: work.image.alt })).toBeVisible()
+        await expect(card.getByRole("img", { name: work.architecture.alt })).toBeVisible()
       }
+      // 仮置きだった作品は無くなっている
+      await expect(page.getByRole("heading", { name: "プロジェクト2" })).toHaveCount(0)
     },
   )
 

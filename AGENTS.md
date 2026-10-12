@@ -52,7 +52,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 - `app/`: ページ (`/overview` `/career` `/skills` `/works` `/now` `/chat` `/theme`) と API (`/api/chat` `/api/now` `/rss.xml`)。ページは部品を組み立てるだけにする
 - `components/`: UI。層と依存の向きは **[docs/design/components.md](docs/design/components.md)**
   - `ui/`: shadcn/ui の基本部品 (Button, Badge, Dialog, Tabs …)
-  - `common/`: 画面をまたいで使う部品 (GlassPanel, Section, Callout, TagList, BulletList, TextLink)。`@/components/common` から import する
+  - `common/`: 画面をまたいで使う部品 (GlassPanel, Section, Callout, TagList, BulletList, TextLink, Markdown)。`@/components/common` から import する
   - `layout/`: 全ページ共通の枠 (`page-template.tsx`、`browser-tabs.tsx` など)
   - `features/<機能>/`: ページ・機能ごとの部品 (career, skills, works, chat, background, theme, now)
     - 3D 背景のシーンは `features/background/themes/<id>.tsx` に 1 テーマ 1 ファイル。一覧と選択のストアは `lib/background-theme.ts` (ADR 0012)

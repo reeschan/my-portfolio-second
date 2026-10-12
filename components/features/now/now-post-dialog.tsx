@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { NowPost } from "@/lib/now/schema"
 import { formatJapaneseDateTime } from "@/lib/format"
-import { Markdown } from "./markdown"
+import { Markdown } from "@/components/common"
 
 type NowPostDialogProps = {
   post: NowPost | null

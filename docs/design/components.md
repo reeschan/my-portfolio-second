@@ -47,6 +47,8 @@ flowchart TD
 | `BulletList` | 黒丸の箇条書き |
 | `TagList` | バッジを横に並べた一覧。`label` で何の一覧かを読み上げる |
 | `TextLink` | 本文中のリンク。外部 URL は新しいタブで開き `rel="noopener noreferrer"` を付ける |
+| `Markdown` | Markdown の本文。GFM と ```` ```mermaid ```` の図に対応。見出しは h3 から |
+| `MermaidDiagram` | Markdown の中の ```` ```mermaid ```` を図にする。mermaid は図があるときだけ読み込む |
 
 ### layout (`components/layout/`): 全ページ共通の枠
 
@@ -64,11 +66,11 @@ flowchart TD
 | --- | --- | --- |
 | career | `CareerTimeline`, `EngagementsDialog` | `data/career.ts` |
 | skills | `SkillsVisualization`, `SkillRadar` | `data/skills.ts` |
-| works | `WorkGallery`, `WorkCard`, `WorkDetailDialog`, `ArchitectureDiagram` | `data/works.ts` |
+| works | `WorkGallery`, `WorkCard`, `WorkDetailDialog` | `data/works.ts` |
 | chat | `ResumeChat`, `ChatBubble`, `SuggestionList` | — (API から) |
 | background | `BackgroundScene`, `Scene`, `themes/*` (テーマごとのシーン) | `lib/background-theme.ts` (選択中のテーマ)、`lib/theme.ts` の色 (グリッドのみ) |
 | theme | `ThemePicker` | `lib/background-theme.ts` |
-| now | `NowPostList`, `NowPostCard`, `NowPostDialog`, `Markdown`, `MermaidDiagram` | `lib/now/store.ts` (POST /api/now で投稿した記事)、`data/now.ts` (拠点・受付状況) |
+| now | `NowPostList`, `NowPostCard`, `NowPostDialog` | `lib/now/store.ts` (POST /api/now で投稿した記事)、`data/now.ts` (拠点・受付状況) |
 
 ## 部品を作るときの約束
 

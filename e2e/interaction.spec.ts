@@ -1,4 +1,5 @@
 import { expect, routes, test } from "./fixtures"
+import { works } from "../data/works"
 
 test.describe("ページ内の操作", () => {
   test(
@@ -89,30 +90,54 @@ test.describe("ページ内の操作 (追加分)", () => {
   })
 
   test(
-    "ワーク: 作品の詳細ダイアログにアーキテクチャ図が出て、閉じるボタンで閉じられる",
+    "ワーク: どの作品のカードからも詳細ダイアログが開き、図と本文の見出しが出て、閉じるボタンで閉じられる",
     { tag: ["@interaction", "@responsive"], annotation: routes("/works") },
     async ({ page }) => {
       await page.goto("/works")
-      await page.getByRole("button", { name: "ポートフォリオサイト" }).click()
+      for (const work of works) {
+        await page.getByRole("button", { name: work.title, exact: true }).click()
 
-      const dialog = page.getByRole("dialog", { name: "ポートフォリオサイト" })
-      await expect(dialog.getByRole("heading", { name: "アーキテクチャ", exact: true })).toBeVisible()
-      await expect(dialog.getByRole("listitem")).toHaveCount(4)
+        const dialog = page.getByRole("dialog", { name: work.title })
+        await expect(dialog).toBeVisible()
+        await expect(dialog.getByRole("img", { name: work.architecture.alt })).toBeVisible()
+        await expect(dialog.getByRole("heading", { name: "概要", exact: true })).toBeVisible()
 
-      await dialog.getByRole("button", { name: "閉じる" }).click()
-      await expect(dialog).toBeHidden()
+        await dialog.getByRole("button", { name: "閉じる" }).click()
+        await expect(dialog).toBeHidden()
+      }
     },
   )
 
-  test("ワーク: 詳細のない作品は押せない (ボタンにならない)", { tag: "@interaction", annotation: routes("/works") }, async ({ page }) => {
-    await page.goto("/works")
-    await expect(page.getByRole("heading", { name: "プロジェクト2" })).toBeVisible()
-    await expect(page.getByRole("button", { name: "プロジェクト2" })).toHaveCount(0)
-  })
+  test(
+    "ワーク: 公開リポジトリはリンクを新しいタブで開き、非公開は「リポジトリは非公開」と出る",
+    { tag: "@interaction", annotation: routes("/works") },
+    async ({ page }) => {
+      await page.goto("/works")
+      for (const work of works) {
+        await page.getByRole("button", { name: work.title, exact: true }).click()
+        const dialog = page.getByRole("dialog", { name: work.title })
+        await expect(dialog).toBeVisible()
+
+        if (work.repository.visibility === "public") {
+          const link = dialog.getByRole("link", { name: work.repository.url.replace(/^https:\/\//, "") })
+          await expect(link).toHaveAttribute("href", work.repository.url)
+          await expect(link).toHaveAttribute("target", "_blank")
+          await expect(link).toHaveAttribute("rel", /noopener/)
+          await expect(link).toHaveAttribute("rel", /noreferrer/)
+        } else {
+          await expect(dialog.getByText("リポジトリは非公開", { exact: true })).toBeVisible()
+          await expect(dialog.locator('a[href*="github.com"]')).toHaveCount(0)
+        }
+
+        await dialog.getByRole("button", { name: "閉じる" }).click()
+        await expect(dialog).toBeHidden()
+      }
+    },
+  )
 
   test("ワーク: キーボードだけで詳細ダイアログを開ける", { tag: "@interaction", annotation: routes("/works") }, async ({ page }) => {
     await page.goto("/works")
-    await page.getByRole("button", { name: "ポートフォリオサイト" }).focus()
+    await page.getByRole("button", { name: "ポートフォリオサイト", exact: true }).focus()
     await page.keyboard.press("Enter")
     await expect(page.getByRole("dialog", { name: "ポートフォリオサイト" })).toBeVisible()
   })

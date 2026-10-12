@@ -40,6 +40,7 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.7.0",
     "three": "^0.186.1",
+    "tokiline": "^0.1.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

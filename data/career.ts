@@ -40,10 +40,16 @@ export const careerData: CareerEntry[] = [
         points: [],
       },
       {
-        client: "Stract",
+        client: "STRACT",
         // TODO: 参画期間 (period) と使用技術 (tech) を記入する
         summary: "Plug アプリの開発。",
         points: ["検索機能の改善", "AI 連携機能の開発", "UI 刷新プロジェクトへの参画"],
+      },
+      {
+        // 個別に載せていない参画先をまとめる
+        client: "Other",
+        summary: "上記のほかにも、複数の企業の Web アプリケーション開発に携わっています。",
+        points: [],
       },
     ],
   },

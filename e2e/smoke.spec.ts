@@ -16,9 +16,10 @@ test.describe("スモーク: 全ページが表示できる", () => {
         expect(res?.status()).toBe(200)
 
         await expect(page.getByRole("heading", { level: 1, name: p.heading })).toBeVisible()
-        // 全タブが並んでいる
+        // 全タブが並んでいる (概要の本文にも同じ名前のリンクがあるので、タブの帯に絞る)
+        const nav = page.getByRole("navigation", { name: "ページ切り替え" })
         for (const q of pages) {
-          await expect(page.getByRole("link", { name: q.tab, exact: true })).toBeAttached()
+          await expect(nav.getByRole("link", { name: q.tab, exact: true })).toBeAttached()
         }
         // アドレスバーに現在のパスが出る
         await expect(page.getByText(`myportfolio.vercel.app${p.path}`)).toBeVisible()

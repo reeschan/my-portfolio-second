@@ -1,4 +1,5 @@
 import { expect, routes, test } from "./fixtures"
+import { careerData } from "../data/career"
 import { works } from "../data/works"
 
 test.describe("ページ内の操作", () => {
@@ -57,8 +58,10 @@ test.describe("ページ内の操作 (追加分)", () => {
       await page.getByRole("button", { name: "参画案件の詳細" }).first().click()
 
       const dialog = page.getByRole("dialog", { name: "参画案件の詳細" })
-      await expect(dialog.getByRole("heading", { level: 3, name: "Forgers" })).toBeVisible()
-      await expect(dialog.getByRole("heading", { level: 3, name: "Stract" })).toBeVisible()
+      // 参画先の名前は data/career.ts が正本
+      for (const { client } of careerData.flatMap((e) => e.engagements ?? [])) {
+        await expect(dialog.getByRole("heading", { level: 3, name: client, exact: true })).toBeVisible()
+      }
 
       await dialog.getByRole("button", { name: "閉じる" }).click()
       await expect(dialog).toBeHidden()

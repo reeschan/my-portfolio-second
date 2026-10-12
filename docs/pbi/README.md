@@ -15,3 +15,4 @@
 | [0009](0009-ci-cost-owner-only/PBI.md) | Actions の費用を抑える: E2E は develop へのマージ後だけ、PR は持ち主と Dependabot だけ | 進行中 |
 | [0010](0010-tokiline-timeline/PBI.md) | 経歴のタイムラインを自作ライブラリ tokiline に置き換える | 進行中 |
 | [0011](0011-works-detail/PBI.md) | 自作の作品を /works に並べ、押すとアーキテクチャ図付きの詳細ダイアログを出す | 進行中 |
+| [0012](0012-release-merge-commit/PBI.md) | リリース PR (develop → main) はマージコミットで入れ、毎回の衝突をなくす | 進行中 |

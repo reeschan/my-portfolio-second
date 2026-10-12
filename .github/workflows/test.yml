@@ -2,7 +2,7 @@ name: ci
 
 # 品質ゲート。PR では lint / 型チェック / ユニット / ビルドが通らないとマージできない (E2E は PR では回さない)。
 # E2E は develop への push (PR のマージ後) で回す。成功したら release-pr ワークフローがリリース PR を作る。
-# main への push では回さない (main に入る内容は、リリース PR の head = develop の先頭コミットで E2E 込みの ci-ok が通ったもの。Squash でマージするのでツリーは同じ)。
+# main への push では回さない (main に入る内容は、リリース PR の head = develop の先頭コミットで E2E 込みの ci-ok が通ったもの。マージコミットで入れ、main は develop の祖先なのでツリーは同じ。ADR 0025)。
 # PR の CI は作成者が持ち主か Dependabot のときだけ動かす (public リポジトリで他人の PR に費用をかけない)。
 # ブランチ保護 (ルールセット) は .github/rulesets/main.json を GitHub に取り込んで有効にする
 # (CI の必須チェックは最後の「ci-ok」1 つだけ (もう 1 つの必須チェック main-source は main-source.yml)。ジョブを増やしても needs に足せばルールセットは変えなくてよい)

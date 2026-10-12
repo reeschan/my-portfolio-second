@@ -8,7 +8,7 @@ PBI: [PBI.md](PBI.md)
 - [x] 案内とタブの対応をユニットで確かめる — test/data/overview.test.ts が通る
 - [x] 経歴を STRACT と Other にする — e2e/interaction.spec.ts が通る
 - [x] タブを名前で探す E2E を `ページ切り替え` のナビゲーションに絞る — e2e/navigation.spec.ts と e2e/smoke.spec.ts が通る
-- [ ] LinkedIn の URL を持ち主から受け取って足す
+- [x] LinkedIn の URL を持ち主から受け取って足す — e2e/content.spec.ts が通る
 
 ## ADR が要る判断
 
@@ -21,6 +21,8 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-12: タブの表示名は `lib/navigation.ts` が正なので、案内のデータには href と説明だけを持たせ、名前はページで引く
 - 2026-10-12: 本文に「経歴」などのリンクが増え、`getByRole("link", { name: "経歴" })` が 2 つに当たるようになる。既存の E2E はタブを押す意図なので、`ページ切り替え` のナビゲーションの中に絞った
 - 2026-10-12: 経歴のダイアログの E2E は参画先の名前を直書きせず、data/career.ts から読む形にした (content 観点の決まりに合わせる)
+
+- 2026-10-12: 持ち主から LinkedIn の URL を受け取って足した。共有用の `?isSelfProfile=true` は本人の画面向けの引数なので外した
 
 ## 検証
 

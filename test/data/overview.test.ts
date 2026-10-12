@@ -16,10 +16,11 @@ describe("overview のデータ", () => {
     }
   })
 
-  it("外部のプロフィールは https の URL で、GitHub を含む", () => {
+  it("外部のプロフィールは https の URL で、GitHub と LinkedIn を含む", () => {
     for (const link of profileLinks) {
       expect(link.href.startsWith("https://")).toBe(true)
     }
     expect(profileLinks).toContainEqual({ label: "GitHub", href: "https://github.com/reeschan" })
+    expect(profileLinks.map((link) => link.label)).toContain("LinkedIn")
   })
 })

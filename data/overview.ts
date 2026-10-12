@@ -22,8 +22,10 @@ export const profile = {
   ],
 } as const
 
-// TODO: LinkedIn のプロフィール URL を持ち主に確認して足す
-export const profileLinks: readonly ProfileLink[] = [{ label: "GitHub", href: "https://github.com/reeschan" }]
+export const profileLinks: readonly ProfileLink[] = [
+  { label: "GitHub", href: "https://github.com/reeschan" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/ryuki-tobita-890802228/" },
+]
 
 // 概要以外のタブを、タブと同じ順に案内する
 export const pageGuides: readonly PageGuide[] = [

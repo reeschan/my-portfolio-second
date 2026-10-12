@@ -41,3 +41,4 @@ main は develop → main の PR (Squash のみ) でだけ更新する決まり�
 - リリース PR を作り直したいときは Actions の `release-pr` を手動で実行する
 - release-pr が GITHUB_TOKEN で PR を作るには、リポジトリの Settings → Actions → General → Workflow permissions の「Allow GitHub Actions to create and approve pull requests」を有効にする必要がある (無効だと PR の作成が 403 になる)。ルールセットの承認数は 0 なので、Actions が承認できることで増える権限は実質ない
 - リリース PR を作るきっかけは ADR 0022 で「develop の CI の成功」に変えた
+- マージの方法は ADR 0025 で「マージコミットのみ」に変えた (Squash だと次のリリースで衝突するため)

@@ -10,6 +10,7 @@
  */
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "tokiline/style.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
@@ -164,4 +165,21 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+}
+
+/*
+ * 経歴のタイムライン (tokiline)。線・マーカーの色をこのサイトのトークンに合わせる (ADR 0023)。
+ * このサイトのトークンは HSL のチャンネルだけを持つので、色として使うには hsl() で包む必要がある。
+ * @layer の外に置くのは、tokiline の components レイヤーより強くして確実に上書きするため。
+ */
+.toki-timeline {
+  --toki-line-color: hsl(var(--border));
+  --toki-line-width: 1px;
+  --toki-marker-size: 2rem;
+  --toki-marker-bg: hsl(var(--primary));
+  --toki-marker-fg: hsl(var(--primary-foreground));
+  --toki-marker-ring-width: 4px;
+  --toki-marker-ring-color: hsl(var(--card));
+  --toki-card-bg: hsl(var(--card));
+  --toki-arrow-size: 0;
 }

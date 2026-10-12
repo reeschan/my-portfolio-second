@@ -94,8 +94,7 @@ describe("buildReleaseBody", () => {
     for (const item of [
       "- [ ] CI (ci-ok) が緑",
       "- [ ] Vercel のプレビューで主要な画面を確かめた",
-      "- [ ] Squash and merge でマージする (main は Squash のみ)",
-      "- [ ] マージ後、main を develop にマージして揃える",
+      "- [ ] Create a merge commit でマージする (main はマージコミットのみ。ADR 0025)",
     ]) {
       expect(body).toContain(item)
     }

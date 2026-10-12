@@ -1,4 +1,5 @@
 import { AwardIcon, BriefcaseIcon, GraduationCapIcon, WrenchIcon } from "lucide-react"
+import { Timeline, TimelineCard, TimelineItem, TimelineMarker, TimelineMeta } from "tokiline/react"
 import { TagList } from "@/components/common"
 import { Badge } from "@/components/ui/badge"
 import { careerData, type CareerEntry, type CareerEntryType } from "@/data/career"
@@ -11,14 +12,14 @@ const icons: Record<CareerEntryType, typeof BriefcaseIcon> = {
   milestone: AwardIcon,
 }
 
-// 経歴を縦のタイムラインで並べる
+// 経歴を縦のタイムラインで並べる。線・マーカー・カードの配置は tokiline に任せ、色は globals.css の変数で合わせる (ADR 0023)
 export function CareerTimeline({ entries = careerData }: { entries?: CareerEntry[] }) {
   return (
-    <ol className="relative ml-4 border-l border-border">
+    <Timeline side="end">
       {entries.map((entry) => (
         <CareerTimelineItem key={entry.title} entry={entry} />
       ))}
-    </ol>
+    </Timeline>
   )
 }
 
@@ -26,19 +27,20 @@ function CareerTimelineItem({ entry }: { entry: CareerEntry }) {
   const Icon = icons[entry.type]
 
   return (
-    <li className="relative pb-10 pl-8 last:pb-0">
-      <span className="absolute -left-4 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground ring-4 ring-card">
+    <TimelineItem>
+      <TimelineMarker>
         <Icon className="h-4 w-4" />
-      </span>
+      </TimelineMarker>
 
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+      <TimelineMeta className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <time>
           {entry.startDate} - {entry.endDate ?? "現在"}
         </time>
         {entry.ongoing && <Badge variant="status">継続中</Badge>}
-      </div>
+      </TimelineMeta>
 
-      <div className="mt-2 rounded-lg border border-border/40 border-t-4 border-t-primary bg-card p-4 shadow-md">
+      {/* カードの面は今までと同じ見た目を保つため、Tailwind のクラスで指定する */}
+      <TimelineCard className="rounded-lg border border-border/40 border-t-4 border-t-primary bg-card p-4 shadow-md">
         <h3 className="text-lg font-semibold">{entry.title}</h3>
         <p className="text-sm text-muted-foreground">{entry.subtitle}</p>
         {entry.description && <p className="mt-2">{entry.description}</p>}
@@ -49,7 +51,7 @@ function CareerTimelineItem({ entry }: { entry: CareerEntry }) {
             <EngagementsDialog title={entry.title} engagements={entry.engagements} />
           </>
         )}
-      </div>
-    </li>
+      </TimelineCard>
+    </TimelineItem>
   )
 }

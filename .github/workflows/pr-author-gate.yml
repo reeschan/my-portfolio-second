@@ -1,0 +1,37 @@
+name: pr-author-gate
+
+# このリポジトリは public で、他人もフォークから PR を出せる。GitHub の設定では PR の作成そのものを
+# 恒久的に禁止できないので、持ち主 (github.repository_owner)・dependabot[bot]・github-actions[bot]
+# (このリポジトリの release-pr が作るリリース PR) 以外が出した PR を、開かれた時点でコメントを付けて
+# 自動で閉じる。経緯は ADR 0022 (docs/adr/0022-*.md)。
+#
+# pull_request_target を使う理由: フォークからの PR でも、ベースのリポジトリの書き込み権限を持った
+# GITHUB_TOKEN で動くため。pull_request ではフォークの PR のトークンが読み取り専用になり、PR を閉じられない。
+#
+# 安全のための約束 (崩すと、他人のコードや文字列が書き込み権限付きで動く):
+# - PR のコードはチェックアウトしない・実行しない (チェックアウトのアクションを使わない)
+# - PR の題名・本文・ブランチ名などの文字列を run に埋め込まない。使うのは PR の番号だけ
+# - 式は run に直接書かず env 経由で渡す
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  close-outside-pr:
+    if: github.event.pull_request.user.login != github.repository_owner && github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.user.login != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      pull-requests: write
+    steps:
+      - name: 持ち主・Dependabot・リリース PR 以外の PR を閉じる
+        # gh は ubuntu-latest に入っているものを使う
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr close "$NUMBER" --repo "$REPO" --comment "このリポジトリは個人のポートフォリオのため、持ち主以外からの Pull Request は受け付けていません。自動で閉じました。ご意見は Issue でお知らせください。"

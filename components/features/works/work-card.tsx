@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { TagList } from "@/components/common"
 import { cn } from "@/lib/utils"
 import type { Work } from "@/data/works"
 
@@ -21,13 +22,21 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
         interactive ? "hover:-translate-y-1 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring" : "hover:shadow-md",
       )}
     >
-      <div className="relative h-48 w-full">
+      {/* 図は横長で白や黒の地なので、切り取らず枠に収める。ライト / ダークは dark: で出し分ける */}
+      <div className="relative h-48 w-full bg-background/60 p-2">
         <Image
-          src={work.image.src}
-          alt={work.image.alt}
+          src={work.architecture.light}
+          alt={work.architecture.alt}
           fill
           loading={priority ? "eager" : undefined}
-          className={cn("object-cover", interactive && "transition-transform hover:scale-105")}
+          className={cn("object-contain dark:hidden", interactive && "transition-transform hover:scale-105")}
+        />
+        <Image
+          src={work.architecture.dark}
+          alt={work.architecture.alt}
+          fill
+          loading={priority ? "eager" : undefined}
+          className={cn("hidden object-contain dark:block", interactive && "transition-transform hover:scale-105")}
         />
       </div>
       <div className="p-4">
@@ -41,6 +50,7 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
           )}
         </h3>
         <p className="mt-2 text-sm text-muted-foreground">{work.description}</p>
+        <TagList tags={work.tech} label="使用技術" variant="muted" className="mt-3" />
       </div>
     </article>
   )

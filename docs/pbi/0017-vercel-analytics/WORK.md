@@ -20,8 +20,10 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-13: `<Analytics />` は Vercel 以外で読み込むと、本番ビルドでは `/_vercel/insights/script.js` が 404 になり (console エラーになる)、dev では外部の `va.vercel-scripts.com` からデバッグ用スクリプトを読む。E2E の console エラー検出と「テストから外部に出ない」方針に掛かるので、`VERCEL=1` のときだけ描くことにした
 - 2026-10-13: `pnpm add` で `pnpm-lock.yaml` の既存の依存の書き方 (`supports-color@7.2.0` の付け方) も変わった。pnpm 9.15〜10.33 のどれで作り直しても同じ差分になるので、そのまま入れる
 
+- 2026-10-13: E2E が本当に効くかを、`VERCEL=1` で本番ビルドを立てて確かめた。追加した E2E は `/_vercel/insights/script.js` への通信と 404 の console エラーの両方で落ちた (いつも描いた場合に CI で起きることと同じ)
+
 ## 検証
 
 ```
-pnpm commit-gate
+CI=1 pnpm commit-gate  # 本番ビルドで E2E 132 件すべて合格
 ```

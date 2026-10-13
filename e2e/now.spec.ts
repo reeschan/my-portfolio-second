@@ -41,6 +41,26 @@ test.describe("Now の記事", () => {
     },
   )
 
+  test(
+    "Markdown のファイルを multipart/form-data で投稿すると、先頭の見出しが題名になってカードに出る (Postman 向け)",
+    { tag: "@content", annotation: routes("/now", "/api/now") },
+    async ({ page, request }) => {
+      const title = uniqueTitle("ファイル投稿")
+      const res = await request.post("/api/now", {
+        headers: auth,
+        multipart: {
+          file: { name: "post.md", mimeType: "text/markdown", buffer: Buffer.from(`# ${title}\n\nファイルから投稿した本文です。`) },
+        },
+      })
+      expect(res.status(), await res.text()).toBe(201)
+      expect(await res.json()).toMatchObject({ title, body: "ファイルから投稿した本文です。" })
+
+      await page.goto("/now")
+      const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) })
+      await expect(card.getByText("ファイルから投稿した本文です。")).toBeVisible()
+    },
+  )
+
   test("記事は公開日の新しい順に並ぶ", { tag: "@content", annotation: routes("/now") }, async ({ page, request }) => {
     const older = uniqueTitle("古い記事")
     const newer = uniqueTitle("新しい記事")

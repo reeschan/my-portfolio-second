@@ -112,6 +112,42 @@ test.describe("ページ内の操作 (追加分)", () => {
   )
 
   test(
+    "ワーク: アーキテクチャ図を押すと画面いっぱいに拡大でき、倍率を変えられ、Escape で詳細に戻る",
+    { tag: ["@interaction", "@responsive"], annotation: routes("/works") },
+    async ({ page }) => {
+      const work = works[0]!
+      await page.goto("/works")
+      await page.getByRole("button", { name: work.title, exact: true }).click()
+      const detail = page.getByRole("dialog", { name: work.title })
+      await detail.getByRole("button", { name: "アーキテクチャ図を拡大する" }).click()
+
+      const viewer = page.getByRole("dialog", { name: `${work.title} のアーキテクチャ` })
+      await expect(viewer.getByRole("img", { name: work.architecture.alt })).toBeVisible()
+      const level = viewer.getByRole("status", { name: "表示の倍率" })
+      await expect(level).toHaveText("100%")
+      await expect(viewer.getByRole("button", { name: "縮小" })).toBeDisabled()
+
+      // 拡大すると図が表示領域より広くなり、横にスクロールして見回せる
+      const area = viewer.getByRole("region", { name: "図の表示領域" })
+      const areaBox = await area.boundingBox()
+      await viewer.getByRole("button", { name: "拡大" }).click()
+      await viewer.getByRole("button", { name: "拡大" }).click()
+      await expect(level).toHaveText("200%")
+      const imageBox = await viewer.getByRole("img", { name: work.architecture.alt }).boundingBox()
+      expect(imageBox!.width).toBeGreaterThan(areaBox!.width * 1.5)
+
+      await viewer.getByRole("button", { name: "全体を表示" }).click()
+      await expect(level).toHaveText("100%")
+      await expect(viewer.getByRole("link", { name: "元の図を新しいタブで開く" })).toHaveAttribute("target", "_blank")
+
+      // 拡大表示だけが閉じ、作品の詳細は開いたまま
+      await page.keyboard.press("Escape")
+      await expect(viewer).toBeHidden()
+      await expect(detail).toBeVisible()
+    },
+  )
+
+  test(
     "ワーク: 公開リポジトリはリンクを新しいタブで開き、非公開は「リポジトリは非公開」と出る",
     { tag: "@interaction", annotation: routes("/works") },
     async ({ page }) => {

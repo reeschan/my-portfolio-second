@@ -22,3 +22,4 @@
 | [0016](0016-profile-avatar/PBI.md) | 概要のプロフィールにメインのアイコンを丸く載せる | 進行中 |
 | [0017](0017-vercel-analytics/PBI.md) | Vercel Analytics で閲覧数を計測する | 進行中 |
 | [0018](0018-contact-form/PBI.md) | お問い合わせフォームを足し、お問い合わせを Slack に届ける | 進行中 |
+| [0021](0021-architecture-viewer/PBI.md) | ワークのアーキテクチャ図を拡大して読めるようにする | 進行中 |

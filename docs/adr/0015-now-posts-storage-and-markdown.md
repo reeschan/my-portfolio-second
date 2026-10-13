@@ -19,6 +19,7 @@ Vercel のサーバーレス関数はファイルに書いても残らないの�
   - Redis が未設定なら、開発中と `NOW_POSTS_STORE=memory` (E2E) のときだけプロセス内のメモリに保存する。本番で未設定なら投稿は 503 にし、一覧は空にする
 - **認可は固定のトークン**。`Authorization: Bearer <NOW_POST_TOKEN>` と定数時間で比べる。未設定なら誰も投稿できない
 - **API**: `POST /api/now` (足す)、`PUT /api/now/[id]` (書き換える。公開日を省くと元のまま)、`DELETE /api/now/[id]` (消す)。認証は `decorator/` のデコレータで掛ける ([ADR 0016](0016-test-directory-and-auth-decorator.md))
+  - 追記 (PBI-0015): POST と PUT は JSON に加えて `multipart/form-data` (`file` に Markdown のファイル、`title`・`publishedAt` は任意) も受ける。Postman などでファイルを選んで投稿できるようにするため。題名を省くとファイル先頭の `# 見出し`、なければファイル名を使う (`lib/now/input.ts`)
 - **描画**: `react-markdown` + `remark-gfm`。生の HTML は描かない。` ```mermaid ` のコードブロックだけ `mermaid` で SVG にする
   - mermaid は大きいので、図を開いたときに動的 import する。`securityLevel: "strict"`
 - /now はリクエストごとに保存先から読む (`connection()`)。書き込み後のキャッシュ破棄は要らない

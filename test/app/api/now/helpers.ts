@@ -36,4 +36,15 @@ export function jsonRequest(method: string, path: string, body?: unknown, auth: 
   })
 }
 
+// multipart/form-data のリクエスト。Content-Type (boundary 付き) は FormData から Request が付ける
+export function formRequest(method: string, path: string, fields: Record<string, string | File>, auth: string | null = token) {
+  const form = new FormData()
+  for (const [name, value] of Object.entries(fields)) form.append(name, value)
+  return new Request(`http://localhost${path}`, {
+    method,
+    headers: auth ? { Authorization: `Bearer ${auth}` } : {},
+    body: form,
+  })
+}
+
 export const paramsOf = <T extends Record<string, string>>(params: T) => ({ params: Promise.resolve(params) })

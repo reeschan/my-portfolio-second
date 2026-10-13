@@ -150,7 +150,18 @@ curl -X DELETE https://<ドメイン>/api/now/<id> -H "Authorization: Bearer $NO
 
 `SLACK_WEBHOOK_URL` (Slack の Incoming Webhook の URL) を設定すると、投稿・更新したときと AI チャットに質問が来たときに、その Webhook のチャンネルへ通知が届く ([ADR 0018](docs/adr/0018-slack-notify-decorator.md))。
 
-Markdown のファイルから投稿するなら `jq -n --arg title "近況" --rawfile body post.md '{title: $title, body: $body}' | curl ... -d @-` のように JSON にする。
+### Markdown のファイルをそのまま投稿する (Postman など)
+
+`multipart/form-data` で送ると、Markdown のファイルを JSON に詰め直さずに投稿・更新できる。
+
+| 欄 | 必須 | 内容 |
+| --- | --- | --- |
+| `file` | ○ | Markdown のファイル (.md) |
+| `title` | | 題名。省略すると、ファイル先頭の `# 見出し` (本文からは外す)、それもなければファイル名 (拡張子なし) |
+| `publishedAt` | | 公開日時 (ISO 8601)。省略時は JSON と同じ |
+
+- Postman: [docs/postman/now-api.postman_collection.json](docs/postman/now-api.postman_collection.json) を Import し、コレクションの変数 `baseUrl` と `token` を入れて、Body の `file` 行でファイルを選んで Send する
+- curl: `curl -X POST https://<ドメイン>/api/now -H "Authorization: Bearer $NOW_POST_TOKEN" -F "file=@post.md"`
 
 ## 開発の進め方
 

@@ -5,7 +5,7 @@ import { DELETE, PUT } from "@/app/api/now/[id]/route"
 import { POST } from "@/app/api/now/route"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
-import { jsonRequest, paramsOf, useMemoryStoreEnv, useSlackMock } from "../helpers"
+import { formRequest, jsonRequest, paramsOf, useMemoryStoreEnv, useSlackMock } from "../helpers"
 
 // after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
 const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
@@ -62,6 +62,14 @@ describe("PUT /api/now/[id]", () => {
     await runAfterTasks()
 
     expect(slack.sent().map((m) => m.text)).toEqual([":pencil2: /now の記事を更新しました: 直した題名"])
+  })
+
+  it("multipart/form-data で直した Markdown のファイルを送っても置き換えられる (公開日は元のまま)", async () => {
+    const { id } = await create()
+    const file = new File(["# 直した題名\n\n直した本文"], "post.md", { type: "text/markdown" })
+    const res = await PUT(formRequest("PUT", `/api/now/${id}`, { file }), paramsOf({ id }))
+    expect(res.status).toBe(200)
+    expect(await stored(id)).toMatchObject({ title: "直した題名", body: "直した本文", publishedAt: "2026-01-01T00:00:00.000Z" })
   })
 
   it("ない記事なら 404 で、新しく作らない", async () => {

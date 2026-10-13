@@ -10,6 +10,7 @@ export const ja = {
     works: "ワーク",
     now: "Now",
     chat: "チャット",
+    contact: "お問い合わせ",
     theme: "テーマ",
   } satisfies Record<NavId, string>,
   layout: {
@@ -84,6 +85,32 @@ export const ja = {
       "職務経歴や保有している知識や技術、人柄について大まかに回答します。",
       "詳細については LinkedIn やメールにてメッセージをいただけると幸いです。",
     ],
+  },
+  contact: {
+    description: "持ち主へのお問い合わせのフォーム",
+    lead: "お仕事のご依頼やご質問は、こちらからお送りください。",
+    name: "お名前",
+    email: "メールアドレス",
+    message: "本文",
+    messageHint: "10〜2000 字",
+    privacy: "いただいた情報は返信のためだけに使い、第三者には渡しません。",
+    submit: "送信する",
+    sending: "送信中…",
+    receivedTitle: "お問い合わせを受け付けました",
+    receivedBody: "いただいたメールアドレスに返信します。",
+    again: "別のお問い合わせを送る",
+    // 送信の失敗。API の文言は日本語だけなので、画面では応答のステータスに応じてこちらを出す
+    errors: {
+      invalid: "入力内容を確かめてください。",
+      tooMany: "送信が多すぎます。しばらく時間をおいてからお試しください。",
+      unavailable: "現在お問い合わせを受け付けられません。",
+      failed: "送信に失敗しました。時間をおいてもう一度お試しください。",
+    },
+    // 項目ごとのエラー。送る前に lib/contact/schema.ts の決まりで確かめた結果を出す
+    nameRequired: "お名前を入力してください。",
+    nameTooLong: "お名前は 100 字以内で入力してください。",
+    emailInvalid: "メールアドレスの形式が正しくありません。",
+    messageLength: "本文は 10〜2000 字で入力してください。",
   },
   theme: {
     description: "背景の 3D シーンを選べます",

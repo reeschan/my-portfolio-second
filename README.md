@@ -17,6 +17,7 @@
 | `/now` | いま取り組んでいること ([nownownow.com](https://nownownow.com/about) の考え方)。記事を新しい順のカードで並べ、押すと Markdown・Mermaid の全文をモーダルで読める |
 | `/api/now` | /now の記事の投稿 (POST)、書き換え (PUT `/api/now/[id]`)、削除 (DELETE `/api/now/[id]`)。トークンが要る |
 | `/chat` | 職務経歴について答える AI チャット (Moonshot / Kimi) |
+| `/contact` | お問い合わせフォーム。送った内容は Slack に届く |
 | `/theme` | 背景の 3D シーンを選ぶ (グリッド / オーロラ / 月夜の海 / 蛍の森 / 月面 / 皆既日食) |
 | `/rss.xml` | RSS フィード |
 
@@ -148,7 +149,7 @@ curl -X PUT https://<ドメイン>/api/now/<id> \
 curl -X DELETE https://<ドメイン>/api/now/<id> -H "Authorization: Bearer $NOW_POST_TOKEN"
 ```
 
-`SLACK_WEBHOOK_URL` (Slack の Incoming Webhook の URL) を設定すると、投稿・更新したときと AI チャットに質問が来たときに、その Webhook のチャンネルへ通知が届く ([ADR 0018](docs/adr/0018-slack-notify-decorator.md))。
+`SLACK_WEBHOOK_URL` (Slack の Incoming Webhook の URL) を設定すると、投稿・更新したときと AI チャットに質問が来たときに、その Webhook のチャンネルへ通知が届く ([ADR 0018](docs/adr/0018-slack-notify-decorator.md))。お問い合わせ (`/contact`) も、この Webhook のチャンネルに届き、未設定だとお問い合わせは受け付けられない (503、[ADR 0028](docs/adr/0028-contact-form-slack-only.md))。
 
 ### Markdown のファイルをそのまま投稿する (Postman など)
 

@@ -18,5 +18,6 @@ export const pageGuidesEn: readonly PageGuide[] = [
   { href: "/works", description: "Apps and tools I've built, with architecture diagrams and write-ups." },
   { href: "/now", description: "Blog-style posts on what I'm working on now and what I've learned while building." },
   { href: "/chat", description: "Ask an AI about my career." },
+  { href: "/contact", description: "Send me a work inquiry or a question through a form." },
   { href: "/theme", description: "Choose the 3D scene in the background." },
 ]

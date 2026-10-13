@@ -5,7 +5,7 @@ import { ApiError, HttpError } from "@/lib/api/errors"
 import { chatNotification } from "@/lib/chat/notify"
 import { readJsonBody } from "@/lib/api/request"
 import { createRedactingStream } from "@/lib/chat/redact"
-import { isRateLimited } from "@/lib/chat/rate-limit"
+import { createRateLimiter } from "@/lib/rate-limit"
 import { chatRequestSchema, sseChunkSchema } from "@/lib/chat/schema"
 import { buildSystemPrompt } from "@/lib/chat/system-prompt"
 import type { ChatMessage } from "@/types/chat-types"
@@ -16,6 +16,9 @@ export const maxDuration = 60
 
 const baseUrl = process.env.MOONSHOT_BASE_URL ?? "https://api.moonshot.ai/v1"
 const model = process.env.MOONSHOT_MODEL ?? "kimi-k2.6"
+
+// チャットは 10 分 20 回まで
+const isChatRateLimited = createRateLimiter({ windowMs: 10 * 60 * 1000, maxRequests: 20 })
 
 const truncatedNotice = "\n\n（回答が長くなったため、ここで区切りました。続きは質問を絞ってお尋ねください）"
 
@@ -91,7 +94,7 @@ export const POST = withErrorHandling(
     if (!apiKey) throw new HttpError(503, "チャット機能は現在ご利用いただけません。")
 
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-    if (isRateLimited(ip)) throw new HttpError(429, "リクエストが多すぎます。しばらく時間をおいてからお試しください。")
+    if (isChatRateLimited(ip)) throw new HttpError(429, "リクエストが多すぎます。しばらく時間をおいてからお試しください。")
 
     const messages = await readJsonBody(request, chatRequestSchema, "メッセージの形式が正しくありません。")
     const upstream = await requestCompletion(messages, apiKey, request.signal)

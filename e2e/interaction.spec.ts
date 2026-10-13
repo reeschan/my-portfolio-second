@@ -144,6 +144,8 @@ test.describe("ページ内の操作 (追加分)", () => {
       await page.keyboard.press("Escape")
       await expect(viewer).toBeHidden()
       await expect(detail).toBeVisible()
+      // キーボードで操作する人が迷わないよう、フォーカスは拡大のボタンに戻る
+      await expect(detail.getByRole("button", { name: "アーキテクチャ図を拡大する" })).toBeFocused()
     },
   )
 

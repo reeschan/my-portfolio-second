@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useState, type RefObject } from "react"
 import { ExternalLink, Maximize2, ZoomIn, ZoomOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -16,11 +16,13 @@ type ArchitectureViewerProps = {
   architecture: Work["architecture"]
   open: boolean
   onOpenChange: (open: boolean) => void
+  // 閉じたときにフォーカスを戻す先。DialogTrigger を使わずに開くので、Radix は戻し先を知らない
+  returnFocusRef: RefObject<HTMLElement | null>
 }
 
 // アーキテクチャ図を画面いっぱいに出し、倍率を変えてスクロールで見回せるようにする (PBI-0021)
 // 詳細ダイアログの中の図は幅が 850px 前後 (スマホでは 340px) しかなく、図の中の文字が読めないため
-export function ArchitectureViewer({ title, architecture, open, onOpenChange }: ArchitectureViewerProps) {
+export function ArchitectureViewer({ title, architecture, open, onOpenChange, returnFocusRef }: ArchitectureViewerProps) {
   const messages = useMessages().works
   const [stepIndex, setStepIndex] = useState(0)
   const zoom = zoomSteps[stepIndex] ?? 1
@@ -34,7 +36,15 @@ export function ArchitectureViewer({ title, architecture, open, onOpenChange }: 
         onOpenChange(next)
       }}
     >
-      <DialogContent overlayClassName="bg-black/70" className="flex h-[95dvh] w-[95vw] max-w-[95vw] flex-col gap-3 p-4">
+      <DialogContent
+        overlayClassName="bg-black/70"
+        className="flex h-[95dvh] w-[95vw] max-w-[95vw] flex-col gap-3 p-4"
+        onCloseAutoFocus={(event) => {
+          // 既定の動きではフォーカスが詳細ダイアログの外 (body) に落ちるので、開いたボタンに戻す
+          event.preventDefault()
+          returnFocusRef.current?.focus()
+        }}
+      >
         <DialogHeader className="pr-8">
           <DialogTitle>{messages.viewerTitle(title)}</DialogTitle>
           <DialogDescription className="sr-only">{architecture.alt}</DialogDescription>

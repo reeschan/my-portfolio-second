@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Markdown, Section, TagList, TextLink } from "@/components/common"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { Work } from "@/data/works"
@@ -59,11 +59,13 @@ function RepositoryLine({ repository }: { repository: Work["repository"] }) {
 function ArchitectureFigure({ title, architecture }: { title: string; architecture: Work["architecture"] }) {
   const messages = useMessages().works
   const [viewerOpen, setViewerOpen] = useState(false)
+  const enlargeButtonRef = useRef<HTMLButtonElement>(null)
 
   return (
     <figure>
       <button
         type="button"
+        ref={enlargeButtonRef}
         onClick={() => setViewerOpen(true)}
         aria-label={messages.enlarge}
         className="block w-full cursor-zoom-in rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
@@ -72,7 +74,13 @@ function ArchitectureFigure({ title, architecture }: { title: string; architectu
         <Image src={architecture.dark} alt={architecture.alt} width={1600} height={1000} className="hidden h-auto w-full dark:block" />
       </button>
       <figcaption className="mt-2 text-center text-xs text-muted-foreground">{messages.enlargeHint}</figcaption>
-      <ArchitectureViewer title={title} architecture={architecture} open={viewerOpen} onOpenChange={setViewerOpen} />
+      <ArchitectureViewer
+        title={title}
+        architecture={architecture}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        returnFocusRef={enlargeButtonRef}
+      />
     </figure>
   )
 }

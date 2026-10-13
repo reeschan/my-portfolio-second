@@ -12,6 +12,10 @@ test.describe("表示内容", () => {
     await page.goto("/overview")
     await expect(page.getByRole("heading", { level: 2, name: "プロフィール" })).toBeVisible()
     await expect(page.getByText(profile.role, { exact: true })).toBeVisible()
+    // メインのアイコンが代替テキスト付きで、読み込めている (壊れた画像でない)
+    const avatar = page.getByRole("img", { name: profile.avatar.alt })
+    await expect(avatar).toBeVisible()
+    await expect.poll(() => avatar.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true)
     for (const paragraph of profile.summary) {
       await expect(page.getByText(paragraph)).toBeVisible()
     }

@@ -4,6 +4,7 @@ import type { PageGuide, Profile } from "../overview"
 export const profileEn: Profile = {
   name: "Ryuki Tobita",
   role: "Full-stack developer",
+  avatar: { src: "/profile/avatar.webp", alt: "Ryuki Tobita's icon: an illustration of a character in a cap making a peace sign" },
   summary: [
     "I'm a full-stack developer who builds products end to end on my own, from the frontend and backend to the cloud infrastructure.",
     "Since 2025 I have been working as a freelancer on web application development, search improvements and AI-powered features.",

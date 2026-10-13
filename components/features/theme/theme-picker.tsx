@@ -11,14 +11,16 @@ import {
   setBackgroundThemeId,
   subscribeBackgroundTheme,
 } from "@/lib/background-theme"
+import { useMessages } from "@/lib/i18n/locale-context"
 
 // 3D 背景のテーマを選ぶラジオボタンの一覧。選んだ瞬間に全ページの背景が切り替わる
 export function ThemePicker() {
   const selected = useSyncExternalStore(subscribeBackgroundTheme, getBackgroundThemeId, getServerBackgroundThemeId)
+  const messages = useMessages().theme
 
   return (
     <fieldset>
-      <legend className="sr-only">背景のテーマ</legend>
+      <legend className="sr-only">{messages.legend}</legend>
       <div className="grid gap-4 sm:grid-cols-2">
         {backgroundThemes.map((theme) => {
           const isSelected = theme.id === selected
@@ -52,9 +54,9 @@ export function ThemePicker() {
               />
               <span className="flex items-start justify-between gap-2 p-4">
                 <span>
-                  <span className="block font-semibold">{theme.label}</span>
+                  <span className="block font-semibold">{messages.themes[theme.id].label}</span>
                   <span id={`theme-${theme.id}-description`} className="mt-1 block text-sm text-muted-foreground">
-                    {theme.description}
+                    {messages.themes[theme.id].description}
                   </span>
                 </span>
                 {isSelected && <Check aria-hidden className="mt-0.5 size-5 shrink-0 text-primary" />}

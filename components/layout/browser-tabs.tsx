@@ -4,7 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
+import { useMessages } from "@/lib/i18n/locale-context"
 import { displayHost, navItems } from "@/lib/navigation"
+import { LocaleSwitch } from "@/components/layout/locale-switch"
 import { RssButton } from "@/components/layout/rss-button"
 
 // ブラウザのタブとアドレスバーを模したナビゲーション
@@ -20,9 +22,11 @@ export function BrowserTabs() {
 }
 
 function TabBar({ pathname }: { pathname: string }) {
+  const messages = useMessages()
+
   return (
     <nav
-      aria-label="ページ切り替え"
+      aria-label={messages.layout.pages}
       className="glass-bar flex h-12 items-center gap-1 overflow-x-auto rounded-t-lg border-b border-border/20 px-2"
     >
       {navItems.map((item) => {
@@ -38,7 +42,7 @@ function TabBar({ pathname }: { pathname: string }) {
               isActive ? "bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted/30 hover:text-foreground",
             )}
           >
-            <span>{item.label}</span>
+            <span>{messages.nav[item.id]}</span>
             {isActive && <motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" layoutId="activeTab" />}
           </Link>
         )
@@ -55,6 +59,7 @@ function AddressBar({ pathname }: { pathname: string }) {
         {pathname}
       </div>
       <RssButton />
+      <LocaleSwitch />
     </div>
   )
 }

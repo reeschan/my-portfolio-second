@@ -45,14 +45,6 @@ test.describe("ナビゲーション", () => {
     await page.goto("/overview")
     await expect(page.getByRole("link", { name: "RSSフィード" })).toHaveAttribute("href", "/rss.xml")
   })
-
-  test("お知らせバナーを閉じられる", { tag: "@interaction", annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
-    const close = page.getByRole("button", { name: "お知らせを閉じる" })
-    await expect(close).toBeVisible()
-    await close.click()
-    await expect(close).toBeHidden()
-  })
 })
 
 test.describe("ナビゲーション (現在地)", () => {

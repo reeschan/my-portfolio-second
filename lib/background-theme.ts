@@ -5,50 +5,34 @@ export type BackgroundThemeId = "grid" | "aurora" | "moonlit-sea" | "firefly-for
 
 export type BackgroundTheme = {
   id: BackgroundThemeId
-  // ラジオボタンの名前 (アクセシブルネーム) にもなる表示名
-  label: string
-  // カードに出す一言の説明
-  description: string
   // カードの見本に塗るグラデーション。three.js の描画を待たずに雰囲気が分かるようにする
   swatch: readonly [string, string, string]
 }
 
-// 並び順がそのまま /theme の一覧の順になる
+// 並び順がそのまま /theme の一覧の順になる。表示名と説明は言語ごとに data/messages/ に持つ
 export const backgroundThemes: readonly BackgroundTheme[] = [
   {
     id: "grid",
-    label: "グリッド",
-    description: "浮遊する多面体と粒子。サイト開設時からの既定の背景",
     swatch: ["#0b1020", "#13203a", "#3399ff"],
   },
   {
     id: "aurora",
-    label: "オーロラ",
-    description: "雪山の稜線の上で揺れるオーロラと、それを映す凍った湖",
     swatch: ["#020611", "#0b3b3a", "#4dffb0"],
   },
   {
     id: "moonlit-sea",
-    label: "月夜の海",
-    description: "雲間の満月と、波に揺れる月の道",
     swatch: ["#03060f", "#16264a", "#e8e4d0"],
   },
   {
     id: "firefly-forest",
-    label: "蛍の森",
-    description: "霧の立ちこめる針葉樹の森を舞う蛍",
     swatch: ["#020805", "#0d2318", "#d8ff6a"],
   },
   {
     id: "lunar-surface",
-    label: "月面",
-    description: "クレーターの並ぶ月の地平線から昇る地球",
     swatch: ["#000000", "#2b2b2e", "#4f8fd6"],
   },
   {
     id: "eclipse",
-    label: "皆既日食",
-    description: "闇に浮かぶ黒い太陽とコロナ、漂う星雲",
     swatch: ["#000000", "#1a0f26", "#ffd9a0"],
   },
 ]

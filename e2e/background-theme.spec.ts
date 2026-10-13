@@ -1,5 +1,9 @@
-import { backgroundThemes, defaultBackgroundThemeId } from "../lib/background-theme"
+import { ja } from "../data/messages/ja"
+import { backgroundThemes as themeData, defaultBackgroundThemeId } from "../lib/background-theme"
 import { expect, routes, test } from "./fixtures"
+
+// テーマの表示名と説明は data/messages/ にある。既定の言語 (日本語) の文言と組にして使う
+const backgroundThemes = themeData.map((theme) => ({ ...theme, ...ja.theme.themes[theme.id] }))
 
 // /theme で 3D 背景のテーマを選ぶ (docs/pbi/0002-background-themes)。
 // 描画結果のピクセルは比べず、「どのテーマのシーンが載っているか」を背景の枠の data-background-theme で確かめる

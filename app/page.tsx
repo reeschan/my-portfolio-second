@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
+import { LocaleSwitch } from "@/components/layout/locale-switch"
 import { useIsClient } from "@/hooks/use-is-client"
 
 export default function Home() {
@@ -10,6 +11,8 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6">
+      {/* タブのないトップでも、各ページと同じく右上で言語を選べるようにする */}
+      <LocaleSwitch className="absolute right-4 top-4" />
       <AnimatePresence>
         {isLoaded && (
           <motion.div

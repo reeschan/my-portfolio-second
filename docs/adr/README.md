@@ -51,3 +51,4 @@
 | [0024](0024-works-detail-data-and-diagrams.md) | 作品の詳細はデータで持ち、図は各リポジトリの D2 の SVG を写して出す | 提案中 |
 | [0025](0025-release-pr-merge-commit.md) | リリース PR (develop → main) はマージコミットで入れる | 提案中 |
 | [0026](0026-locale-cookie-and-dictionaries.md) | 表示言語は Cookie で持ち、文言は自前の辞書で持つ | 提案中 |
+| [0027](0027-vercel-analytics.md) | 閲覧の計測は Vercel Web Analytics で行い、Vercel 上でだけ動かす | 提案中 |

@@ -59,7 +59,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 - `data/`: 表示データ (`career.ts` `skills.ts` `works.ts` `now.ts`)。/now の記事は `data/` ではなく `POST /api/now` で投稿する
   - 英語版は `data/en/`、画面の固定の文言は `data/messages/` (`ja.ts` が正本、`en.ts` は同じ型)。言語ごとの入口は `data/localized.ts`。表示言語は Cookie で持つ (ADR 0026)
   - チャットの資料 (`resume.md`・`profile-freelance.md`) はリポジトリに置かない。Vercel Blob (private) の `chat-docs/` から `lib/chat/documents.ts` で読む。手元の `data/*.md` は .gitignore 済みの写しで、`pnpm chat-docs:upload` で Blob に上げる (ADR 0019)
-- `lib/`: `navigation.ts` (タブの並び)、`i18n/` (表示言語の設定・Cookie の読み書き・Context、ADR 0026)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限・資料の読み込み)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)、`slack/` (Slack への通知 `notifySlack`、ADR 0018)
+- `lib/`: `navigation.ts` (タブの並び)、`analytics.ts` (Vercel Analytics を有効にする条件、ADR 0027)、`i18n/` (表示言語の設定・Cookie の読み書き・Context、ADR 0026)、`theme.ts` (three.js・recharts 用の色)、`background-theme.ts` (背景テーマの一覧と選択)、`format.ts`、`api/` (API の呼び出し `apiFetch`・エラーの型・入力検証、ADR 0017)、`chat/` (システムプロンプト・伏せ字・レート制限・資料の読み込み)、`now/` (/now の記事の保存先・認証の設定、ADR 0015)、`slack/` (Slack への通知 `notifySlack`、ADR 0018)
 - `hooks/`: `use-media-query.ts`、`use-is-client.ts`
 - `decorator/`: Route Handler を包むデコレータ。すべての API は `withErrorHandling` で包み、認証が要るものはその内側を `withBearerAuth` で包む (ADR 0016、0017)
   - Slack に知らせたい API は `withErrorHandling` と `withBearerAuth` の間を `withSlackNotify` で包む。送る中身は `lib/<機能>/notify.ts` で組み立てる (ADR 0018)

@@ -7,13 +7,13 @@ import { now } from "@/data/now"
 import { messagesOf, type Messages } from "@/data/messages"
 import { formatDate } from "@/lib/format"
 import { getLocale } from "@/lib/i18n/server"
-import { pageTitle } from "@/lib/metadata"
+import { pageMetadata, pageTitle } from "@/lib/metadata"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
 
 export async function generateMetadata(): Promise<Metadata> {
   const messages = messagesOf(await getLocale())
-  return { title: pageTitle(messages.nav.now), description: messages.now.description }
+  return pageMetadata({ title: pageTitle(messages.nav.now), description: messages.now.description, path: "/now" })
 }
 
 export default async function NowPage() {

@@ -1,5 +1,8 @@
+import { siteUrl } from "@/lib/metadata"
+
 export function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://myportfolio.vercel.app"
+  // 末尾の / を除いて、パスとつなげられるようにする
+  const baseUrl = siteUrl.origin
 
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

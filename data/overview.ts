@@ -9,6 +9,8 @@ export type ProfileLink = {
 export type Profile = {
   name: string
   role: string
+  // 丸く切り抜いて出すメインのアイコン (public/ からのパス) と代替テキスト
+  avatar: { src: string; alt: string }
   // 段落ごとに 1 要素
   summary: readonly string[]
 }
@@ -22,6 +24,7 @@ export type PageGuide = {
 export const profile: Profile = {
   name: "Ryuki Tobita",
   role: "フルスタックデベロッパー",
+  avatar: { src: "/profile/avatar.webp", alt: "Ryuki Tobita のアイコン。キャップをかぶりピースサインをするイラスト" },
   summary: [
     "フロントエンドからバックエンド、クラウド基盤までを一人で通して作るフルスタックデベロッパーです。",
     "2025 年からはフリーランスとして、Web アプリケーションの開発、検索の改善、AI 連携機能の開発などに携わっています。",

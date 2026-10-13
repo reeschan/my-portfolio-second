@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Section, TextLink } from "@/components/common"
 import { PageTemplate } from "@/components/layout/page-template"
 import { overviewByLocale } from "@/data/localized"
@@ -17,10 +18,21 @@ export default async function OverviewPage() {
     <PageTemplate title={messages.nav.overview}>
       <div className="space-y-10">
         <Section title={messages.overview.profile} size="lg">
-          <p className="text-lg font-semibold">
-            {profile.name}
-            <span className="ml-3 text-base font-normal text-muted-foreground">{profile.role}</span>
-          </p>
+          <div className="flex flex-wrap items-center gap-5">
+            {/* 3D 背景の上でも縁が分かるよう、トークンの枠線で囲む */}
+            <Image
+              src={profile.avatar.src}
+              alt={profile.avatar.alt}
+              width={112}
+              height={112}
+              priority
+              className="size-28 shrink-0 rounded-full border-2 border-primary/60 object-cover shadow-lg"
+            />
+            <p className="text-lg font-semibold">
+              {profile.name}
+              <span className="ml-3 text-base font-normal text-muted-foreground">{profile.role}</span>
+            </p>
+          </div>
           <div className="mt-4 space-y-3 leading-relaxed text-foreground/90">
             {profile.summary.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>

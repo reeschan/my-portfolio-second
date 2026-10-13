@@ -1,4 +1,4 @@
-// /career の内容。経歴を更新するときはこのファイルだけを書き換える
+// /career の内容。経歴を更新するときはこのファイルと英語版の data/en/career.ts を書き換える
 
 export type CareerEntryType = "work" | "education" | "freelance" | "milestone"
 

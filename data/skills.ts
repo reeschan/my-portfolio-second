@@ -1,9 +1,10 @@
-// /skills の内容。スキルや資格を更新するときはこのファイルだけを書き換える
+// /skills の内容。スキルや資格を更新するときはこのファイルと英語版の data/en/skills.ts を書き換える
 import type { SkillCategory } from "@/types/skill-types"
 
 // カテゴリ別のスキル (5 段階)。shortName はスマホ幅で使う短縮名
 export const skillCategories: SkillCategory[] = [
   {
+    id: "frontend",
     name: "フロントエンド",
     shortName: "FE",
     skills: [
@@ -16,6 +17,7 @@ export const skillCategories: SkillCategory[] = [
     ],
   },
   {
+    id: "backend",
     name: "バックエンド",
     shortName: "BE",
     skills: [
@@ -28,6 +30,7 @@ export const skillCategories: SkillCategory[] = [
     ],
   },
   {
+    id: "aws",
     name: "AWS",
     shortName: "AWS",
     skills: [
@@ -40,6 +43,7 @@ export const skillCategories: SkillCategory[] = [
     ],
   },
   {
+    id: "other",
     name: "その他",
     shortName: "他",
     skills: [
@@ -52,7 +56,9 @@ export const skillCategories: SkillCategory[] = [
 ]
 
 // メインスキルカテゴリ（レーダーチャート用 - 5段階評価）（短縮名を含む）
-export const radarData = [
+export type RadarDatum = { subject: string; shortSubject: string; value: number; fullMark: number }
+
+export const radarData: RadarDatum[] = [
   { subject: "フロントエンド", shortSubject: "FE", value: 5, fullMark: 5 },
   { subject: "バックエンド", shortSubject: "BE", value: 4, fullMark: 5 },
   { subject: "クラウド(AWS)", shortSubject: "AWS", value: 5, fullMark: 5 },
@@ -61,11 +67,11 @@ export const radarData = [
   { subject: "DevOps", shortSubject: "DevOps", value: 4, fullMark: 5 },
 ]
 
-export const certifications = [
+export const certifications: readonly string[] = [
   "応用情報技術者",
   "AWS認定ソリューションアーキテクト - プロフェッショナル",
   "AWS認定DevOpsエンジニア - プロフェッショナル",
   "AWS認定セキュリティ - スペシャリティ",
   "AWS認定機械学習 - スペシャリティ",
   "その他AWS資格5つ保持",
-] as const
+]

@@ -1,8 +1,16 @@
 // /overview の内容。自己紹介・外部のプロフィールへのリンク・各ページの案内をここにまとめる (PBI-0013)
+// 英語版は data/en/overview.ts。言語ごとの切り替えは data/localized.ts (PBI-0014)
 
 export type ProfileLink = {
   label: string
   href: string
+}
+
+export type Profile = {
+  name: string
+  role: string
+  // 段落ごとに 1 要素
+  summary: readonly string[]
 }
 
 export type PageGuide = {
@@ -11,16 +19,15 @@ export type PageGuide = {
   description: string
 }
 
-export const profile = {
+export const profile: Profile = {
   name: "Ryuki Tobita",
   role: "フルスタックデベロッパー",
-  // 段落ごとに 1 要素
   summary: [
     "フロントエンドからバックエンド、クラウド基盤までを一人で通して作るフルスタックデベロッパーです。",
     "2025 年からはフリーランスとして、Web アプリケーションの開発、検索の改善、AI 連携機能の開発などに携わっています。",
     "最近は Claude Code などの AI エージェントを組み合わせて、アプリやツールを速く確実に作るための仕組みづくりに力を入れています。",
   ],
-} as const
+}
 
 export const profileLinks: readonly ProfileLink[] = [
   { label: "GitHub", href: "https://github.com/reeschan" },

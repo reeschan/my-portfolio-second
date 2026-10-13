@@ -1,5 +1,8 @@
+"use client"
+
 import Image from "next/image"
 import { TagList } from "@/components/common"
+import { useMessages } from "@/lib/i18n/locale-context"
 import { cn } from "@/lib/utils"
 import type { Work } from "@/data/works"
 
@@ -14,6 +17,7 @@ type WorkCardProps = {
 // 作品 1 件のカード。押せる場合は見出しの中のボタンをカード全体に広げ、キーボードでも開けるようにする
 export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
   const interactive = !!onSelect
+  const messages = useMessages().works
 
   return (
     <article
@@ -50,7 +54,7 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
           )}
         </h3>
         <p className="mt-2 text-sm text-muted-foreground">{work.description}</p>
-        <TagList tags={work.tech} label="使用技術" variant="muted" className="mt-3" />
+        <TagList tags={work.tech} label={messages.tech} variant="muted" className="mt-3" />
       </div>
     </article>
   )

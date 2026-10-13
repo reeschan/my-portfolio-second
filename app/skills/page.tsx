@@ -1,9 +1,12 @@
 import { PageTemplate } from "@/components/layout/page-template"
 import { SkillsVisualization } from "@/components/features/skills/skills-visualization"
+import { getMessages } from "@/lib/i18n/server"
 
-export default function SkillsPage() {
+export default async function SkillsPage() {
+  const messages = await getMessages()
+
   return (
-    <PageTemplate title="スキル">
+    <PageTemplate title={messages.nav.skills}>
       <SkillsVisualization />
     </PageTemplate>
   )

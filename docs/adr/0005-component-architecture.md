@@ -17,7 +17,7 @@
 | --- | --- | --- | --- |
 | ui | `components/ui/` | shadcn/ui の基本部品 (Button, Dialog, Tabs, Badge …)。見た目の種類は cva の variant | なし (lib/utils だけ) |
 | common | `components/common/` | 画面をまたいで使う部品 (GlassPanel, Section, Callout, TagList, BulletList, TextLink)。`index.ts` から import する | ui |
-| layout | `components/layout/` | 全ページ共通の枠 (PageTemplate, BrowserTabs, AnnouncementBanner, RssButton, ThemeProvider) | ui, common, lib |
+| layout | `components/layout/` | 全ページ共通の枠 (PageTemplate, BrowserTabs, LocaleSwitch, RssButton, ThemeProvider) | ui, common, lib |
 | features | `components/features/<機能>/` | 1 つのページ・機能に閉じた部品 (career, skills, works, chat, background) | ui, common, data, lib, hooks |
 
 - **ページ (`app/**/page.tsx`) は組み立てだけ**にする: PageTemplate + features / common の部品

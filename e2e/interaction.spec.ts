@@ -157,14 +157,6 @@ test.describe("ページ内の操作 (追加分)", () => {
       await expect(link).toHaveAttribute("rel", /noreferrer/)
     },
   )
-
-  test("トップ: お知らせバナーを閉じられる", { tag: "@interaction", annotation: routes("/") }, async ({ page }) => {
-    await page.goto("/")
-    const banner = page.getByRole("region", { name: "お知らせ" })
-    await expect(banner).toBeVisible()
-    await banner.getByRole("button", { name: "お知らせを閉じる" }).click()
-    await expect(banner).toBeHidden()
-  })
 })
 
 test(

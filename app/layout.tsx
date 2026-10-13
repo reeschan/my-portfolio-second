@@ -1,11 +1,13 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/layout/theme-provider"
 import { LocaleProvider } from "@/lib/i18n/locale-context"
 import { getLocale } from "@/lib/i18n/server"
 import { BackgroundScene } from "@/components/features/background/background-scene"
+import { isVercelAnalyticsEnabled } from "@/lib/analytics"
 
 // globals.css の --font-sans から参照するため CSS 変数として読み込む
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -32,6 +34,8 @@ export default async function RootLayout({
             <div className="relative min-h-screen">{children}</div>
           </ThemeProvider>
         </LocaleProvider>
+        {/* 閲覧の計測は Vercel 上でだけ行う (ADR 0027) */}
+        {isVercelAnalyticsEnabled() && <Analytics />}
       </body>
     </html>
   )

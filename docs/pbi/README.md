@@ -20,3 +20,4 @@
 | [0014](0014-locale-switch/PBI.md) | 「準備中」のお知らせを消し、右上で日本語と英語を切り替えられるようにする | 進行中 |
 | [0015](0015-now-markdown-file-upload/PBI.md) | /now の記事を Markdown のファイルのまま (Postman などで) 投稿できるようにする | 進行中 |
 | [0016](0016-profile-avatar/PBI.md) | 概要のプロフィールにメインのアイコンを丸く載せる | 進行中 |
+| [0017](0017-vercel-analytics/PBI.md) | Vercel Analytics で閲覧数を計測する | 進行中 |

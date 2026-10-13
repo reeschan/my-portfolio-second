@@ -35,4 +35,26 @@ test.describe("スモーク: 全ページが表示できる", () => {
     expect(body).toContain("<rss")
     expect(body).toContain("<channel>")
   })
+
+  test(
+    "Vercel 以外ではページを移っても計測スクリプトを読み込まない",
+    { tag: ["@smoke"], annotation: routes("/overview", "/career") },
+    async ({ page }) => {
+      // 計測は Vercel 上でだけ行う (ADR 0027)。手元と CI で読むと 404 や外部への通信になる
+      const analyticsRequests: string[] = []
+      page.on("request", (req) => {
+        if (/\/_vercel\/insights\/|va\.vercel-scripts\.com/.test(req.url())) analyticsRequests.push(req.url())
+      })
+
+      await page.goto("/overview")
+      // タブで移る = 画面が動き出している (計測の部品なら読み込みを始めている) ことを確かめてから数える
+      const nav = page.getByRole("navigation", { name: "ページ切り替え" })
+      await nav.getByRole("link", { name: "経歴", exact: true }).click()
+      await expect(page).toHaveURL(/\/career$/)
+      await expect(page.getByRole("heading", { level: 1, name: "経歴" })).toBeVisible()
+
+      expect(analyticsRequests).toEqual([])
+      expect(await page.evaluate(() => "va" in window)).toBe(false)
+    },
+  )
 })

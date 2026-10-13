@@ -1,6 +1,7 @@
 import type { APIRequestContext } from "@playwright/test"
 import { expect, nowPostToken, routes, test } from "./fixtures"
 import { formatJapaneseDateTime } from "../lib/format"
+import { escapeXml } from "../lib/now/feed"
 
 // /now の記事 (PBI-0004)。記事は POST /api/now で仕込む (保存先は webServer のメモリ。playwright.config.ts)
 // 並列のテストが同じサーバーに投稿するので、題名は毎回一意にし、件数や先頭の記事には頼らない
@@ -183,8 +184,8 @@ test.describe("Now の RSS", () => {
       const res = await request.get("/rss.xml")
       expect(res.status()).toBe(200)
       const xml = await res.text()
-      // 題名の & は実体参照になる
-      expect(xml).toContain(`<title>${title.replace("&", "&amp;")}</title>`)
+      // 題名の & は実体参照になる。期待値は本体と同じ escapeXml で作る (文字の置き換えを二重に書かない)
+      expect(xml).toContain(`<title>${escapeXml(title)}</title>`)
       expect(xml).toContain(`/now?post=${id}</link>`)
       expect(xml).toContain("<description>フィードに載る本文です。</description>")
     },

@@ -1,7 +1,10 @@
 // @perspectives content
 // @routes /overview
+import { existsSync } from "node:fs"
+import path from "node:path"
 import { describe, expect, it } from "vitest"
-import { pageGuides, profileLinks } from "@/data/overview"
+import { profileEn } from "@/data/en/overview"
+import { pageGuides, profile, profileLinks } from "@/data/overview"
 import { navItems } from "@/lib/navigation"
 
 describe("overview のデータ", () => {
@@ -22,5 +25,11 @@ describe("overview のデータ", () => {
     }
     expect(profileLinks).toContainEqual({ label: "GitHub", href: "https://github.com/reeschan" })
     expect(profileLinks.map((link) => link.label)).toContain("LinkedIn")
+  })
+
+  it("メインのアイコンが public/ にあり、日英で同じ画像を使い、代替テキストがある", () => {
+    expect(existsSync(path.join(process.cwd(), "public", profile.avatar.src))).toBe(true)
+    expect(profileEn.avatar.src).toBe(profile.avatar.src)
+    for (const alt of [profile.avatar.alt, profileEn.avatar.alt]) expect(alt.trim()).not.toBe("")
   })
 })

@@ -170,3 +170,51 @@ test.describe("Now の記事", () => {
     },
   )
 })
+
+// RSS フィード (PBI-0020)。記事は item になり、そのリンクから記事のダイアログを開ける
+test.describe("Now の RSS", () => {
+  test(
+    "投稿した記事が RSS の item に載り、リンクが /now?post=<id> を指す",
+    { tag: "@api-contract", annotation: routes("/rss.xml") },
+    async ({ request }) => {
+      const title = uniqueTitle("RSS & 抜粋")
+      const { id } = await createPost(request, { title, body: "**フィード**に載る本文です。" })
+
+      const res = await request.get("/rss.xml")
+      expect(res.status()).toBe(200)
+      const xml = await res.text()
+      // 題名の & は実体参照になる
+      expect(xml).toContain(`<title>${title.replace("&", "&amp;")}</title>`)
+      expect(xml).toContain(`/now?post=${id}</link>`)
+      expect(xml).toContain("<description>フィードに載る本文です。</description>")
+    },
+  )
+
+  test(
+    "RSS のリンク (/now?post=<id>) で開くと記事のダイアログが開き、閉じると ?post= が消える",
+    { tag: ["@interaction", "@responsive"], annotation: routes("/now") },
+    async ({ page, request }) => {
+      const title = uniqueTitle("RSS から開く")
+      const { id } = await createPost(request, { title, body: "RSS から開いた本文です。" })
+
+      await page.goto(`/now?post=${id}`)
+      const dialog = page.getByRole("dialog", { name: title })
+      await expect(dialog.getByText("RSS から開いた本文です。")).toBeVisible()
+
+      await page.keyboard.press("Escape")
+      await expect(dialog).toBeHidden()
+      await expect(page).toHaveURL(/\/now$/)
+    },
+  )
+
+  test("知らない id で開いたときはダイアログを出さず一覧を出す", { tag: "@interaction", annotation: routes("/now") }, async ({ page }) => {
+    await page.goto("/now?post=does-not-exist")
+    await expect(page.getByRole("heading", { level: 1, name: "Now" })).toBeVisible()
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+  })
+
+  test("どのページもフィードの場所を link rel=alternate で示す", { tag: "@smoke", annotation: routes("/overview") }, async ({ page }) => {
+    await page.goto("/overview")
+    await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute("href", /\/rss\.xml$/)
+  })
+})

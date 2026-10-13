@@ -23,7 +23,8 @@ export function pageMetadata({ title, description, path }: { title: string; desc
   return {
     title,
     description,
-    alternates: { canonical: path },
+    // RSS リーダーやブラウザの拡張がフィードを見つけられるよう、全ページから /rss.xml を示す (PBI-0020)
+    alternates: { canonical: path, types: { "application/rss+xml": "/rss.xml" } },
     openGraph: {
       title,
       description,

@@ -2,10 +2,10 @@ import { withBearerAuth } from "@/decorator/with-bearer-auth"
 import { withErrorHandling } from "@/decorator/with-error-handling"
 import { withSlackNotify } from "@/decorator/with-slack-notify"
 import { HttpError } from "@/lib/api/errors"
-import { readJsonBody } from "@/lib/api/request"
 import { nowWriteAuth, nowWriteErrors } from "@/lib/now/auth"
 import { nowPostNotification } from "@/lib/now/notify"
-import { nowPostInputSchema, type NowPost } from "@/lib/now/schema"
+import { readNowPostInput } from "@/lib/now/input"
+import type { NowPost } from "@/lib/now/schema"
 import { requireNowStore } from "@/lib/now/store"
 
 export const runtime = "nodejs"
@@ -22,7 +22,7 @@ export const PUT = withErrorHandling(
     nowPostNotification("updated"),
     withBearerAuth(nowWriteAuth, async (request, ctx: Context) => {
       const store = requireNowStore()
-      const { title, body, publishedAt } = await readJsonBody(request, nowPostInputSchema, nowWriteErrors.invalid)
+      const { title, body, publishedAt } = await readNowPostInput(request)
       const { id } = await ctx.params
 
       const current = await store.get(id)

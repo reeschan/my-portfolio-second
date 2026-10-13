@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { POST } from "@/app/api/now/route"
 import { getNowStore } from "@/lib/now/store"
-import { jsonRequest, paramsOf, useMemoryStoreEnv, useSlackMock } from "./helpers"
+import { formRequest, jsonRequest, paramsOf, useMemoryStoreEnv, useSlackMock } from "./helpers"
 
 // after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
 const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
@@ -58,6 +58,39 @@ describe("POST /api/now", () => {
     ["公開日が日時でない", { title: "t", body: "b", publishedAt: "昨日" }],
   ])("%s なら 400", async (_, body) => {
     expect((await post(body)).status).toBe(400)
+  })
+
+  describe("multipart/form-data で Markdown のファイルを送る (Postman 向け)", () => {
+    const postForm = (fields: Record<string, string | File>) => POST(formRequest("POST", "/api/now", fields), paramsOf({}))
+    const mdFile = (text: string, name = "post.md") => new File([text], name, { type: "text/markdown" })
+
+    it("ファイルの先頭の # 見出しが題名、残りが本文になり、201 で保存する", async () => {
+      const res = await postForm({ file: mdFile("# 近況\n\n```mermaid\nflowchart LR\n  A --> B\n```\n") })
+      expect(res.status).toBe(201)
+      const created = (await res.json()) as { id: string; title: string; body: string }
+      expect(created).toMatchObject({ title: "近況", body: "```mermaid\nflowchart LR\n  A --> B\n```" })
+      expect(await listIds()).toContain(created.id)
+    })
+
+    it("title と publishedAt の欄を指定すればそれを使う。空欄は指定なしとして扱う", async () => {
+      const res = await postForm({ file: mdFile("# 見出し\n本文"), title: "別の題名", publishedAt: "2026-10-09T12:00:00+09:00" })
+      expect(await res.json()).toMatchObject({ title: "別の題名", body: "# 見出し\n本文", publishedAt: "2026-10-09T03:00:00.000Z" })
+
+      const blank = await postForm({ file: mdFile("本文", "メモ.md"), title: " ", publishedAt: "" })
+      expect(await blank.json()).toMatchObject({ title: "メモ", body: "本文" })
+    })
+
+    it.each([
+      ["file がない", { title: "t" }],
+      ["file がテキスト", { file: "本文" }],
+      ["ファイルが空", { file: new File([""], "empty.md") }],
+    ])("%s なら 400", async (_, fields) => {
+      expect((await postForm(fields)).status).toBe(400)
+    })
+
+    it("トークンが違えば 401", async () => {
+      expect((await POST(formRequest("POST", "/api/now", { file: mdFile("# t\nb") }, "wrong"), paramsOf({}))).status).toBe(401)
+    })
   })
 
   it("保存できたら、題名と本文の抜粋と /now へのリンクを Slack に送る (題名のメンションは無効にする)", async () => {

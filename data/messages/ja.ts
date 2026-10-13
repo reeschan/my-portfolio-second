@@ -3,6 +3,11 @@ import type { BackgroundThemeId } from "@/lib/background-theme"
 import type { NavId } from "@/lib/navigation"
 
 export const ja = {
+  // 検索結果と OGP に出すサイトの説明。ページごとの説明がないトップで使う
+  site: {
+    description:
+      "フロントエンドからクラウド基盤まで一人で通して作るフルスタックデベロッパー、Ryuki Tobita のポートフォリオ。経歴・スキル・制作物を載せ、職務経歴について AI に質問できる。",
+  },
   nav: {
     overview: "概要",
     career: "経歴",
@@ -21,12 +26,14 @@ export const ja = {
     close: "閉じる",
   },
   overview: {
+    description: "Ryuki Tobita のプロフィールと、このサイトの各ページの案内",
     profile: "プロフィール",
     profileLinks: "外部のプロフィール",
     guide: "このサイトの歩き方",
     guideList: "各ページの案内",
   },
   career: {
+    description: "勤務先とフリーランスでの参画案件のタイムライン",
     present: "現在",
     ongoing: "継続中",
     clients: "参画先",
@@ -34,6 +41,7 @@ export const ja = {
     tech: "使用技術",
   },
   skills: {
+    description: "フロントエンド・バックエンド・AWS のスキルと保有資格",
     overviewTab: "概要",
     overviewTitle: "スキルレーダー (5段階評価)",
     overviewTitleShort: "スキル概要",

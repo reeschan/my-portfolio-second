@@ -1,3 +1,4 @@
+import { displayHost } from "../lib/metadata"
 import { expect, pages, routes, test } from "./fixtures"
 
 test.describe("スモーク: 全ページが表示できる", () => {
@@ -22,7 +23,7 @@ test.describe("スモーク: 全ページが表示できる", () => {
           await expect(nav.getByRole("link", { name: q.tab, exact: true })).toBeAttached()
         }
         // アドレスバーに現在のパスが出る
-        await expect(page.getByText(`myportfolio.vercel.app${p.path}`)).toBeVisible()
+        await expect(page.getByText(`${displayHost}${p.path}`)).toBeVisible()
       },
     )
   }

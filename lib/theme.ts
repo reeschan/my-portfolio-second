@@ -14,3 +14,11 @@ export const chartColors = {
   foreground: "hsl(var(--foreground))",
   grid: "hsl(var(--muted-foreground) / 0.5)",
 } as const
+
+// OGP の画像 (app/opengraph-image.tsx) のための色。画像は CSS 変数を読めないので、.dark の値を 16 進で持つ
+export const ogImageColors = {
+  background: "#121721", // --background: 220 30% 10%
+  foreground: "#f9fafa", // --foreground: 220 10% 98%
+  muted: "#a1a1aa", // --muted-foreground: 240 5% 65%
+  primary: sceneColors.primary,
+} as const

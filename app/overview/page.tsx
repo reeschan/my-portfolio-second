@@ -1,11 +1,18 @@
+import type { Metadata } from "next"
 import Image from "next/image"
 import { Section, TextLink } from "@/components/common"
 import { PageTemplate } from "@/components/layout/page-template"
 import { overviewByLocale } from "@/data/localized"
 import { profileLinks } from "@/data/overview"
 import { messagesOf } from "@/data/messages"
-import { getLocale } from "@/lib/i18n/server"
+import { getLocale, getMessages } from "@/lib/i18n/server"
+import { pageMetadata, pageTitle } from "@/lib/metadata"
 import { navItems, type NavId } from "@/lib/navigation"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const messages = await getMessages()
+  return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/overview" })
+}
 
 export default async function OverviewPage() {
   const locale = await getLocale()

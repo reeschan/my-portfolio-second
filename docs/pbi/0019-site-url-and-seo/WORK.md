@@ -24,5 +24,5 @@ PBI: [PBI.md](PBI.md)
 ## 検証
 
 ```
-CI=1 pnpm commit-gate
+CI=1 pnpm commit-gate  # 本番ビルドで E2E 158 件すべて合格
 ```

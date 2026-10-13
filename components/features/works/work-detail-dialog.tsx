@@ -1,10 +1,12 @@
 "use client"
 
 import Image from "next/image"
+import { useRef, useState } from "react"
 import { Markdown, Section, TagList, TextLink } from "@/components/common"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { Work } from "@/data/works"
 import { useMessages } from "@/lib/i18n/locale-context"
+import { ArchitectureViewer } from "./architecture-viewer"
 
 type WorkDetailDialogProps = {
   work: Work | null
@@ -29,7 +31,7 @@ export function WorkDetailDialog({ work, open, onOpenChange }: WorkDetailDialogP
             <RepositoryLine repository={work.repository} />
             <Markdown>{work.body}</Markdown>
             <Section title={messages.architecture}>
-              <ArchitectureFigure architecture={work.architecture} />
+              <ArchitectureFigure title={work.title} architecture={work.architecture} />
             </Section>
           </>
         )}
@@ -53,11 +55,32 @@ function RepositoryLine({ repository }: { repository: Work["repository"] }) {
 }
 
 // サイトのテーマは <html> の dark クラスで決まるので、dark: で 2 枚を出し分ける (隠れた方は display: none で読み上げにも出ない)
-function ArchitectureFigure({ architecture }: { architecture: Work["architecture"] }) {
+// ダイアログの幅では図の文字が読めないので、押すと画面いっぱいの拡大表示を開く (PBI-0021)
+function ArchitectureFigure({ title, architecture }: { title: string; architecture: Work["architecture"] }) {
+  const messages = useMessages().works
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const enlargeButtonRef = useRef<HTMLButtonElement>(null)
+
   return (
     <figure>
-      <Image src={architecture.light} alt={architecture.alt} width={1600} height={1000} className="h-auto w-full dark:hidden" />
-      <Image src={architecture.dark} alt={architecture.alt} width={1600} height={1000} className="hidden h-auto w-full dark:block" />
+      <button
+        type="button"
+        ref={enlargeButtonRef}
+        onClick={() => setViewerOpen(true)}
+        aria-label={messages.enlarge}
+        className="block w-full cursor-zoom-in rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Image src={architecture.light} alt={architecture.alt} width={1600} height={1000} className="h-auto w-full dark:hidden" />
+        <Image src={architecture.dark} alt={architecture.alt} width={1600} height={1000} className="hidden h-auto w-full dark:block" />
+      </button>
+      <figcaption className="mt-2 text-center text-xs text-muted-foreground">{messages.enlargeHint}</figcaption>
+      <ArchitectureViewer
+        title={title}
+        architecture={architecture}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+        returnFocusRef={enlargeButtonRef}
+      />
     </figure>
   )
 }

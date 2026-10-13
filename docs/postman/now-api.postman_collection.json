@@ -1,0 +1,57 @@
+{
+  "info": {
+    "name": "my-portfolio-second /now API",
+    "description": "/now の記事を投稿・更新・削除する。コレクションの変数 baseUrl (例: https://<ドメイン>) と token (NOW_POST_TOKEN) を入れてから使う。トークンは共有しないこと。詳しくは README の「Now の記事を投稿する」",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "記事を足す (Markdown のファイルを選ぶ)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/now",
+        "description": "Body の file 行で .md を選ぶ。題名は title 欄 → ファイル先頭の「# 見出し」→ ファイル名の順に決まる。publishedAt は省略すると今の時刻",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": [] },
+            { "key": "title", "type": "text", "value": "", "disabled": true },
+            { "key": "publishedAt", "type": "text", "value": "2026-10-13T09:00:00+09:00", "disabled": true }
+          ]
+        }
+      }
+    },
+    {
+      "name": "記事を書き換える (Markdown のファイルを選ぶ)",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/api/now/{{id}}",
+        "description": "変数 id に投稿したときのレスポンスの id を入れる。題名と本文はまるごと置き換え、publishedAt を省くと元の公開日のまま",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": [] },
+            { "key": "title", "type": "text", "value": "", "disabled": true },
+            { "key": "publishedAt", "type": "text", "value": "", "disabled": true }
+          ]
+        }
+      }
+    },
+    {
+      "name": "記事を消す",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/now/{{id}}"
+      }
+    }
+  ]
+}

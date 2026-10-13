@@ -7,22 +7,28 @@ import { now } from "@/data/now"
 import { messagesOf, type Messages } from "@/data/messages"
 import { formatDate } from "@/lib/format"
 import { getLocale } from "@/lib/i18n/server"
-import { pageTitle } from "@/lib/metadata"
+import { pageMetadata, pageTitle } from "@/lib/metadata"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
 
 export async function generateMetadata(): Promise<Metadata> {
   const messages = messagesOf(await getLocale())
-  return { title: pageTitle(messages.nav.now), description: messages.now.description }
+  return pageMetadata({ title: pageTitle(messages.nav.now), description: messages.now.description, path: "/now" })
 }
 
-export default async function NowPage() {
+type NowPageProps = {
+  // RSS の item のリンク (/now?post=<id>) から来たら、その記事のダイアログを開いて出す (PBI-0020)
+  searchParams: Promise<{ post?: string | string[] }>
+}
+
+export default async function NowPage({ searchParams }: NowPageProps) {
   // 記事は POST /api/now でいつでも増えるので、ビルド時に固めずリクエストごとに読む
   await connection()
   const locale = await getLocale()
   const messages = messagesOf(locale)
   const { posts, loadError } = await loadPosts(messages.now)
   const latest = posts[0]
+  const { post: requestedPost } = await searchParams
 
   return (
     <PageTemplate title={messages.nav.now}>
@@ -44,7 +50,7 @@ export default async function NowPage() {
             <p>{loadError}</p>
           </Callout>
         ) : (
-          <NowPostList posts={posts} />
+          <NowPostList posts={posts} initialPostId={typeof requestedPost === "string" ? requestedPost : undefined} />
         )}
 
         {messages.now.languageNote && <p className="text-sm text-muted-foreground">{messages.now.languageNote}</p>}

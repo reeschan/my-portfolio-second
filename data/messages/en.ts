@@ -2,6 +2,11 @@
 import type { Messages } from "./ja"
 
 export const en: Messages = {
+  // 検索結果と OGP に出すサイトの説明。ページごとの説明がないトップで使う
+  site: {
+    description:
+      "Portfolio of Ryuki Tobita, a full-stack developer who builds everything from the frontend to cloud infrastructure. Career, skills, and works, plus an AI chat that answers questions about my career.",
+  },
   nav: {
     overview: "Overview",
     career: "Career",
@@ -20,12 +25,14 @@ export const en: Messages = {
     close: "Close",
   },
   overview: {
+    description: "Ryuki Tobita's profile and a guide to this site",
     profile: "Profile",
     profileLinks: "Elsewhere",
     guide: "How to explore this site",
     guideList: "Page guide",
   },
   career: {
+    description: "A timeline of my employers and freelance engagements",
     present: "Present",
     ongoing: "Ongoing",
     clients: "Clients",
@@ -33,6 +40,7 @@ export const en: Messages = {
     tech: "Tech stack",
   },
   skills: {
+    description: "Frontend, backend, and AWS skills, plus certifications",
     overviewTab: "Overview",
     overviewTitle: "Skill radar (out of 5)",
     overviewTitleShort: "Skills overview",

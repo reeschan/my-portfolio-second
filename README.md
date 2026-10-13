@@ -19,7 +19,8 @@
 | `/chat` | 職務経歴について答える AI チャット (Moonshot / Kimi) |
 | `/contact` | お問い合わせフォーム。送った内容は Slack に届く |
 | `/theme` | 背景の 3D シーンを選ぶ (グリッド / オーロラ / 月夜の海 / 蛍の森 / 月面 / 皆既日食) |
-| `/rss.xml` | RSS フィード |
+| `/rss.xml` | /now の記事の RSS フィード。item のリンク `/now?post=<id>` は記事のダイアログを開く |
+| `/sitemap.xml` `/robots.txt` `/opengraph-image` | 検索エンジン向けのサイトマップと巡回の規則、SNS に出す OGP の画像 ([ADR 0029](docs/adr/0029-site-url-and-seo-metadata.md)) |
 
 全ページの背後に three.js の 3D 背景 (`/theme` で選べる) があり、その上にガラス調のパネルを重ねるデザイン (ダークテーマ既定)。
 

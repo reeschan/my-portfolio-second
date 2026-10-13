@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import { PageTemplate } from "@/components/layout/page-template"
 import { WorkGallery } from "@/components/features/works/work-gallery"
 import { getMessages } from "@/lib/i18n/server"
-import { pageTitle } from "@/lib/metadata"
+import { pageMetadata, pageTitle } from "@/lib/metadata"
 
 export async function generateMetadata(): Promise<Metadata> {
   const messages = await getMessages()
-  return { title: pageTitle(messages.nav.works), description: messages.works.description }
+  return pageMetadata({ title: pageTitle(messages.nav.works), description: messages.works.description, path: "/works" })
 }
 
 export default async function WorksPage() {

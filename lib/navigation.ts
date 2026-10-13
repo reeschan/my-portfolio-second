@@ -18,6 +18,3 @@ export const navItems: readonly NavItem[] = [
   { id: "contact", href: "/contact" },
   { id: "theme", href: "/theme" },
 ]
-
-// アドレスバーに出すホスト名。実際のドメインとは別の「見た目上の URL」
-export const displayHost = "myportfolio.vercel.app"

@@ -11,8 +11,8 @@
 version: 1
 
 tools:
-  e2e: playwright   # e2e/*.spec.ts
-  unit: vitest      # test/**/*.test.ts (ソースと同じ階層で test/ の下に置く。docs/adr/0016)
+  e2e: playwright # e2e/*.spec.ts
+  unit: vitest # test/**/*.test.ts (ソースと同じ階層で test/ の下に置く。docs/adr/0016)
 
 # 対象外にするルート (テスト不要と判断したもの)。理由も書く
 exclude_routes: []
@@ -49,8 +49,8 @@ perspectives:
   external-mock:
     enabled: true
     required: true
-    routes: [/chat, /api/chat]
-    description: 外部 LLM (Moonshot / Kimi) をテストから絶対に呼ばない。E2E は page.route で /api/chat を、ユニットは fetch をモックする
+    routes: [/chat, /api/chat, /contact, /api/contact]
+    description: 外部 LLM (Moonshot / Kimi) と Slack をテストから絶対に呼ばない。E2E は page.route で /api/chat・/api/contact を、ユニットは fetch をモックする
     rules:
       - playwright.config.ts の webServer は MOONSHOT_API_KEY を空にして起動する
       - 本物の API キーを CI のシークレットに入れない
@@ -73,7 +73,7 @@ perspectives:
     enabled: true
     required: false
     applies_to: pages
-    fail_on: [critical, serious]   # e2e/a11y.spec.ts と揃える
+    fail_on: [critical, serious] # e2e/a11y.spec.ts と揃える
     description: axe-core で WCAG 2 A/AA の重大な違反がない。装飾の 3D canvas は対象外
     how: e2e/a11y.spec.ts
 
@@ -81,7 +81,7 @@ perspectives:
     enabled: true
     required: false
     applies_to: pages
-    viewports: [desktop, mobile]   # playwright.config.ts の projects 名
+    viewports: [desktop, mobile] # playwright.config.ts の projects 名
     description: スマホ幅 (Pixel 7) でも主要な表示と導線が使える
     how: テストに @responsive タグを付けると mobile プロジェクトでも実行される
 

@@ -35,6 +35,7 @@ flowchart TD
 | `Dialog` | モーダル。閉じるボタンの名前は「閉じる」。`overlayClassName` で背景の暗幕の濃さを変えられる |
 | `Tabs` | タブ切り替え (矢印キーで移動できる) |
 | `Input` | 入力欄 |
+| `Textarea` | 複数行の入力欄。Input と同じ見た目 |
 
 ### common (`components/common/`): 画面をまたいで使う部品
 
@@ -69,6 +70,7 @@ flowchart TD
 | skills | `SkillsVisualization`, `SkillRadar` | `data/skills.ts` |
 | works | `WorkGallery`, `WorkCard`, `WorkDetailDialog` | `data/works.ts` |
 | chat | `ResumeChat`, `ChatBubble`, `SuggestionList` | — (API から) |
+| contact | `ContactForm` | `data/messages/` の `contact`、`POST /api/contact` |
 | background | `BackgroundScene`, `Scene`, `themes/*` (テーマごとのシーン) | `lib/background-theme.ts` (選択中のテーマ)、`lib/theme.ts` の色 (グリッドのみ) |
 | theme | `ThemePicker` | `lib/background-theme.ts` |
 | now | `NowPostList`, `NowPostCard`, `NowPostDialog` | `lib/now/store.ts` (POST /api/now で投稿した記事)、`data/now.ts` (拠点・受付状況) |

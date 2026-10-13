@@ -44,5 +44,6 @@ export const pageGuides: readonly PageGuide[] = [
   { href: "/works", description: "自作のアプリやツールを、アーキテクチャ図と説明付きで紹介しています。" },
   { href: "/now", description: "いま取り組んでいることや、開発で得たナレッジをブログ風の記事で書いています。" },
   { href: "/chat", description: "職務経歴について、AI に質問できます。" },
+  { href: "/contact", description: "お仕事のご依頼やご質問を、フォームから送れます。" },
   { href: "/theme", description: "背景の 3D シーンを選べます。" },
 ]

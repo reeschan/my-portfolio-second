@@ -8,6 +8,7 @@ export const pages = [
   { path: "/works", tab: "ワーク", heading: "ワーク" },
   { path: "/now", tab: "Now", heading: "Now" },
   { path: "/chat", tab: "チャット", heading: "チャット" },
+  { path: "/contact", tab: "お問い合わせ", heading: "お問い合わせ" },
   { path: "/theme", tab: "テーマ", heading: "テーマ" },
 ] as const
 

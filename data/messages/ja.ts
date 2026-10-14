@@ -56,6 +56,16 @@ export const ja = {
     architecture: "アーキテクチャ",
     repository: "リポジトリ: ",
     privateRepository: "リポジトリは非公開",
+    // アーキテクチャ図の拡大表示 (PBI-0021)
+    enlarge: "アーキテクチャ図を拡大する",
+    enlargeHint: "図を押すと拡大して見られます",
+    viewerTitle: (title: string) => `${title} のアーキテクチャ`,
+    zoomIn: "拡大",
+    zoomOut: "縮小",
+    zoomFit: "全体を表示",
+    diagramArea: "図の表示領域",
+    zoomLevel: "表示の倍率",
+    openOriginal: "元の図を新しいタブで開く",
   },
   now: {
     description: "いま取り組んでいること",

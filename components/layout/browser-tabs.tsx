@@ -31,7 +31,8 @@ function TabBar({ pathname }: { pathname: string }) {
       className="glass-bar flex h-12 items-center gap-1 overflow-x-auto rounded-t-lg border-b border-border/20 px-2"
     >
       {navItems.map((item) => {
-        const isActive = pathname === item.href
+        // /now/<id> のような下の階層のページでも選んだ状態にする。/nowhere で Now が選ばれないよう、/ を付けて前方一致を比べる
+        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
 
         return (
           <Link

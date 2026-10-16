@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { permanentRedirect } from "next/navigation"
 import { connection } from "next/server"
 import { Callout, TextLink } from "@/components/common"
 import { NowPostList } from "@/components/features/now/now-post-list"
@@ -8,6 +9,7 @@ import { messagesOf, type Messages } from "@/data/messages"
 import { formatDate } from "@/lib/format"
 import { getLocale } from "@/lib/i18n/server"
 import { pageMetadata, pageTitle } from "@/lib/metadata"
+import { nowPostPath } from "@/lib/now/feed"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
 
@@ -17,18 +19,21 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 type NowPageProps = {
-  // RSS の item のリンク (/now?post=<id>) から来たら、その記事のダイアログを開いて出す (PBI-0020)
+  // 旧 RSS の item のリンク (/now?post=<id>)。ADR 0030 で、その記事のページ (/now/<id>) に転送する
   searchParams: Promise<{ post?: string | string[] }>
 }
 
 export default async function NowPage({ searchParams }: NowPageProps) {
   // 記事は POST /api/now でいつでも増えるので、ビルド時に固めずリクエストごとに読む
   await connection()
+  // 記事を読む前に転送する。id を保存先で確かめない (知らない id は記事のページが 404 を返す)
+  const { post: requestedPost } = await searchParams
+  if (typeof requestedPost === "string") permanentRedirect(nowPostPath(requestedPost))
+
   const locale = await getLocale()
   const messages = messagesOf(locale)
   const { posts, loadError } = await loadPosts(messages.now)
   const latest = posts[0]
-  const { post: requestedPost } = await searchParams
 
   return (
     <PageTemplate title={messages.nav.now}>
@@ -50,7 +55,7 @@ export default async function NowPage({ searchParams }: NowPageProps) {
             <p>{loadError}</p>
           </Callout>
         ) : (
-          <NowPostList posts={posts} initialPostId={typeof requestedPost === "string" ? requestedPost : undefined} />
+          <NowPostList posts={posts} />
         )}
 
         {messages.now.languageNote && <p className="text-sm text-muted-foreground">{messages.now.languageNote}</p>}

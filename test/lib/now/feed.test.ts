@@ -1,7 +1,7 @@
 // @perspectives api-contract
 // @routes /rss.xml
 import { describe, expect, it } from "vitest"
-import { buildNowFeed, escapeXml, nowPostUrl } from "@/lib/now/feed"
+import { buildNowFeed, escapeXml, nowPostPath, nowPostUrl } from "@/lib/now/feed"
 import type { NowPost } from "@/lib/now/schema"
 
 const siteUrl = new URL("https://reeschan.pink")
@@ -23,7 +23,7 @@ describe("buildNowFeed", () => {
       post({ id: "old", title: "古い記事" }),
     ])
     expect(xml.indexOf("新しい記事")).toBeLessThan(xml.indexOf("古い記事"))
-    expect(xml).toContain("<link>https://reeschan.pink/now?post=new</link>")
+    expect(xml).toContain("<link>https://reeschan.pink/now/new</link>")
     expect(xml).toContain('<guid isPermaLink="false">new</guid>')
     expect(xml).toContain("<pubDate>Mon, 12 Oct 2026 03:00:00 GMT</pubDate>")
     expect(xml).toContain("<description>見出し 本文です。</description>")
@@ -51,9 +51,16 @@ describe("buildNowFeed", () => {
   })
 })
 
+describe("nowPostPath", () => {
+  it("id を記事ごとのページのパスに安全に埋める", () => {
+    expect(nowPostPath("new")).toBe("/now/new")
+    expect(nowPostPath("a b&c")).toBe("/now/a%20b%26c")
+  })
+})
+
 describe("nowPostUrl", () => {
-  it("id を URL のクエリとして安全に埋める", () => {
-    expect(nowPostUrl("a b&c", siteUrl)).toBe("https://reeschan.pink/now?post=a+b%26c")
+  it("記事ごとのページ (ADR 0030) の絶対 URL を返す", () => {
+    expect(nowPostUrl("a b&c", siteUrl)).toBe("https://reeschan.pink/now/a%20b%26c")
   })
 })
 

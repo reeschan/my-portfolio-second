@@ -25,3 +25,4 @@
 | [0019](0019-site-url-and-seo/PBI.md) | サイトの URL を reeschan.pink に揃え、検索と共有に備える | 進行中 |
 | [0020](0020-now-rss-feed/PBI.md) | RSS に /now の記事を載せる | 進行中 |
 | [0021](0021-architecture-viewer/PBI.md) | ワークのアーキテクチャ図を拡大して読めるようにする | 進行中 |
+| [0022](0022-contact-lead-copy/PBI.md) | お問い合わせの冒頭の一言で、仕事を募っていることを伝える | 進行中 |

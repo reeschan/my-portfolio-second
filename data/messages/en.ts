@@ -102,7 +102,7 @@ export const en: Messages = {
   },
   contact: {
     description: "A form to get in touch with me",
-    lead: "For work inquiries or questions, please send me a message here.",
+    lead: "I've spent so much on AI that I'm always broke. I'll take on anything, so please send work my way! For inquiries or questions, send me a message here.",
     name: "Name",
     email: "Email",
     message: "Message",

@@ -47,6 +47,8 @@ test.describe("お問い合わせ", () => {
     async ({ page }) => {
       const sent = await mockContactApi(page, { status: 200, body: { received: true } })
       await page.goto("/contact")
+      // フォームの上に、仕事を募る一言が出る (PBI-0022)
+      await expect(page.getByText(t.lead)).toBeVisible()
 
       await fillSample(page)
       await page.getByRole("button", { name: t.submit }).click()

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import type { Element, ElementContent } from "hast"
 import ReactMarkdown, { type Components } from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -6,28 +7,87 @@ import { MermaidDiagram } from "./mermaid-diagram"
 
 type MarkdownProps = {
   children: string
+  // 見出しの開始タグ (Markdown の # をどの見出しにするか)。既定は 3: この本文はダイアログの題 (h2) の下に入るから。記事のページ (/now/[id]) では題名が h1 になるので 2 を渡す
+  headingStart?: 2 | 3
 }
 
 // /now の記事と /works の作品の詳細の本文。GFM (表・チェックリスト・打ち消し線) と ```mermaid の図に対応する
 // 生の HTML は描かない (react-markdown の既定)。画像の埋め込みは扱わない (PBI-0004)
-export function Markdown({ children }: MarkdownProps) {
+export function Markdown({ children, headingStart = 3 }: MarkdownProps) {
   return (
     <div className="space-y-4 leading-relaxed text-foreground/90">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={componentsByHeadingStart[headingStart]}>
         {children}
       </ReactMarkdown>
     </div>
   )
 }
 
-// 本文の見出しはダイアログの題 (h2) の下に入るので、# を h3 から始める
-const components: Components = {
-  h1: ({ children }) => <h3 className="mt-6 border-b border-border/30 pb-1 text-xl font-semibold">{children}</h3>,
-  h2: ({ children }) => <h4 className="mt-6 text-lg font-semibold">{children}</h4>,
-  h3: ({ children }) => <h5 className="mt-4 font-semibold">{children}</h5>,
-  h4: ({ children }) => <h6 className="mt-4 font-semibold">{children}</h6>,
-  h5: ({ children }) => <h6 className="mt-4 font-semibold">{children}</h6>,
-  h6: ({ children }) => <h6 className="mt-4 font-semibold">{children}</h6>,
+// Markdown の本文の見出し (1〜6) と、headingStart ごとの描き方の集まりで使う見出しのキー (h1〜h6)
+type HeadingSource = 1 | 2 | 3 | 4 | 5 | 6
+type HeadingKeys = "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
+
+// 見出しの className は Markdown の階層ごとに決めていて、# は h1 の行のもの、## は h2 の行のものを使う。描くタグをずらしてもそのままにする
+const headingClassNames: Record<HeadingSource, string> = {
+  1: "mt-6 border-b border-border/30 pb-1 text-xl font-semibold",
+  2: "mt-6 text-lg font-semibold",
+  3: "mt-4 font-semibold",
+  4: "mt-4 font-semibold",
+  5: "mt-4 font-semibold",
+  6: "mt-4 font-semibold",
+}
+
+// Markdown の # を h{headingStart} から始める見出し (## はその次の見出し)。
+// className は Markdown の階層ごとのものを使い、変わるのは描くタグだけ
+function Heading({ source, headingStart, children }: { source: HeadingSource; headingStart: 2 | 3; children?: ReactNode }) {
+  const className = headingClassNames[source]
+  // h6 を超えたら h6 に止める
+  const tag = Math.min(source + headingStart - 1, 6)
+  if (tag === 2) return <h2 className={className}>{children}</h2>
+  if (tag === 3) return <h3 className={className}>{children}</h3>
+  if (tag === 4) return <h4 className={className}>{children}</h4>
+  if (tag === 5) return <h5 className={className}>{children}</h5>
+  return <h6 className={className}>{children}</h6>
+}
+
+// Markdown の # を h{headingStart} から始め、## をその次の見出しにずらす
+function headingComponents(headingStart: 2 | 3): Pick<Components, HeadingKeys> {
+  return {
+    h1: ({ children }) => (
+      <Heading source={1} headingStart={headingStart}>
+        {children}
+      </Heading>
+    ),
+    h2: ({ children }) => (
+      <Heading source={2} headingStart={headingStart}>
+        {children}
+      </Heading>
+    ),
+    h3: ({ children }) => (
+      <Heading source={3} headingStart={headingStart}>
+        {children}
+      </Heading>
+    ),
+    h4: ({ children }) => (
+      <Heading source={4} headingStart={headingStart}>
+        {children}
+      </Heading>
+    ),
+    h5: ({ children }) => (
+      <Heading source={5} headingStart={headingStart}>
+        {children}
+      </Heading>
+    ),
+    h6: ({ children }) => (
+      <Heading source={6} headingStart={headingStart}>
+        {children}
+      </Heading>
+    ),
+  }
+}
+
+// 見出し以外の要素の描き方。headingStart によらないので 1 つだけ作る
+const otherComponents: Omit<Components, HeadingKeys> = {
   a: ({ href, children }) => <TextLink href={href ?? "#"}>{children}</TextLink>,
   ul: ({ children }) => <ul className="list-disc space-y-1 pl-6">{children}</ul>,
   // チェックリストの項目は、黒丸の代わりにチェックボックスを印にする
@@ -50,6 +110,12 @@ const components: Components = {
     if (mermaid !== null) return <MermaidDiagram code={mermaid} />
     return <pre className="overflow-x-auto rounded-md border border-border/30 bg-background/60 p-4 font-mono text-sm">{children}</pre>
   },
+}
+
+// headingStart ごとの描き方。描画のたびに作り直さないよう、2 と 3 の 2 通りをモジュールの定数で用意して選ぶ
+const componentsByHeadingStart: Record<2 | 3, Components> = {
+  2: { ...otherComponents, ...headingComponents(2) },
+  3: { ...otherComponents, ...headingComponents(3) },
 }
 
 // <pre><code class="language-mermaid">…</code></pre> なら中のコードを返す

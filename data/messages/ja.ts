@@ -78,6 +78,8 @@ export const ja = {
     loadError: "記事を読み込めませんでした。時間をおいて再度お試しください。",
     empty: "まだ投稿はありません。",
     recent: "最近の投稿",
+    // 記事のページ (/now/[id]) から一覧へ戻るリンク
+    backToList: "記事の一覧へ戻る",
     dialogUpdatedBefore: "（",
     dialogUpdatedAfter: "更新）",
     inspiredBefore: "このページは ",

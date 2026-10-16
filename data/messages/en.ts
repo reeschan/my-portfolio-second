@@ -74,6 +74,7 @@ export const en: Messages = {
     loadError: "Couldn't load the posts. Please try again later.",
     empty: "No posts yet.",
     recent: "Recent posts",
+    backToList: "Back to all posts",
     dialogUpdatedBefore: " (updated ",
     dialogUpdatedAfter: ")",
     inspiredBefore: "This page follows the idea of ",

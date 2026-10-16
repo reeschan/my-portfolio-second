@@ -1,25 +1,12 @@
-import type { APIRequestContext } from "@playwright/test"
-import { expect, nowPostToken, routes, test } from "./fixtures"
+import { createNowPost, expect, nowPostToken, routes, test, uniqueTitle } from "./fixtures"
+import { ja } from "../data/messages/ja"
 import { formatJapaneseDateTime } from "../lib/format"
-import { escapeXml } from "../lib/now/feed"
+import { escapeXml, nowPostPath } from "../lib/now/feed"
 
 // /now の記事 (PBI-0004)。記事は POST /api/now で仕込む (保存先は webServer のメモリ。playwright.config.ts)
 // 並列のテストが同じサーバーに投稿するので、題名は毎回一意にし、件数や先頭の記事には頼らない
 
-type Post = { title: string; body: string; publishedAt?: string }
-
-const uniqueTitle = (label: string) => `${label} ${crypto.randomUUID().slice(0, 8)}`
-
 const auth = { Authorization: `Bearer ${nowPostToken}` }
-
-async function createPost(request: APIRequestContext, post: Post): Promise<{ id: string }> {
-  const res = await request.post("/api/now", {
-    headers: auth,
-    data: post,
-  })
-  expect(res.status(), await res.text()).toBe(201)
-  return (await res.json()) as { id: string }
-}
 
 test.describe("Now の記事", () => {
   test(
@@ -27,7 +14,7 @@ test.describe("Now の記事", () => {
     { tag: ["@content", "@responsive"], annotation: routes("/now", "/api/now") },
     async ({ page, request }) => {
       const title = uniqueTitle("カード表示")
-      await createPost(request, {
+      await createNowPost(request, {
         title,
         body: "## 近況\n\n**Next.js 16** に移行しています。",
         publishedAt: "2026-10-09T10:00:00+09:00",
@@ -66,8 +53,8 @@ test.describe("Now の記事", () => {
     const older = uniqueTitle("古い記事")
     const newer = uniqueTitle("新しい記事")
     // 投稿の順と公開日の順を逆にして、投稿順ではなく公開日で並ぶことを確かめる
-    await createPost(request, { title: newer, body: "新", publishedAt: "2999-01-02T00:00:00Z" })
-    await createPost(request, { title: older, body: "旧", publishedAt: "2999-01-01T00:00:00Z" })
+    await createNowPost(request, { title: newer, body: "新", publishedAt: "2999-01-02T00:00:00Z" })
+    await createNowPost(request, { title: older, body: "旧", publishedAt: "2999-01-01T00:00:00Z" })
 
     await page.goto("/now")
     const titles = await page.getByRole("region", { name: "最近の投稿" }).getByRole("heading", { level: 2 }).allTextContents()
@@ -76,11 +63,11 @@ test.describe("Now の記事", () => {
   })
 
   test(
-    "カードを押すとダイアログで Markdown と Mermaid の図が読め、閉じられる",
-    { tag: ["@interaction", "@responsive"], annotation: routes("/now") },
+    "カードを押すと記事のページに移り、本文の Markdown と Mermaid の図が読める",
+    { tag: ["@interaction", "@responsive"], annotation: routes("/now", "/now/[id]") },
     async ({ page, request }) => {
       const title = uniqueTitle("詳細表示")
-      await createPost(request, {
+      const { id } = await createNowPost(request, {
         title,
         body: [
           "# 取り組み",
@@ -102,20 +89,19 @@ test.describe("Now の記事", () => {
       })
 
       await page.goto("/now")
-      await page.getByRole("button", { name: title }).click()
+      // カード (見出しのリンク) から記事のページへ移る
+      await page.getByRole("link", { name: title }).click()
+      await expect(page).toHaveURL(new RegExp(`${nowPostPath(id)}$`))
 
-      const dialog = page.getByRole("dialog", { name: title })
-      await expect(dialog).toBeVisible()
-      await expect(dialog.getByRole("heading", { name: "取り組み" })).toBeVisible()
-      await expect(dialog.getByRole("checkbox")).toHaveCount(2)
-      await expect(dialog.getByRole("cell", { name: "完了" })).toBeVisible()
-      await expect(dialog.getByRole("link", { name: "参考リンク" })).toHaveAttribute("target", "_blank")
+      // 題名が h1 (PageTemplate) なので、本文の # は h2 から始まる
+      await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible()
+      await expect(page.getByRole("heading", { name: "取り組み" })).toBeVisible()
+      await expect(page.getByRole("checkbox")).toHaveCount(2)
+      await expect(page.getByRole("cell", { name: "完了" })).toBeVisible()
+      await expect(page.getByRole("link", { name: "参考リンク" })).toHaveAttribute("target", "_blank")
       // mermaid は読み込んでから描くので、SVG が差し込まれるのを待つ。
       // dev サーバーは mermaid を初めて開いたときにコンパイルするため、既定の 5 秒では足りない
-      await expect(dialog.getByRole("figure", { name: "Mermaid の図" }).locator("svg")).toBeVisible({ timeout: 30_000 })
-
-      await page.keyboard.press("Escape")
-      await expect(dialog).toBeHidden()
+      await expect(page.getByRole("figure", { name: "Mermaid の図" }).locator("svg")).toBeVisible({ timeout: 30_000 })
     },
   )
 
@@ -133,12 +119,12 @@ test.describe("Now の記事", () => {
   )
 
   test(
-    "PUT で直した記事は題名と本文が変わり、更新日が出る",
-    { tag: "@interaction", annotation: routes("/now", "/api/now/[id]") },
+    "PUT で直した記事は、記事のページに新しい題名と更新日が出る",
+    { tag: "@interaction", annotation: routes("/now", "/api/now/[id]", "/now/[id]") },
     async ({ page, request }) => {
       const before = uniqueTitle("直す前")
       const after = uniqueTitle("直した後")
-      const { id } = await createPost(request, { title: before, body: "誤字あり", publishedAt: "2026-01-01T00:00:00+09:00" })
+      const { id } = await createNowPost(request, { title: before, body: "誤字あり", publishedAt: "2026-01-01T00:00:00+09:00" })
 
       const res = await request.put(`/api/now/${id}`, { headers: auth, data: { title: after, body: "誤字なし" } })
       expect(res.status()).toBe(200)
@@ -146,12 +132,14 @@ test.describe("Now の記事", () => {
 
       await page.goto("/now")
       await expect(page.getByRole("heading", { name: before })).toHaveCount(0)
-      await page.getByRole("button", { name: after }).click()
 
-      const dialog = page.getByRole("dialog", { name: after })
-      await expect(dialog.getByText("誤字なし")).toBeVisible()
-      // 公開日は元のまま、更新日が添えられる
-      await expect(dialog).toHaveAccessibleDescription(`2026年1月1日（${formatJapaneseDateTime(updatedAt)}更新）`)
+      await page.goto(nowPostPath(id))
+      await expect(page.getByRole("heading", { level: 1, name: after })).toBeVisible()
+      await expect(page.getByText("誤字なし")).toBeVisible()
+      // 公開日は元のまま、更新日が添えられる (文言は data/messages の dialogUpdatedBefore/After)
+      await expect(
+        page.getByText(`2026年1月1日${ja.now.dialogUpdatedBefore}${formatJapaneseDateTime(updatedAt)}${ja.now.dialogUpdatedAfter}`),
+      ).toBeVisible()
     },
   )
 
@@ -160,7 +148,7 @@ test.describe("Now の記事", () => {
     { tag: "@interaction", annotation: routes("/now", "/api/now/[id]") },
     async ({ page, request }) => {
       const title = uniqueTitle("消す記事")
-      const { id } = await createPost(request, { title, body: "本文" })
+      const { id } = await createNowPost(request, { title, body: "本文" })
 
       await page.goto("/now")
       await expect(page.getByRole("heading", { name: title })).toBeVisible()
@@ -172,47 +160,50 @@ test.describe("Now の記事", () => {
   )
 })
 
-// RSS フィード (PBI-0020)。記事は item になり、そのリンクから記事のダイアログを開ける
+// RSS フィード (PBI-0020)。記事は item になり、リンク (旧 ?post= の形も) から記事のページに着ける
 test.describe("Now の RSS", () => {
   test(
-    "投稿した記事が RSS の item に載り、リンクが /now?post=<id> を指す",
+    "投稿した記事が RSS の item に載り、リンクが記事のページを指す",
     { tag: "@api-contract", annotation: routes("/rss.xml") },
     async ({ request }) => {
       const title = uniqueTitle("RSS & 抜粋")
-      const { id } = await createPost(request, { title, body: "**フィード**に載る本文です。" })
+      const { id } = await createNowPost(request, { title, body: "**フィード**に載る本文です。" })
 
       const res = await request.get("/rss.xml")
       expect(res.status()).toBe(200)
       const xml = await res.text()
       // 題名の & は実体参照になる。期待値は本体と同じ escapeXml で作る (文字の置き換えを二重に書かない)
       expect(xml).toContain(`<title>${escapeXml(title)}</title>`)
-      expect(xml).toContain(`/now?post=${id}</link>`)
+      // item のリンクは記事のページ (nowPostPath)。/now/<id></link> で終わる
+      expect(xml).toContain(`${nowPostPath(id)}</link>`)
       expect(xml).toContain("<description>フィードに載る本文です。</description>")
     },
   )
 
   test(
-    "RSS のリンク (/now?post=<id>) で開くと記事のダイアログが開き、閉じると ?post= が消える",
-    { tag: ["@interaction", "@responsive"], annotation: routes("/now") },
+    "旧リンク (/now?post=<id>) で開くと記事のページに移り、記事が出る",
+    { tag: ["@interaction", "@responsive"], annotation: routes("/now", "/now/[id]") },
     async ({ page, request }) => {
       const title = uniqueTitle("RSS から開く")
-      const { id } = await createPost(request, { title, body: "RSS から開いた本文です。" })
+      const { id } = await createNowPost(request, { title, body: "RSS から開いた本文です。" })
 
       await page.goto(`/now?post=${id}`)
-      const dialog = page.getByRole("dialog", { name: title })
-      await expect(dialog.getByText("RSS から開いた本文です。")).toBeVisible()
-
-      await page.keyboard.press("Escape")
-      await expect(dialog).toBeHidden()
-      await expect(page).toHaveURL(/\/now$/)
+      await expect(page).toHaveURL(new RegExp(`${nowPostPath(id)}$`))
+      await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible()
+      await expect(page.getByText("RSS から開いた本文です。")).toBeVisible()
     },
   )
 
-  test("知らない id で開いたときはダイアログを出さず一覧を出す", { tag: "@interaction", annotation: routes("/now") }, async ({ page }) => {
-    await page.goto("/now?post=does-not-exist")
-    await expect(page.getByRole("heading", { level: 1, name: "Now" })).toBeVisible()
-    await expect(page.getByRole("dialog")).toHaveCount(0)
-  })
+  test(
+    "旧リンクの ?post= は 308 Permanent で記事のページに転送する (知らない id も転送する)",
+    { tag: "@interaction", annotation: routes("/now") },
+    async ({ request }) => {
+      // 知らない id は転送先の記事ページが 404 を返す。page.goto だと 404 の console エラーで自動フィクスチャが落ちるので request で見る
+      const res = await request.get("/now?post=does-not-exist", { maxRedirects: 0 })
+      expect(res.status()).toBe(308)
+      expect(res.headers()["location"]).toMatch(/\/now\/does-not-exist$/)
+    },
+  )
 
   test("どのページもフィードの場所を link rel=alternate で示す", { tag: "@smoke", annotation: routes("/overview") }, async ({ page }) => {
     await page.goto("/overview")

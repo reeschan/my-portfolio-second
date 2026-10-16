@@ -1,4 +1,4 @@
-import { test as base, expect } from "@playwright/test"
+import { test as base, expect, type APIRequestContext } from "@playwright/test"
 
 // 全ページ共通のルート一覧。ページを増やしたらここにも足す (巡回エージェントもこの一覧と app/ を突き合わせる)
 export const pages = [
@@ -19,6 +19,23 @@ export function routes(...paths: string[]) {
 
 // E2E が POST /api/now で記事を仕込むときのトークン。playwright.config.ts が webServer に渡す。本番のトークンとは無関係
 export const nowPostToken = "e2e-now-post-token"
+
+// 記事を仕込むテストは同じサーバーに並列で投稿するので、題名は毎回一意にする。
+// 件数や先頭の記事に頼ると、ほかのテストが足した記事で結果が揺れる
+export const uniqueTitle = (label: string) => `${label} ${crypto.randomUUID().slice(0, 8)}`
+
+// POST /api/now で記事を 1 件仕込む。201 を確かめて { id } を返す (e2e/now.spec.ts の createPost と同じ形)
+export async function createNowPost(
+  request: APIRequestContext,
+  post: { title: string; body: string; publishedAt?: string },
+): Promise<{ id: string }> {
+  const res = await request.post("/api/now", {
+    headers: { Authorization: `Bearer ${nowPostToken}` },
+    data: post,
+  })
+  expect(res.status(), await res.text()).toBe(201)
+  return (await res.json()) as { id: string }
+}
 
 // ヘッドレス環境で避けられない既知のノイズ。増やすときは理由をコメントで残す
 // (例: ヘッドレス Chromium で WebGL がソフトウェア描画になったときの警告が CI で error として出るようになった場合)

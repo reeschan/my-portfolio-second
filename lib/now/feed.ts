@@ -34,15 +34,19 @@ export function buildNowFeed({ siteUrl, title, description, posts }: FeedOptions
 `
 }
 
-// 記事ごとのページはないので、/now の詳細ダイアログを開く URL を指す
+// 記事ごとのページ (ADR 0030) のパス。URL はここだけで作り、/now/<id> を直接書かない
+export function nowPostPath(id: string): string {
+  return `/now/${encodeURIComponent(id)}`
+}
+
+// 記事ごとのページ (ADR 0030) を指す絶対 URL
 export function nowPostUrl(id: string, siteUrl: URL): string {
-  const url = new URL("/now", siteUrl)
-  url.searchParams.set("post", id)
-  return url.href
+  return new URL(nowPostPath(id), siteUrl).href
 }
 
 function feedItem(post: NowPost, siteUrl: URL): string {
   const link = nowPostUrl(post.id, siteUrl)
+  // リンクが変わっても guid は id のままにする。変えると RSS リーダーが既読の記事を新着と見なす
   return `
   <item>
     <title>${escapeXml(post.title)}</title>

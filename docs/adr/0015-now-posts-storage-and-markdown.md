@@ -2,6 +2,7 @@
 
 - 状態: 提案中
 - 日付: 2026-10-09
+- 一部置き換え: 「画像の埋め込みは扱わない」は [ADR 0031](0031-now-post-images.md) で置き換えた (2026-10-21)
 - 関連: [PBI-0004](../pbi/0004-now-posts/PBI.md)、[ADR 0002](0002-framework-and-hosting.md)、[ADR 0005](0005-component-architecture.md)
 
 ## 背景

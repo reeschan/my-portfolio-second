@@ -94,3 +94,37 @@ test.describe("背景テーマ", () => {
     })
   }
 })
+
+// prefers-reduced-motion: reduce のときは、背景を動かさず止まった 1 枚だけを描く (frameloop "demand"。PBI-0025)。
+// 描画の回し方が変わっても、canvas が出て、選んだテーマのシーンが載っていることを確かめる
+test.describe("視差効果を減らす設定", () => {
+  test.use({ reducedMotion: "reduce" })
+
+  // 既定のテーマと、それ以外のテーマ 1 つ (月夜の海) を選ぶ
+  const targets = [defaultBackgroundThemeId, "moonlit-sea"].map((id) => backgroundThemes.find((t) => t.id === id)!)
+
+  test(
+    "テーマを選ぶと、止まった背景としてそのテーマのシーンが描かれる",
+    { tag: "@interaction", annotation: routes("/theme") },
+    async ({ page }) => {
+      test.setTimeout(120_000)
+      await page.goto("/theme")
+      const group = page.getByRole("group", { name: "背景のテーマ" })
+      const el = page.locator(canvasSelector)
+
+      for (const theme of targets) {
+        await group.getByText(theme.label, { exact: true }).click()
+        await expect(group.getByRole("radio", { name: theme.label })).toBeChecked()
+        await expect(el).toHaveAttribute("data-background-theme", theme.id)
+        // テーマのシーンは遅延読み込みで、CI のヘッドレス Chromium は WebGL をソフトウェアで描くため長めに待つ
+        await expect(el.locator("canvas")).toBeVisible({ timeout: 30_000 })
+        // シェーダーのコンパイルと描画が進んだことを、rAF が 2 回回ることで確かめる (固定の待ち時間は使わない)
+        await expect
+          .poll(() => page.evaluate(() => new Promise<number>((r) => requestAnimationFrame(() => requestAnimationFrame((t) => r(t))))), {
+            timeout: 60_000,
+          })
+          .toBeGreaterThan(0)
+      }
+    },
+  )
+})

@@ -2,11 +2,10 @@
 
 import Image from "next/image"
 import { useRef, useState } from "react"
-import { Markdown, Section, TagList, TextLink } from "@/components/common"
+import { ImageViewer, Markdown, Section, TagList, TextLink } from "@/components/common"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { Work } from "@/data/works"
 import { useMessages } from "@/lib/i18n/locale-context"
-import { ArchitectureViewer } from "./architecture-viewer"
 
 type WorkDetailDialogProps = {
   work: Work | null
@@ -74,12 +73,13 @@ function ArchitectureFigure({ title, architecture }: { title: string; architectu
         <Image src={architecture.dark} alt={architecture.alt} width={1600} height={1000} className="hidden h-auto w-full dark:block" />
       </button>
       <figcaption className="mt-2 text-center text-xs text-muted-foreground">{messages.enlargeHint}</figcaption>
-      <ArchitectureViewer
-        title={title}
-        architecture={architecture}
+      <ImageViewer
+        title={messages.viewerTitle(title)}
+        image={architecture}
         open={viewerOpen}
         onOpenChange={setViewerOpen}
         returnFocusRef={enlargeButtonRef}
+        openOriginalLabel={messages.openOriginal}
       />
     </figure>
   )

@@ -3,20 +3,32 @@ import type { Element, ElementContent } from "hast"
 import ReactMarkdown, { type Components } from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { TextLink } from "./text-link"
+import { imageLookup, type ImageLookupResult } from "@/lib/now/post-image-lookup"
+import type { NowPostImage } from "@/lib/now/schema"
 import { MermaidDiagram } from "./mermaid-diagram"
+import { MarkdownImage } from "./markdown-image"
 
 type MarkdownProps = {
   children: string
   // 見出しの開始タグ (Markdown の # をどの見出しにするか)。既定は 3: この本文はダイアログの題 (h2) の下に入るから。記事のページ (/now/[id]) では題名が h1 になるので 2 を渡す
   headingStart?: 2 | 3
+  // 記事の画像の対応表。本文の画像はここから引いて描く。渡さない呼び出し (/works の本文など) では、画像はすべて代替テキストの文字になる
+  images?: NowPostImage[]
+  // 画像の拡大表示の題 (「<記事の題名> の画像」)。images を渡すときに一緒に渡す
+  imageViewerTitle?: string
 }
 
+type Lookup = (src: string) => ImageLookupResult | null
+
 // /now の記事と /works の作品の詳細の本文。GFM (表・チェックリスト・打ち消し線) と ```mermaid の図に対応する
-// 生の HTML は描かない (react-markdown の既定)。画像の埋め込みは扱わない (PBI-0004)
-export function Markdown({ children, headingStart = 3 }: MarkdownProps) {
+// 生の HTML は描かない (react-markdown の既定)。画像は記事の対応表にあるものだけを <img> にし、押すと拡大表示を開く (ADR 0031)
+export function Markdown({ children, headingStart = 3, images, imageViewerTitle }: MarkdownProps) {
+  // 対応表は描画ごとに 1 回だけ引ける形にする。表が無ければどの画像も引けない
+  const lookup: Lookup = images && images.length > 0 ? imageLookup(images) : () => null
+  const components: Components = { ...componentsByHeadingStart[headingStart], ...imageComponents(lookup, imageViewerTitle) }
   return (
     <div className="space-y-4 leading-relaxed text-foreground/90">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={componentsByHeadingStart[headingStart]}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
         {children}
       </ReactMarkdown>
     </div>
@@ -116,6 +128,46 @@ const otherComponents: Omit<Components, HeadingKeys> = {
 const componentsByHeadingStart: Record<2 | 3, Components> = {
   2: { ...otherComponents, ...headingComponents(2) },
   3: { ...otherComponents, ...headingComponents(3) },
+}
+
+// 画像と段落の描き方。対応表によって変わるので、描画ごとに作る
+function imageComponents(lookup: Lookup, viewerTitle: string | undefined): Pick<Components, "img" | "p"> {
+  return {
+    img: ({ src, alt }) => {
+      const text = alt ?? ""
+      const found = typeof src === "string" ? lookup(src) : null
+      // 対応表に無い画像 (外部の画像を含む) は <img> にせず、代替テキストの文字だけを出す
+      if (!found) return text
+      const { light, dark } = found
+      return (
+        <MarkdownImage
+          light={{ url: light.url, width: light.width, height: light.height }}
+          dark={dark ? { url: dark.url, width: dark.width, height: dark.height } : undefined}
+          alt={text}
+          viewerTitle={viewerTitle ?? text}
+        />
+      )
+    },
+    // 引ける画像だけの段落は <figure> にする (<p> の中にブロックを入れないため)。文と混ざった段落は <p> のまま
+    p: ({ node, children }) =>
+      isImageOnlyParagraph(node, lookup) ? <figure className="my-4 space-y-2">{children}</figure> : <p>{children}</p>,
+  }
+}
+
+// 段落の子が画像の要素と空白の文字だけで、そのうち 1 枚でも対応表で引けるか
+function isImageOnlyParagraph(p: Element | undefined, lookup: Lookup): boolean {
+  if (!p) return false
+  let found = false
+  for (const child of p.children) {
+    if (child.type === "text") {
+      if (child.value.trim() !== "") return false
+      continue
+    }
+    if (child.type !== "element" || child.tagName !== "img") return false
+    const src = child.properties.src
+    if (typeof src === "string" && lookup(src)) found = true
+  }
+  return found
 }
 
 // <pre><code class="language-mermaid">…</code></pre> なら中のコードを返す

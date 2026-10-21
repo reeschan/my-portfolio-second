@@ -63,7 +63,9 @@ export default async function NowPostPage({ params }: NowPostPageProps) {
         </p>
 
         {/* 題名が h1 なので、本文の # は h2 から始める */}
-        <Markdown headingStart={2}>{post.body}</Markdown>
+        <Markdown headingStart={2} images={post.images} imageViewerTitle={messages.now.imageViewerTitle(post.title)}>
+          {post.body}
+        </Markdown>
 
         <p>
           <Link href="/now" className="text-primary underline-offset-4 hover:underline">

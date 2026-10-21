@@ -2,7 +2,7 @@
 
 - 状態: 提案中
 - 日付: 2026-10-13
-- 関連: [PBI-0019](../pbi/0019-site-url-and-seo/PBI.md)
+- 関連: [PBI-0019](../pbi/0019-site-url-and-seo/PBI.md)、[PBI-0027](../pbi/0027-canonical-host/PBI.md) (2026-10-21 に正規ホストと配信の転送の向きを書き足した)
 
 ## 背景
 
@@ -14,6 +14,9 @@
 ## 決定
 
 - 本番の URL を `lib/metadata.ts` の `siteUrl` に固定する。環境変数にはしない
+- 配信の正規ホストは `siteUrl` と同じ apex (`reeschan.pink`) にする。Vercel の Domains で apex を primary にし、`www.reeschan.pink` は同じパスの apex へ 308 で転送する (PBI-0027)
+  - canonical が転送される URL を指すと、検索エンジンはリダイレクトと canonical の食い違いをどちらで解くか自分で決めてしまう。sitemap の URL もすべて転送を挟む
+  - ドメインの設定はコードの外にあり、テストでは確かめられない。Vercel の Domains を変えたら、`curl -sI https://reeschan.pink/` が 200、`curl -sI https://www.reeschan.pink/` が apex への 308 であることを確かめる
 - アドレスバーの表示 (`displayHost`)・RSS・`metadataBase`・canonical・OGP・sitemap・robots はすべて `siteUrl` から作る
 - ページの metadata は `pageMetadata()` で作る。Next.js は子の `openGraph` を親と深く混ぜないので、`siteName`・`type`・画像を毎回渡す
 - OGP の画像は `app/opengraph-image.tsx` で `next/og` の `ImageResponse` を使い、ビルド時に作る。日本語のフォントを同梱しないため、文字は英語だけにする
@@ -36,6 +39,6 @@
 ## 結果
 
 - 検索結果と SNS で、ページごとのタイトル・説明・画像が出る
-- ドメインを変えるときは `siteUrl` を 1 行直せば全体が追従する
+- ドメインを変えるときは `siteUrl` を 1 行直せば全体が追従する。あわせて Vercel の Domains の primary と転送の向きも `siteUrl` に合わせる
 - 新しいページは `pageMetadata()` を使い、`lib/navigation.ts` に足せば sitemap にも載る
 - 新しい観点は足さない。E2E は `@smoke` と `@api-contract` で確かめる

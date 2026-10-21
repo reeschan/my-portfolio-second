@@ -42,3 +42,11 @@
 - テーマのファイルには生の色 (`#0b1020` や GLSL の `vec3(...)`) が書かれる。UI のコード (`app/`、`components/` の DOM) では引き続きトークンだけを使う
 - E2E (`e2e/background-theme.spec.ts`) は描画結果のピクセルを比べず、canvas の `data-background-theme` と、全テーマがエラー (シェーダーのコンパイル失敗など) なく描けることを確かめる
 - シェーダーは端末の GPU に負荷をかけるので、dpr の上限を 1.75 に下げた
+- 2026-10-21 追記 ([PBI-0025](../pbi/0025-render-load/PBI.md)): 見た目をほぼ変えずに描画の負荷を削るため、次を決めた
+  - 30fps に間引く。Canvas を `frameloop="never"` にし、requestAnimationFrame の中で間隔を測って `advance` を呼ぶ。背景は動きがゆるやかなので、30fps でも見た目はほぼ変わらない
+  - `antialias` は切る。`powerPreference` は付けず既定に任せる (ノート PC で外付けの GPU を起こさない)
+  - dpr は範囲 `[1, 状態]` で渡し、端末の画素密度を 1〜1.75 に抑える。数値で渡すと端末に関係なくその倍率で描くため
+  - 24fps を下回ったら dpr を 1 に下げる (drei の `PerformanceMonitor`、bounds は `[24, Infinity]`)。drei の既定の bounds は 40〜60fps で、30fps に間引くと常に「重い」と判定されるため
+  - `prefers-reduced-motion: reduce` では `frameloop="demand"` にし、止まった 1 枚だけを描く。間引きと PerformanceMonitor は使わない
+  - 定数 (fps・dpr の上限と下限・下げる閾値) と間引きの判定は `lib/background-frame.ts` に置く
+  - 新しいテーマは時間の経過 (`delta` / `clock.elapsedTime`) で動かし、フレームの数で動かさない。30fps に間引いても動く速さを保つため

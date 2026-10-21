@@ -26,6 +26,10 @@
    - `chart-1`〜`chart-4`: 図やグラフの塗り分け
    - `rss`: RSS のブランド色
    - `shadow-panel` / `blur-glass`: 3D 背景の上に浮くパネルの質感
+   - `blur-glass-panel` (6px): 本文パネル (`glass-panel`) のぼかし。2026-10-21 に足した ([PBI-0025](../pbi/0025-render-load/PBI.md))
+     - 本文パネルは大きく、動く 3D 背景の上で毎フレームぼかし直すので、帯の `blur-glass` (12px) より弱める
+     - 弱めた分、面の不透明度を 0.6 から 0.75 に上げて、文字の読みやすさを保つ
+     - 帯 (`glass-bar`) は `blur-glass` (12px) のまま
 4. 質感は **ユーティリティ 1 つ** にまとめる: `glass-panel` (本文のパネル)、`glass-bar` (タブバー・アドレスバー)
 5. CSS 変数を読めない描画先 (three.js) の色は `lib/theme.ts` に集め、globals.css の値と対応をコメントで示す
 6. 文字は Inter (`--font-sans`)。日本語はシステムのフォントに任せる

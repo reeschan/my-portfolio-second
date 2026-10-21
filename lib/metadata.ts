@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { profile } from "@/data/overview"
 
 // サイト名。タブのタイトルの後ろに付ける
 export const siteName = "Ryuki Tobita's Portfolio"
@@ -7,14 +8,21 @@ export const siteName = "Ryuki Tobita's Portfolio"
 // プレビューのデプロイでも本番の URL を指させ、検索エンジンに重複したページとして扱わせない
 export const siteUrl = new URL("https://reeschan.pink")
 
-// 筆者。/now の記事の OGP と JSON-LD の author に使う (data/overview.ts の name と同じ表記。ADR 0030)
-export const authorName = "Ryuki Tobita"
+// 筆者。/now の記事の OGP と JSON-LD の author に使う (ADR 0030)
+// 名前はプロフィールの表示データから取る。構造化データの Person と同じ値を二重に持たないため
+export const authorName = profile.name
 
 // アドレスバー風の帯に出すホスト名
 export const displayHost = siteUrl.host
 
 // SNS に URL を貼ったときに出る画像 (app/opengraph-image.tsx が描く)
 export const ogImage = { path: "/opengraph-image", width: 1200, height: 630, alt: "Ryuki Tobita — Full-stack Developer" } as const
+
+// 画像の版。app/opengraph-image.tsx の描き方を変えたら上げる。SNS は URL ごとに画像を長く覚えるので、版を変えると取り直させられる
+export const ogImageVersion = 1
+
+// og:image と twitter:image に使う版付きのパス。URL は 1 か所で作る (相対パスは Next.js が siteUrl から絶対 URL にする)
+export const ogImagePath = `${ogImage.path}?v=${ogImageVersion}`
 
 export function pageTitle(page: string): string {
   return `${page} | ${siteName}`
@@ -39,7 +47,9 @@ export function pageMetadata({
     description,
     url: path,
     siteName,
-    images: [{ url: ogImage.path, width: ogImage.width, height: ogImage.height, alt: ogImage.alt }],
+    // 表示言語は Cookie で切り替わるが、クローラは Cookie を送らないので言語に合わせても検索には効かない。og:locale は ja_JP に固定する
+    locale: "ja_JP",
+    images: [{ url: ogImagePath, width: ogImage.width, height: ogImage.height, alt: ogImage.alt }],
   }
   return {
     title,
@@ -56,6 +66,6 @@ export function pageMetadata({
           ...(article.modifiedTime ? { modifiedTime: article.modifiedTime } : {}),
         }
       : { ...openGraphBase, type: "website" },
-    twitter: { card: "summary_large_image", title, description, images: [ogImage.path] },
+    twitter: { card: "summary_large_image", title, description, images: [ogImagePath] },
   }
 }

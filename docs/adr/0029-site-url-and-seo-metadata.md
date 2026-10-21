@@ -41,4 +41,4 @@
 - 検索結果と SNS で、ページごとのタイトル・説明・画像が出る
 - ドメインを変えるときは `siteUrl` を 1 行直せば全体が追従する。あわせて Vercel の Domains の primary と転送の向きも `siteUrl` に合わせる
 - 新しいページは `pageMetadata()` を使い、`lib/navigation.ts` に足せば sitemap にも載る
-- 新しい観点は足さない。E2E は `@smoke` と `@api-contract` で確かめる
+- 新しい観点は足さない。E2E は `@smoke` と `@api-contract` で確かめる (2 段目で観点 `seo` を足した。[ADR 0033](0033-seo-test-perspective.md) がこの行を置き換える)

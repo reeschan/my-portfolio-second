@@ -53,7 +53,7 @@ test.describe("表示内容", () => {
     { tag: ["@content", "@responsive"], annotation: routes("/career") },
     async ({ page }) => {
       await page.goto("/career")
-      const headings = page.getByRole("main").getByRole("heading", { level: 3 })
+      const headings = page.getByRole("main").getByRole("heading", { level: 2 })
       await expect(headings).toHaveText(careerData.map((e) => e.title))
       for (const entry of careerData) {
         await expect(page.getByText(`${entry.startDate} - ${entry.endDate ?? "現在"}`)).toBeVisible()

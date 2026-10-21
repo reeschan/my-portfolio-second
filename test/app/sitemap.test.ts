@@ -21,7 +21,8 @@ const post = (id: string, publishedAt: string, updatedAt?: string): NowPost => (
   ...(updatedAt === undefined ? {} : { updatedAt }),
 })
 
-const fixedUrls = [siteUrl.href, ...navItems.map((item) => new URL(item.href, siteUrl).href)]
+// 期待値はタブの並びの定義から作る。道具のページ (印の付いたページ) は sitemap に載らない (docs/specs/seo-stage2.md)
+const fixedUrls = [siteUrl.href, ...navItems.filter((item) => !item.utility).map((item) => new URL(item.href, siteUrl).href)]
 
 describe("sitemap", () => {
   // 記事はテストの中で入れて、終わったら消す (メモリの保存先はテストの間ずっと生きている)
@@ -37,7 +38,7 @@ describe("sitemap", () => {
     savedIds.push(saved.id)
   }
 
-  it("保存先に記事が無いとき、トップとタブの全ページだけを本番の URL で載せる", async () => {
+  it("保存先に記事が無いとき、トップと印の付いていないタブのページだけを本番の URL で載せる", async () => {
     const urls = (await sitemap()).map((entry) => entry.url)
     expect(urls).toEqual(fixedUrls)
   })

@@ -63,11 +63,17 @@ test.describe("Now の記事ページ", () => {
       const { id } = await createNowPost(request, { title, body: "JSON-LD の記事です。" })
 
       await page.goto(nowPostPath(id))
-      const raw = await page.locator('script[type="application/ld+json"]').textContent()
-      expect(raw, "JSON-LD の script が出ている").not.toBeNull()
-      const jsonLd = JSON.parse(raw ?? "") as { "@type": string; headline: string }
-      expect(jsonLd["@type"]).toBe("BlogPosting")
-      expect(jsonLd.headline).toBe(title)
+      // script は 2 つになる (レイアウトの WebSite・Person と、記事の BlogPosting)。
+      // 1 つだけ取らず、すべて集めて @type で BlogPosting を探す
+      const scripts = await page.locator('script[type="application/ld+json"]').allTextContents()
+      const nodes = scripts.flatMap((text) => {
+        const data = JSON.parse(text) as Record<string, unknown>
+        const graph = data["@graph"]
+        return Array.isArray(graph) ? (graph as Record<string, unknown>[]) : [data]
+      })
+      const blogPosting = nodes.find((node) => node["@type"] === "BlogPosting")
+      expect(blogPosting, "BlogPosting の script が出ている").toBeDefined()
+      expect(blogPosting?.headline).toBe(title)
     },
   )
 

@@ -1,5 +1,6 @@
 import { ja } from "../data/messages/ja"
 import { siteName, siteUrl } from "../lib/metadata"
+import { navItems } from "../lib/navigation"
 import { expect, pages, routes, test } from "./fixtures"
 
 // 検索エンジンと SNS に渡すメタデータ (PBI-0019、ADR 0029)
@@ -42,12 +43,41 @@ test.describe("SEO: タイトル・説明・canonical・OGP", () => {
     expect(body).toContain(`Sitemap: ${new URL("/sitemap.xml", siteUrl).href}`)
   })
 
-  test("sitemap.xml にトップと全ページが載る", { tag: ["@api-contract"], annotation: routes("/sitemap.xml") }, async ({ request }) => {
-    const res = await request.get("/sitemap.xml")
-    expect(res.status()).toBe(200)
-    const body = await res.text()
-    for (const path of ["/", ...pages.map((p) => p.path)]) {
-      expect(body).toContain(`<loc>${new URL(path, siteUrl).href}</loc>`)
-    }
-  })
+  test(
+    "sitemap.xml はトップと印の付いていないタブのページを載せ、道具のページは載せない",
+    { tag: ["@api-contract"], annotation: routes("/sitemap.xml") },
+    async ({ request }) => {
+      const res = await request.get("/sitemap.xml")
+      expect(res.status()).toBe(200)
+      const body = await res.text()
+
+      const locs: string[] = []
+      for (const match of body.matchAll(/<loc>([^<]+)<\/loc>/g)) {
+        const loc = match[1]
+        if (loc !== undefined) locs.push(loc)
+      }
+
+      // 絶対 URL はすべて正のホストで作る (www などを混ぜない)
+      for (const loc of locs) {
+        expect(new URL(loc).host, `正のホスト以外の URL が載っている: ${loc}`).toBe(siteUrl.host)
+      }
+
+      // トップと印の付いていないタブのページは載せる。期待値はタブの並びの定義から作る
+      const fixedPaths = ["/", ...navItems.filter((item) => !item.utility).map((item) => item.href)]
+      for (const path of fixedPaths) {
+        expect(locs, `${path} が sitemap に無い`).toContain(new URL(path, siteUrl).href)
+      }
+
+      // 道具のページは索引に要らない (docs/specs/seo-stage2.md)
+      for (const path of navItems.filter((item) => item.utility).map((item) => item.href)) {
+        expect(locs, `${path} は道具のページなのに sitemap に載っている`).not.toContain(new URL(path, siteUrl).href)
+      }
+
+      // 固定のページは開ける。本番の URL には要求を送らず、パスを手元のサーバーに当てる
+      for (const path of fixedPaths) {
+        const pageRes = await request.get(path)
+        expect(pageRes.status(), `${path} が ${pageRes.status()} を返した`).toBe(200)
+      }
+    },
+  )
 })

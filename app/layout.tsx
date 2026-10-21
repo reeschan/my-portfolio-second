@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/components/layout/theme-provider"
 import { LocaleProvider } from "@/lib/i18n/locale-context"
 import { getLocale, getMessages } from "@/lib/i18n/server"
 import { pageMetadata, siteName, siteUrl } from "@/lib/metadata"
+import { serializeJsonLd } from "@/lib/now/structured-data"
+import { siteGraphJsonLd } from "@/lib/structured-data"
 import { BackgroundScene } from "@/components/features/background/background-scene"
 import { isVercelAnalyticsEnabled } from "@/lib/analytics"
 
@@ -39,6 +41,9 @@ export default async function RootLayout({
             <div className="relative min-h-screen">{children}</div>
           </ThemeProvider>
         </LocaleProvider>
+        {/* 持ち主 (Person) とサイト (WebSite) を全ページに出す。ページ側はこの @id を指す (lib/structured-data.ts) */}
+        {/* serializeJsonLd が < をエスケープ済み (lib/now/structured-data.ts、Next.js の JSON-LD のガイド) */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(siteGraphJsonLd()) }} />
         {/* 閲覧の計測は Vercel 上でだけ行う (ADR 0027) */}
         {isVercelAnalyticsEnabled() && <Analytics />}
       </body>

@@ -25,14 +25,16 @@ export const en: Messages = {
     close: "Close",
   },
   overview: {
-    description: "Ryuki Tobita's profile and a guide to this site",
+    description:
+      "Profile of Ryuki Tobita, a full-stack developer who builds everything from the front end to cloud infrastructure, with links to GitHub and LinkedIn and a guide to this site.",
     profile: "Profile",
     profileLinks: "Elsewhere",
     guide: "How to explore this site",
     guideList: "Page guide",
   },
   career: {
-    description: "A timeline of my employers and freelance engagements",
+    description:
+      "Ryuki Tobita's career: past employers and, since 2025, freelance engagements in web app development, search improvements and AI integrations, in a timeline from newest to oldest.",
     present: "Present",
     ongoing: "Ongoing",
     clients: "Clients",
@@ -40,7 +42,8 @@ export const en: Messages = {
     tech: "Tech stack",
   },
   skills: {
-    description: "Frontend, backend, and AWS skills, plus certifications",
+    description:
+      "Front-end, back-end and AWS skills on five-level radar charts, with the languages, frameworks and cloud services used so far and the certifications held.",
     overviewTab: "Overview",
     overviewTitle: "Skill radar (out of 5)",
     overviewTitleShort: "Skills overview",
@@ -50,7 +53,8 @@ export const en: Messages = {
     legend: "Skill level (out of 5)",
   },
   works: {
-    description: "Things I've built",
+    description:
+      "Apps and tools built by Ryuki Tobita, each with its purpose, the technologies used and an architecture diagram showing how it was built.",
     tech: "Tech stack",
     architecture: "Architecture",
     repository: "Repository: ",
@@ -66,7 +70,8 @@ export const en: Messages = {
     openOriginal: "Open the original diagram in a new tab",
   },
   now: {
-    description: "What I'm working on now",
+    description:
+      "Blog-style posts by Ryuki Tobita on current work and lessons learned in development, newest first. Also available as an RSS feed.",
     intro: "What I'm working on right now, newest first.",
     updatedBefore: " Updated ",
     updatedAfter: "",
@@ -81,7 +86,8 @@ export const en: Messages = {
     inspiredAfter: ".",
   },
   chat: {
-    description: "Ask an AI about my career",
+    description:
+      "Ask an AI about Ryuki Tobita's career. It answers questions about experience, skills and past engagements based on the resume.",
     greeting: "Hi! Feel free to ask anything about my career and skills.",
     suggestions: [
       "Give me a quick summary of your career",
@@ -102,7 +108,8 @@ export const en: Messages = {
     ],
   },
   contact: {
-    description: "A form to get in touch with me",
+    description:
+      "Send Ryuki Tobita a work request or a question through this form. Write your name, email address and message, and you will get a reply by email.",
     lead: "For work inquiries or questions, please send me a message here.",
     name: "Name",
     email: "Email",
@@ -125,8 +132,16 @@ export const en: Messages = {
     emailInvalid: "Please enter a valid email address.",
     messageLength: "Please write a message of 10–2000 characters.",
   },
+  notFound: {
+    title: "Page not found",
+    heading: "Page not found",
+    body: "The page you are looking for may have been moved or deleted.",
+    home: "Go to the top page",
+    now: "Read the Now posts",
+    works: "See the works",
+  },
   theme: {
-    description: "Choose the 3D scene in the background",
+    description: "Choose the 3D scene that plays behind this site, from six options such as Grid, Aurora and Moonlit Sea.",
     heading: "Choose a background",
     intro: "Switch the 3D scene that plays behind the whole site. Your choice is saved in this browser and used the next time you visit.",
     legend: "Background theme",

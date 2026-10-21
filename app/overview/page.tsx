@@ -8,6 +8,8 @@ import { messagesOf } from "@/data/messages"
 import { getLocale, getMessages } from "@/lib/i18n/server"
 import { pageMetadata, pageTitle } from "@/lib/metadata"
 import { navItems, type NavId } from "@/lib/navigation"
+import { serializeJsonLd } from "@/lib/now/structured-data"
+import { profilePageJsonLd } from "@/lib/structured-data"
 
 export async function generateMetadata(): Promise<Metadata> {
   const messages = await getMessages()
@@ -67,6 +69,10 @@ export default async function OverviewPage() {
           </ul>
         </Section>
       </div>
+
+      {/* 検索エンジンに、このページが持ち主のプロフィールだと伝える。Person はレイアウトの分を @id で指す (lib/structured-data.ts) */}
+      {/* serializeJsonLd が < をエスケープ済み (lib/now/structured-data.ts、Next.js の JSON-LD のガイド) */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(profilePageJsonLd()) }} />
     </PageTemplate>
   )
 }

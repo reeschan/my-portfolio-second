@@ -44,7 +44,8 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
         />
       </div>
       <div className="p-4">
-        <h3 className="text-lg font-medium">
+        {/* ページの h1 の下に h2 を挟まず h3 を置くと段が飛ぶので、作品の題は h2 にする。見た目はクラスで保つ */}
+        <h2 className="text-lg font-medium">
           {interactive ? (
             <button type="button" onClick={onSelect} className="text-left after:absolute after:inset-0 focus:outline-hidden">
               {work.title}
@@ -52,7 +53,7 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
           ) : (
             work.title
           )}
-        </h3>
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">{work.description}</p>
         <TagList tags={work.tech} label={messages.tech} variant="muted" className="mt-3" />
       </div>

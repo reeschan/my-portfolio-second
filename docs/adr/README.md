@@ -54,3 +54,4 @@
 | [0027](0027-vercel-analytics.md) | 閲覧の計測は Vercel Web Analytics で行い、Vercel 上でだけ動かす | 提案中 |
 | [0028](0028-contact-form-slack-only.md) | お問い合わせの届け先は Slack だけにし、応答の前に送って結果を確かめる | 提案中 |
 | [0029](0029-site-url-and-seo-metadata.md) | 本番の URL はコードの 1 か所に固定し、検索と共有のメタデータをそこから作る | 提案中 |
+| [0033](0033-seo-test-perspective.md) | テスト観点 seo を新しく作り、app の全ページで必須にする | 提案中 |

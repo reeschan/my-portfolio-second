@@ -39,8 +39,8 @@
 
 | ユーティリティ | 中身 | 使いどころ |
 | --- | --- | --- |
-| `glass-panel` | 枠 `border/20` + 面 `card/60` + 影 `shadow-panel` + ぼかし `blur-glass` (12px) | ページ本文のパネル (`GlassPanel` 部品) |
-| `glass-bar` | 面 `background/60` + ぼかし | タブバー・アドレスバー |
+| `glass-panel` | 枠 `border/20` + 面 `card/75` + 影 `shadow-panel` + ぼかし `blur-glass-panel` (6px) | ページ本文のパネル (`GlassPanel` 部品) |
+| `glass-bar` | 面 `background/60` + ぼかし `blur-glass` (12px) | タブバー・アドレスバー |
 
 ## 文字
 

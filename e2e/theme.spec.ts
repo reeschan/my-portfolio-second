@@ -1,3 +1,4 @@
+import { ja } from "../data/messages/ja"
 import { expect, pages, routes, test } from "./fixtures"
 
 // testing/e2e-policy.yml の theme 観点。テーマの正本は app/globals.css (docs/design/theme.md)
@@ -60,9 +61,15 @@ test.describe("テーマ", () => {
         const s = getComputedStyle(el)
         return { backdrop: s.backdropFilter, background: s.backgroundColor }
       })
-      expect(style.backdrop).toContain("blur")
+      // 本文パネルは面が大きく描き直しが重いので、帯より弱いぼかし (--blur-glass-panel) にしている
+      expect(style.backdrop).toBe("blur(6px)")
       // 半透明 (アルファ付き) であること
       expect(style.background).toMatch(/rgba?\(.+[,/]\s*0?\.\d+\)|color\(.+\/\s*0?\.\d+\)/)
+
+      // タブバー (glass-bar は nav 自身に付いている) は従来どおりのぼかし (--blur-glass) のまま
+      const tabBar = page.getByRole("navigation", { name: ja.layout.pages })
+      const tabBarBackdrop = await tabBar.evaluate((el) => getComputedStyle(el).backdropFilter)
+      expect(tabBarBackdrop).toBe("blur(12px)")
     },
   )
 })

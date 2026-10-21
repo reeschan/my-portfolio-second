@@ -26,3 +26,4 @@
 | [0020](0020-now-rss-feed/PBI.md) | RSS に /now の記事を載せる | 進行中 |
 | [0021](0021-architecture-viewer/PBI.md) | ワークのアーキテクチャ図を拡大して読めるようにする | 進行中 |
 | [0023](0023-now-post-pages/PBI.md) | /now の記事ごとのページを作り、記事の内容を検索エンジンに載せる | 進行中 |
+| [0027](0027-canonical-host/PBI.md) | 本番の正規ホストと siteUrl を揃え、canonical が転送されない URL を指すようにする | 進行中 |

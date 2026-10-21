@@ -1,7 +1,39 @@
 // @perspectives api-contract
 // @routes /api/now /api/now/[id]
 import { describe, expect, it } from "vitest"
-import { splitTitle } from "@/lib/now/input"
+import { readNowPostInput, splitTitle } from "@/lib/now/input"
+
+describe("readNowPostInput (画像の欄)", () => {
+  it("JSON の入力は uploads が空", async () => {
+    const request = new Request("http://localhost/api/now", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: "t", body: "b" }),
+    })
+    expect(await readNowPostInput(request)).toEqual({ title: "t", body: "b", uploads: [] })
+  })
+
+  it("multipart の images を送った順に、ファイル名とバイト列で返す", async () => {
+    const form = new FormData()
+    form.append("file", new File(["# t\nb"], "post.md"))
+    form.append("images", new File([Uint8Array.from([1, 2])], "a.png"))
+    form.append("images", new File([Uint8Array.from([3])], "b.svg"))
+    const input = await readNowPostInput(new Request("http://localhost/api/now", { method: "POST", body: form }))
+    expect(input.uploads).toEqual([
+      { name: "a.png", bytes: Uint8Array.from([1, 2]) },
+      { name: "b.svg", bytes: Uint8Array.from([3]) },
+    ])
+  })
+
+  it("images にテキストを送ったら 400", async () => {
+    const form = new FormData()
+    form.append("file", new File(["# t\nb"], "post.md"))
+    form.append("images", "a.png")
+    await expect(readNowPostInput(new Request("http://localhost/api/now", { method: "POST", body: form }))).rejects.toMatchObject({
+      status: 400,
+    })
+  })
+})
 
 describe("splitTitle (Markdown のファイルから題名を決める)", () => {
   it("title 欄があればそれを使い、本文はファイルのまま", () => {

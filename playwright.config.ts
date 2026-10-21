@@ -46,6 +46,8 @@ export default defineConfig({
           BLOB_STORE_ID: "",
           NOW_POST_TOKEN: nowPostToken,
           NOW_POSTS_STORE: "memory",
+          // 記事の画像も本物の Blob に置かない。トークンが無く NOW_POSTS_STORE=memory なので、画像の置き場もメモリになる (lib/now/image-store.ts)
+          NOW_IMAGES_BLOB_READ_WRITE_TOKEN: "",
           // E2E から本物の Slack に通知しない
           SLACK_WEBHOOK_URL: "",
           UPSTASH_REDIS_REST_URL: "",

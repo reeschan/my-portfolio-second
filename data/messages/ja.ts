@@ -64,12 +64,19 @@ export const ja = {
     enlarge: "アーキテクチャ図を拡大する",
     enlargeHint: "図を押すと拡大して見られます",
     viewerTitle: (title: string) => `${title} のアーキテクチャ`,
+    // 拡大表示の中の文言は imageViewer を使う。元の画像を開くリンクだけ、/works では「図」と呼ぶ
+    openOriginal: "元の図を新しいタブで開く",
+  },
+  // 画像の拡大表示 (components/common/image-viewer.tsx)。/works の図と /now の記事の画像で使う
+  imageViewer: {
     zoomIn: "拡大",
     zoomOut: "縮小",
     zoomFit: "全体を表示",
     diagramArea: "図の表示領域",
     zoomLevel: "表示の倍率",
-    openOriginal: "元の図を新しいタブで開く",
+    openOriginal: "元の画像を新しいタブで開く",
+    enlargeImage: "画像を拡大する",
+    enlargeHint: "画像を押すと拡大して見られます",
   },
   now: {
     description:
@@ -85,6 +92,8 @@ export const ja = {
     recent: "最近の投稿",
     // 記事のページ (/now/[id]) から一覧へ戻るリンク
     backToList: "記事の一覧へ戻る",
+    // 記事の画像の拡大表示の題 (PBI-0024)
+    imageViewerTitle: (title: string) => `${title} の画像`,
     dialogUpdatedBefore: "（",
     dialogUpdatedAfter: "更新）",
     inspiredBefore: "このページは ",

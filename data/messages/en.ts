@@ -62,12 +62,17 @@ export const en: Messages = {
     enlarge: "Enlarge the architecture diagram",
     enlargeHint: "Tap the diagram to enlarge it",
     viewerTitle: (title: string) => `${title} architecture`,
+    openOriginal: "Open the original diagram in a new tab",
+  },
+  imageViewer: {
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
     zoomFit: "Fit to screen",
     diagramArea: "Diagram area",
     zoomLevel: "Zoom level",
-    openOriginal: "Open the original diagram in a new tab",
+    openOriginal: "Open the original image in a new tab",
+    enlargeImage: "Enlarge the image",
+    enlargeHint: "Tap the image to enlarge it",
   },
   now: {
     description:
@@ -80,6 +85,8 @@ export const en: Messages = {
     empty: "No posts yet.",
     recent: "Recent posts",
     backToList: "Back to all posts",
+    // Title of the image viewer for a post image (PBI-0024)
+    imageViewerTitle: (title: string) => `Images in ${title}`,
     dialogUpdatedBefore: " (updated ",
     dialogUpdatedAfter: ")",
     inspiredBefore: "This page follows the idea of ",

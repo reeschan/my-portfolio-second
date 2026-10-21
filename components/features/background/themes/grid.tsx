@@ -1,11 +1,10 @@
 "use client"
 
 import { useMemo, useRef } from "react"
-import { useFrame, useThree } from "@react-three/fiber"
+import { useFrame } from "@react-three/fiber"
 import { Float } from "@react-three/drei"
 import { MathUtils, type Group, type Mesh } from "three"
 import type { ThreeElements } from "@react-three/fiber"
-import { useMotionValue, useSpring } from "motion/react"
 import { usePathname } from "next/navigation"
 import { sceneColors } from "@/lib/theme"
 
@@ -22,15 +21,16 @@ function randomPositions(count: number) {
 // パーティクルシステム
 function Particles({ count = 200, color = COLORS.primary }) {
   const mesh = useRef<Group>(null)
-  const { mouse } = useThree()
 
   // パーティクルの位置 (count が変わったときだけ作り直す)。乱数は描画のたびに変わらないよう useMemo に閉じ込める
   const positions = useMemo(() => randomPositions(count), [count])
 
-  useFrame(() => {
+  useFrame((state, delta) => {
     if (mesh.current) {
-      mesh.current.rotation.x = MathUtils.lerp(mesh.current.rotation.x, mouse.y * 0.2, 0.1)
-      mesh.current.rotation.y = MathUtils.lerp(mesh.current.rotation.y, mouse.x * 0.2, 0.1)
+      // 係数を経過時間から求め、フレームの数 (間引きの有無) が変わっても追従の速さを変えない。60fps のとき約 0.1
+      const t = 1 - Math.exp(-delta * 6)
+      mesh.current.rotation.x = MathUtils.lerp(mesh.current.rotation.x, state.pointer.y * 0.2, t)
+      mesh.current.rotation.y = MathUtils.lerp(mesh.current.rotation.y, state.pointer.x * 0.2, t)
     }
   })
 
@@ -83,20 +83,22 @@ function Grid() {
 
 // マウス追従エフェクト
 function MouseFollower() {
-  const { viewport, mouse } = useThree()
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
+  const mesh = useRef<Mesh>(null)
 
-  const smoothMouseX = useSpring(mouseX, { stiffness: 300, damping: 30 })
-  const smoothMouseY = useSpring(mouseY, { stiffness: 300, damping: 30 })
-
-  useFrame(() => {
-    mouseX.set(mouse.x)
-    mouseY.set(mouse.y)
+  // 位置は描画ではなくフレームごとに mesh へ直接書き込む。React の再描画を待たずに球が動く
+  useFrame((state, delta) => {
+    if (!mesh.current) return
+    // pointer.y は上が正なので、そのまま使うと画面のマウスと同じ向きに動く
+    const targetX = (state.pointer.x * state.viewport.width) / 4
+    const targetY = (state.pointer.y * state.viewport.height) / 4
+    // 係数を経過時間から求め、フレームの数が変わっても追従の速さを変えない
+    const t = 1 - Math.exp(-delta * 10)
+    mesh.current.position.x = MathUtils.lerp(mesh.current.position.x, targetX, t)
+    mesh.current.position.y = MathUtils.lerp(mesh.current.position.y, targetY, t)
   })
 
   return (
-    <mesh position={[(smoothMouseX.get() * viewport.width) / 4, (-smoothMouseY.get() * viewport.height) / 4, -2]}>
+    <mesh ref={mesh} position={[0, 0, -2]}>
       <sphereGeometry args={[0.5, 16, 16]} />
       <meshStandardMaterial color={COLORS.primary} emissive={COLORS.primary} emissiveIntensity={0.3} transparent opacity={0.4} />
     </mesh>

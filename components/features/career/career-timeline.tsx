@@ -48,7 +48,8 @@ function CareerTimelineItem({ entry, messages }: { entry: CareerEntry; messages:
 
       {/* カードの面は今までと同じ見た目を保つため、Tailwind のクラスで指定する */}
       <TimelineCard className="rounded-lg border border-border/40 border-t-4 border-t-primary bg-card p-4 shadow-md">
-        <h3 className="text-lg font-semibold">{entry.title}</h3>
+        {/* ページの h1 の下に h2 を挟まず h3 を置くと段が飛ぶので、経歴の項目は h2 にする。見た目はクラスで保つ */}
+        <h2 className="text-lg font-semibold">{entry.title}</h2>
         <p className="text-sm text-muted-foreground">{entry.subtitle}</p>
         {entry.description && <p className="mt-2">{entry.description}</p>}
 

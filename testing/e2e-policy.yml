@@ -92,6 +92,13 @@ perspectives:
     description: data/ に書いた内容 (経歴・資格・作品・Now) が漏れなく画面に出る
     how: e2e/content.spec.ts。期待値は data/ から import して突き合わせる (文言の二重管理をしない)
 
+  seo:
+    enabled: true
+    required: true
+    applies_to: pages
+    description: 各ページの title・description・canonical・自サイトの URL のホスト・h1 と見出しの段・構造化データ・noindex・404・セキュリティヘッダーが、検索エンジンに正しく伝わる
+    how: e2e/seo-*.spec.ts など機能ごとのファイル。辞書で決まる検査 (description の長さ・title の重なり) は Vitest (docs/adr/0033)
+
   theme:
     enabled: true
     required: false

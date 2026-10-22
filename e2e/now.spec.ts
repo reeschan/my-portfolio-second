@@ -1,6 +1,7 @@
 import { createNowPost, expect, nowPostToken, routes, test, uniqueTitle } from "./fixtures"
 import { ja } from "../data/messages/ja"
 import { formatJapaneseDateTime } from "../lib/format"
+import { siteUrl } from "../lib/metadata"
 import { escapeXml, nowPostPath } from "../lib/now/feed"
 
 // /now の記事 (PBI-0004)。記事は POST /api/now で仕込む (保存先は webServer のメモリ。playwright.config.ts)
@@ -174,8 +175,12 @@ test.describe("Now の RSS", () => {
       const xml = await res.text()
       // 題名の & は実体参照になる。期待値は本体と同じ escapeXml で作る (文字の置き換えを二重に書かない)
       expect(xml).toContain(`<title>${escapeXml(title)}</title>`)
-      // item のリンクは記事のページ (nowPostPath)。/now/<id></link> で終わる
-      expect(xml).toContain(`${nowPostPath(id)}</link>`)
+      // チャンネル・自分自身・記事のリンクは、すべて正のホスト (siteUrl) の絶対 URL。
+      // パスだけを見ると、ホストが転送元の apex に戻っても気付けない (PBI-0027)
+      expect(xml).toContain(`<link>${new URL("/now", siteUrl).href}</link>`)
+      expect(xml).toContain(`<atom:link href="${new URL("/rss.xml", siteUrl).href}" rel="self"`)
+      // item のリンクは記事のページ (nowPostPath)
+      expect(xml).toContain(`<link>${escapeXml(new URL(nowPostPath(id), siteUrl).href)}</link>`)
       expect(xml).toContain("<description>フィードに載る本文です。</description>")
     },
   )

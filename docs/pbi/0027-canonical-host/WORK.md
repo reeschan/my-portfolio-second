@@ -5,34 +5,32 @@ PBI: [PBI.md](PBI.md)
 ## 計画
 
 - [x] 本番の転送と canonical の現状を curl で確かめる — 下の「記録」に結果
-- [x] (a) と (b) の比較を書き、持ち主に確認する — この下の「比較」。(a) に決まった
-- [x] ADR 0029 に、正規のホストと配信の転送の向きを揃える決まりを書き足す — ADR の差分
-- [ ] 持ち主が Vercel の Domains を変える — 下の「Vercel の設定の手順」
-- [ ] 本番で apex が 200、www が apex への 308 になる — 下の「設定を変えたあとの確かめ方」
+- [x] (a) と (b) の比較を書き、持ち主に確認する — この下の「比較」。2026-10-21 は (a) に決まった (2026-10-22 に (b) に改めた。今の方式は (b))
+- [x] ADR 0029 に、正規のホストと配信の転送の向きを揃える決まりを書き足す (2026-10-21、(a) のときの決まり。下で (b) に書き直した) — ADR の差分
+- [x] 方式を (b) に改める (2026-10-22、持ち主の判断) — 下の「記録」
+- [x] `siteUrl` を www にし、`ogImageVersion` を 2 に上げる — lib/metadata.ts、test/lib/metadata.test.ts
+- [x] ADR 0029 の決定を「正規ホストは www」に書き直す — ADR の差分
+- [ ] リリース (develop → main) のあと、本番で canonical・sitemap・RSS が www を指すことを確かめる — 下の「リリース後の確かめ方」
 - [ ] 確かめたら PBI の状態を「完了」にする
 
-## Vercel の設定の手順 (持ち主が行う)
+## リリース後の確かめ方
 
-Vercel のプロジェクトの Settings → Domains で操作する (画面の文言は変わっていることがある)。
-
-1. `reeschan.pink` の Edit を開き、今の「`www.reeschan.pink` へ転送」をやめて Production に直接つなぐ。先にこちらを変えないと、2 つのドメインが互いに転送し合う形になりうる
-2. `www.reeschan.pink` の Edit を開き、`reeschan.pink` への転送にする。状態コードは 308 (Permanent Redirect)
-3. 一覧で `reeschan.pink` が primary (転送なし)、`www.reeschan.pink` が `reeschan.pink` への転送になっていることを見る
-
-DNS のレコードは変えない (どちらのホストもすでに Vercel に届いている)。
-
-## 設定を変えたあとの確かめ方
+Vercel の Domains は変えない (www が primary、apex は www へ 308)。コードの変更が main に出たあとに確かめる。
 
 ```bash
-curl -sI https://reeschan.pink/ | grep -iE "^(HTTP|location)"
-curl -sI https://reeschan.pink/career | grep -iE "^(HTTP|location)"
 curl -sI https://www.reeschan.pink/career | grep -iE "^(HTTP|location)"
-curl -s https://reeschan.pink/career | grep -oE '<link rel="canonical"[^>]*>'
+curl -sI https://reeschan.pink/career | grep -iE "^(HTTP|location)"
+curl -s -A Googlebot https://www.reeschan.pink/career | grep -oE '<link rel="canonical"[^>]*>'
+curl -s https://www.reeschan.pink/sitemap.xml | grep -oE '<loc>[^<]*</loc>' | head -3
+curl -s https://www.reeschan.pink/robots.txt | grep -i sitemap
+curl -s https://www.reeschan.pink/rss.xml | grep -oE '<(link|atom:link)[^>]*>[^<]*' | head -3
 ```
 
-- 1 行目と 2 行目は `HTTP/1.1 200 OK` で `Location` が無い
-- 3 行目は `HTTP/1.1 308 Permanent Redirect` と `Location: https://reeschan.pink/career`
-- 4 行目の canonical は `https://reeschan.pink/career` (転送されない URL を指している)
+- 1 行目は `HTTP/1.1 200 OK` で `Location` が無い
+- 2 行目は `HTTP/1.1 308 Permanent Redirect` と `Location: https://www.reeschan.pink/career`
+- 3〜5 行目は、canonical・`<loc>`・`Sitemap:` がすべて `https://www.reeschan.pink/...` (転送されない URL を指している)
+- 6 行目は、RSS の `<link>` と `atom:link` の href がどちらも `https://www.reeschan.pink/...`
+- 確かめたら、Search Console のインデックス登録レポートで「ページにリダイレクトがあります」の「修正を検証」を押し、sitemap (`https://www.reeschan.pink/sitemap.xml`) を送り直す。apex の URL は転送元としてこの項目に残るが、正常
 
 ## 比較
 
@@ -46,11 +44,11 @@ curl -s https://reeschan.pink/career | grep -oE '<link rel="canonical"[^>]*>'
 | 一般的な向き | apex は CNAME を張れず A レコードになる。Vercel の DNS を使っていれば実害は小さい | Vercel がドメインを足すときに既定で勧める形 (今の設定がこれ) |
 | 反映の速さ | 設定を変えた直後 | リリース PR (develop → main) のマージ後 |
 
-推奨: **(a)**。ADR 0029 の決定と、サイトの各所に出している短いドメインの表示をそのまま保てて、コードの変更が要らない。持ち主の操作 1 つで直る。www を正規にしたい理由 (Vercel の既定に揃えたい、将来 CDN を挟むなど) があれば (b)。
+2026-10-21 の推奨は **(a)** だった (2026-10-22 に持ち主が (b) に改めた。理由は「記録」)。ADR 0029 の決定と、サイトの各所に出している短いドメインの表示をそのまま保てて、コードの変更が要らない。持ち主の操作 1 つで直る。www を正規にしたい理由 (Vercel の既定に揃えたい、将来 CDN を挟むなど) があれば (b)。
 
 ## ADR が要る判断
 
-- 新しい ADR は要らない。ADR 0029 に「配信の転送の向きを `siteUrl` に合わせる」決まりを書き足す (b のときは値の変更も)
+- 新しい ADR は要らない。ADR 0029 の決定を書き直す (正規ホストを apex から www に。値の変更と、変えたあとの確かめ方)
 
 ## 記録
 
@@ -60,10 +58,13 @@ curl -s https://reeschan.pink/career | grep -oE '<link rel="canonical"[^>]*>'
   - `https://www.reeschan.pink/robots.txt` の `Sitemap:` は `https://reeschan.pink/sitemap.xml`、sitemap の `<loc>` もすべて apex
 - 2026-10-21: (a) と (b) を比べ、持ち主に確認を出した
 - 2026-10-21: 持ち主の回答は (a)「Vercel の Domains で reeschan.pink を primary にし、www から apex へ 308 で転送する。コードは変えない。Vercel の設定はご自身で変更する」。ADR 0029 に決まりを書き足し、Vercel の設定の手順と確かめ方をこのファイルに書いた。コードの変更はないので E2E は足さない
+- 2026-10-22: Search Console から「ページにリダイレクトがあります」で索引に載らないページがあると通知が来た。curl で確かめると、Vercel は変わらず apex → www の 308 で、canonical・sitemap・robots の `Sitemap:` は apex のままだった (原因はこの PBI の食い違い)
+- 2026-10-22: 持ち主が方式を (b) に改めた (「Vercel は今のまま (apex → www) にして、siteUrl を https://www.reeschan.pink に変える」)。どちらの方式でも片方のホストからの転送は残り、要るのは向きと `siteUrl` を揃えることだけなので、配信の設定に触らずコードの 1 行で揃える方を選んだ
+- 2026-10-22: `siteUrl` を www にした。テストは `siteUrl` を import して期待値を作っているので、値の変更だけで追従した。`displayHost` も `siteUrl.host` なので、アドレスバーの表示と OGP の画像の文字が `www.reeschan.pink` になる。画像が変わるので `ogImageVersion` を 2 に上げた。Vercel の primary と一緒に変える値だと分かるよう、`siteUrl` が www を指すユニットテストを足した
 
 ## 検証
 
 最後に実行したコマンドと結果。
 
-- ドキュメントだけの変更なので、commit-gate は検査を省く (`scripts/commit-gate.mjs` の `isDocsOnly`)
-- 本番の確かめ (上の curl) は、持ち主の設定変更後に行う
+- `pnpm commit-gate` (lint・型・ユニット・必須観点・E2E)
+- 本番の確かめ (上の curl) は、リリース後に行う

@@ -116,7 +116,7 @@ test.describe("表示言語 (英語の内容)", () => {
 
   test("経歴: 英語の経歴が期間付きで並ぶ", { tag: "@content", annotation: routes("/career") }, async ({ page }) => {
     await page.goto("/career")
-    await expect(page.getByRole("main").getByRole("heading", { level: 3 })).toHaveText(careerDataEn.map((e) => e.title))
+    await expect(page.getByRole("main").getByRole("heading", { level: 2 })).toHaveText(careerDataEn.map((e) => e.title))
     for (const entry of careerDataEn) {
       await expect(page.getByText(`${entry.startDate} - ${entry.endDate ?? en.career.present}`)).toBeVisible()
     }
@@ -133,7 +133,7 @@ test.describe("表示言語 (英語の内容)", () => {
   test("ワーク: 作品のカードが英語で出る", { tag: "@content", annotation: routes("/works") }, async ({ page }) => {
     await page.goto("/works")
     for (const work of worksEn) {
-      await expect(page.getByRole("heading", { level: 3, name: work.title })).toBeVisible()
+      await expect(page.getByRole("heading", { level: 2, name: work.title })).toBeVisible()
       await expect(page.getByText(work.description)).toBeVisible()
     }
   })

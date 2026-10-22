@@ -26,14 +26,16 @@ export const ja = {
     close: "閉じる",
   },
   overview: {
-    description: "Ryuki Tobita のプロフィールと、このサイトの各ページの案内",
+    description:
+      "フルスタックデベロッパー Ryuki Tobita のプロフィール。フロントエンドからクラウド基盤まで一人で作る経歴の要約と、GitHub・LinkedIn へのリンク、このサイトの各ページの案内を載せています。",
     profile: "プロフィール",
     profileLinks: "外部のプロフィール",
     guide: "このサイトの歩き方",
     guideList: "各ページの案内",
   },
   career: {
-    description: "勤務先とフリーランスでの参画案件のタイムライン",
+    description:
+      "Ryuki Tobita の職務経歴。これまでの勤務先と、2025 年からのフリーランスでの参画案件 (Web アプリの開発・検索の改善・AI 連携など) を、タイムラインで新しい順に並べています。",
     present: "現在",
     ongoing: "継続中",
     clients: "参画先",
@@ -41,7 +43,8 @@ export const ja = {
     tech: "使用技術",
   },
   skills: {
-    description: "フロントエンド・バックエンド・AWS のスキルと保有資格",
+    description:
+      "フロントエンド・バックエンド・AWS などのスキルを、5 段階のレーダーチャートで紹介します。使ってきた言語・フレームワーク・クラウドのサービスと、保有している資格も一覧にしています。",
     overviewTab: "概要",
     overviewTitle: "スキルレーダー (5段階評価)",
     overviewTitleShort: "スキル概要",
@@ -51,7 +54,8 @@ export const ja = {
     legend: "スキルレベル (5段階評価)",
   },
   works: {
-    description: "制作したもの",
+    description:
+      "Ryuki Tobita が個人で作ったアプリやツールを紹介します。作品ごとに目的・使った技術・アーキテクチャ図を載せ、どのように作ったかが分かるようにしています。",
     tech: "使用技術",
     architecture: "アーキテクチャ",
     repository: "リポジトリ: ",
@@ -75,7 +79,8 @@ export const ja = {
     enlargeHint: "画像を押すと拡大して見られます",
   },
   now: {
-    description: "いま取り組んでいること",
+    description:
+      "Ryuki Tobita がいま取り組んでいることや、開発で得たナレッジを書いたブログ風の記事の一覧です。新しい記事から順に並べていて、RSS でも購読できます。",
     intro: "いま取り組んでいることを、新しい順に並べています。",
     // 更新日の前後に付ける文言。日付は <time> で囲むので文言と分けて持つ
     updatedBefore: "",
@@ -95,7 +100,8 @@ export const ja = {
     inspiredAfter: " の考え方にならっています。",
   },
   chat: {
-    description: "職務経歴について AI に質問できるチャット",
+    description:
+      "Ryuki Tobita の職務経歴について、AI に質問できるチャットです。経歴・スキル・参画した案件などについて、職務経歴書の内容をもとに AI が答えます。",
     greeting: "こんにちは！職務経歴やスキルについて、気になることを何でも聞いてください。",
     suggestions: [
       "これまでの経歴を簡単に教えてください",
@@ -116,7 +122,8 @@ export const ja = {
     ],
   },
   contact: {
-    description: "持ち主へのお問い合わせのフォーム",
+    description:
+      "Ryuki Tobita へのお仕事のご依頼やご質問を、このフォームから送れます。名前・メールアドレス・本文を書いて送ると、内容を確かめてメールで返信します。",
     lead: "お仕事のご依頼やご質問は、こちらからお送りください。",
     name: "お名前",
     email: "メールアドレス",
@@ -141,8 +148,18 @@ export const ja = {
     emailInvalid: "メールアドレスの形式が正しくありません。",
     messageLength: "本文は 10〜2000 字で入力してください。",
   },
+  // 404 のページ (app/not-found.tsx)。題名・見出し・本文と、戻り先の導線
+  notFound: {
+    title: "ページが見つかりません",
+    heading: "ページが見つかりません",
+    body: "お探しのページは移動したか、削除された可能性があります。",
+    home: "トップへ",
+    now: "Now の記事を見る",
+    works: "ワークを見る",
+  },
   theme: {
-    description: "背景の 3D シーンを選べます",
+    description:
+      "このサイトの背景に流れる 3D シーンを選べるページです。グリッド・オーロラ・月夜の海など 6 種類の中から、好みの背景に切り替えられます。",
     heading: "背景を選ぶ",
     intro:
       "サイト全体の背景に流れる 3D シーンを切り替えられます。選んだテーマはこのブラウザに保存され、次に開いたときも同じ背景で表示されます。",

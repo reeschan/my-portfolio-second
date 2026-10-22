@@ -1,7 +1,7 @@
 // @perspectives content
 // @routes /now/[id]
 import { describe, expect, it } from "vitest"
-import { authorName, pageMetadata, siteName } from "@/lib/metadata"
+import { authorName, ogImage, ogImagePath, ogImageVersion, pageMetadata, siteName, siteUrl } from "@/lib/metadata"
 
 const base = { title: "題名", description: "説明", path: "/now" }
 
@@ -38,5 +38,39 @@ describe("pageMetadata", () => {
   it("article を渡しても modifiedTime がなければ、modifiedTime のキーを出さない", () => {
     const metadata = pageMetadata({ ...base, article: { publishedTime: "2026-10-09T01:00:00.000Z" } })
     expect(metadata.openGraph).not.toHaveProperty("modifiedTime")
+  })
+})
+
+describe("OG の画像と locale", () => {
+  const variants = [
+    { label: "article なし", metadata: pageMetadata(base) },
+    {
+      label: "article あり",
+      metadata: pageMetadata({ ...base, article: { publishedTime: "2026-10-09T01:00:00.000Z" } }),
+    },
+  ]
+
+  it.each(variants)("$label のとき、openGraph と twitter の画像がどちらも版付きのパスになる", ({ metadata }) => {
+    // 画像の描き方を変えたら版が上がり、URL が変わるので SNS に新しい画像を取り直させられる
+    expect(ogImagePath).toBe(`/opengraph-image?v=${ogImageVersion}`)
+    expect(metadata.openGraph?.images).toEqual([{ url: ogImagePath, width: ogImage.width, height: ogImage.height, alt: ogImage.alt }])
+    expect(metadata.twitter?.images).toEqual([ogImagePath])
+  })
+
+  it.each(variants)("$label のとき、openGraph の locale は ja_JP になる", ({ metadata }) => {
+    // クローラは表示言語の Cookie を送らないので、表示言語によらず固定する
+    expect(metadata.openGraph).toMatchObject({ locale: "ja_JP" })
+  })
+
+  it("版付きのパスは、siteUrl から絶対 URL にすると自サイトの URL になる", () => {
+    expect(new URL(ogImagePath, siteUrl).href.startsWith(siteUrl.origin)).toBe(true)
+  })
+})
+
+describe("siteUrl", () => {
+  it("配信の primary の www を指し、https で末尾にパスを持たない", () => {
+    // apex は Vercel で www へ 308 で転送される。apex を名乗ると canonical・sitemap が転送元を指すので、
+    // Vercel の Domains の primary を変えるときは、ここと一緒に変える (ADR 0029、PBI-0027)
+    expect(siteUrl.href).toBe("https://www.reeschan.pink/")
   })
 })

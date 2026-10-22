@@ -5,7 +5,7 @@
 - PBI: PBI-0028 (作業ツリー `my-portfolio-second-seo2`、ブランチ `feat/pbi-0028-seo-stage2`)
 - 用語: [CONTEXT.md](../../CONTEXT.md) の「正のホスト」「道具のページ」「監査」「持ち主」
 - 前の段: PBI-0019 (サイトの URL と SEO の metadata、ADR 0029)、PBI-0020 (RSS)、PBI-0023 (/now の記事ごとのページ、ADR 0030)
-- 前提: PBI-0027 (正のホストを apex に揃える。持ち主の Vercel の操作と ADR 0029 の追記)
+- 前提: PBI-0027 (正のホストを揃える。2026-10-22 に apex から www に改め、`siteUrl` を www にした。ADR 0029)
 - 参考: [jev-seo](https://github.com/AgriciDaniel/jev-seo) (MIT、Python 製の SEO 監査 CLI。サイトに組み込むコードは持たない)
 
 ## Problem Statement

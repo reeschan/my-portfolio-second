@@ -1,6 +1,6 @@
 # 本番の SEO 監査 (jev-seo) の手順
 
-PBI-0027 (正のホストを apex に揃える) と PBI-0028 (SEO の 2 段目) が本番に出たあと、持ち主が手元で 1 回だけ外部の監査道具 [jev-seo](https://github.com/AgriciDaniel/jev-seo) を当て、テストに写していない観点の穴を探すときの手順。監査は CI でも定期実行でもなく、持ち主の手元の操作で行う (CONTEXT.md の「監査」)。
+PBI-0027 (正のホストを www に揃える) と PBI-0028 (SEO の 2 段目) が本番に出たあと、持ち主が手元で 1 回だけ外部の監査道具 [jev-seo](https://github.com/AgriciDaniel/jev-seo) を当て、テストに写していない観点の穴を探すときの手順。監査は CI でも定期実行でもなく、持ち主の手元の操作で行う (CONTEXT.md の「監査」)。
 
 jev-seo はこのリポジトリにも CI にも入れない。道具はリポジトリの外に置き、結果もリポジトリの外に出す。
 
@@ -8,7 +8,7 @@ jev-seo はこのリポジトリにも CI にも入れない。道具はリポ�
 
 **PBI-0027 と PBI-0028 の両方が本番に出てから**回す。片方だけでは意味のある結果にならない。
 
-- PBI-0027 は、正のホスト (canonical などが指すホスト) を apex に揃える、持ち主の Vercel の操作。
+- PBI-0027 は、正のホスト (canonical などが指すホスト) を Vercel の primary の www に揃える変更 (`siteUrl` の 1 行。Vercel の設定は変えない)。
 - PBI-0028 は、構造化データ・404・description・見出しなどの SEO の 2 段目。
 
 正のホストが揃う前に当てると、jev-seo の `indexable()` が、canonical と巡回した URL の不一致で全ページを対象外にする。その結果、ページ単位の検査と Jev・PageSpeed の判定がトップのページだけになり、結果がほとんど空になる。順序を守る理由はこれ。
@@ -62,7 +62,7 @@ jev-seo はこのリポジトリにも CI にも入れない。道具はリポ�
 
 ```bash
 cd ~/tools/jev-seo
-bin/jevseo audit https://reeschan.pink --out ~/tools/jev-seo-reports
+bin/jevseo audit https://www.reeschan.pink --out ~/tools/jev-seo-reports
 ```
 
 続けて、その出力のディレクトリを Markdown のレポートにする。

@@ -39,7 +39,7 @@ _Avoid_: ライトボックス、ズーム、モーダル
 ### 検索
 
 **正のホスト (Canonical host)**:
-サイトが出すすべての絶対 URL (canonical・共有のカード・sitemap・構造化データ) が指すホスト。`https://reeschan.pink` (apex)。ほかのホスト (www) からはここへ転送する。
+サイトが出すすべての絶対 URL (canonical・共有のカード・sitemap・構造化データ) が指すホスト。`https://www.reeschan.pink` (www。Vercel の Domains の primary)。apex (`reeschan.pink`) からはここへ 308 で転送する。
 _Avoid_: 本番のドメイン、サイトの URL (どのホストかが曖昧になる)
 
 **道具のページ (Utility page)**:

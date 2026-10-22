@@ -66,3 +66,11 @@ describe("OG の画像と locale", () => {
     expect(new URL(ogImagePath, siteUrl).href.startsWith(siteUrl.origin)).toBe(true)
   })
 })
+
+describe("siteUrl", () => {
+  it("配信の primary の www を指し、https で末尾にパスを持たない", () => {
+    // apex は Vercel で www へ 308 で転送される。apex を名乗ると canonical・sitemap が転送元を指すので、
+    // Vercel の Domains の primary を変えるときは、ここと一緒に変える (ADR 0029、PBI-0027)
+    expect(siteUrl.href).toBe("https://www.reeschan.pink/")
+  })
+})

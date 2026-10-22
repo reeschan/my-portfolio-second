@@ -54,11 +54,11 @@ jobs:
         if: steps.head.outputs.latest == 'true'
         with:
           ref: develop
-      # スクリプトは依存なし (Node 22 の fetch) なので、pnpm install はしない
+      # スクリプトは依存なし (Node 24 の fetch) なので、pnpm install はしない
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         if: steps.head.outputs.latest == 'true'
         with:
-          node-version: 22
+          node-version: 24
       - run: node scripts/release-pr.mjs
         if: steps.head.outputs.latest == 'true'
         env:

@@ -5,12 +5,12 @@ PBI: [PBI.md](PBI.md)
 ## 計画
 
 - [x] 本番の転送と canonical の現状を curl で確かめる — 下の「記録」に結果
-- [x] (a) と (b) の比較を書き、持ち主に確認する — この下の「比較」。(a) に決まった
-- [x] ADR 0029 に、正規のホストと配信の転送の向きを揃える決まりを書き足す — ADR の差分
+- [x] (a) と (b) の比較を書き、持ち主に確認する — この下の「比較」。2026-10-21 は (a) に決まった (2026-10-22 に (b) に改めた。今の方式は (b))
+- [x] ADR 0029 に、正規のホストと配信の転送の向きを揃える決まりを書き足す (2026-10-21、(a) のときの決まり。下で (b) に書き直した) — ADR の差分
 - [x] 方式を (b) に改める (2026-10-22、持ち主の判断) — 下の「記録」
 - [x] `siteUrl` を www にし、`ogImageVersion` を 2 に上げる — lib/metadata.ts、test/lib/metadata.test.ts
 - [x] ADR 0029 の決定を「正規ホストは www」に書き直す — ADR の差分
-- [ ] リリース (develop → main) のあと、本番で canonical・sitemap が www を指すことを確かめる — 下の「リリース後の確かめ方」
+- [ ] リリース (develop → main) のあと、本番で canonical・sitemap・RSS が www を指すことを確かめる — 下の「リリース後の確かめ方」
 - [ ] 確かめたら PBI の状態を「完了」にする
 
 ## リリース後の確かめ方
@@ -23,11 +23,13 @@ curl -sI https://reeschan.pink/career | grep -iE "^(HTTP|location)"
 curl -s -A Googlebot https://www.reeschan.pink/career | grep -oE '<link rel="canonical"[^>]*>'
 curl -s https://www.reeschan.pink/sitemap.xml | grep -oE '<loc>[^<]*</loc>' | head -3
 curl -s https://www.reeschan.pink/robots.txt | grep -i sitemap
+curl -s https://www.reeschan.pink/rss.xml | grep -oE '<(link|atom:link)[^>]*>[^<]*' | head -3
 ```
 
 - 1 行目は `HTTP/1.1 200 OK` で `Location` が無い
 - 2 行目は `HTTP/1.1 308 Permanent Redirect` と `Location: https://www.reeschan.pink/career`
 - 3〜5 行目は、canonical・`<loc>`・`Sitemap:` がすべて `https://www.reeschan.pink/...` (転送されない URL を指している)
+- 6 行目は、RSS の `<link>` と `atom:link` の href がどちらも `https://www.reeschan.pink/...`
 - 確かめたら、Search Console のインデックス登録レポートで「ページにリダイレクトがあります」の「修正を検証」を押し、sitemap (`https://www.reeschan.pink/sitemap.xml`) を送り直す。apex の URL は転送元としてこの項目に残るが、正常
 
 ## 比較

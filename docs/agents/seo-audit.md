@@ -16,7 +16,7 @@ jev-seo はこのリポジトリにも CI にも入れない。道具はリポ�
 ## 前提
 
 - Python 3.10 以上。jev-seo の版は 0.1.1 (MIT ライセンス)。
-- jev-seo は公開サイトを外から巡回する CLI で、52 本の検査・Jev (TypeSafe AI の LLM) による意味の判定・PageSpeed Insights で監査し、レポートを作る。**localhost には当てられない**ので、対象は本番の `https://reeschan.pink` だけになる。
+- jev-seo は公開サイトを外から巡回する CLI で、52 本の検査・Jev (TypeSafe AI の LLM) による意味の判定・PageSpeed Insights で監査し、レポートを作る。**localhost には当てられない**ので、対象は本番の正のホスト `https://www.reeschan.pink` だけになる。apex (`https://reeschan.pink`) は www へ 308 で転送されるので、監査には当てない (転送の確かめは PBI-0027 の WORK.md の curl で行う)。
 - 所見があっても終了コードは変わらない。終了コードだけで良し悪しを判断しない。
 - レポートの PDF に使う WeasyPrint は Pango を必要とし、Windows の手順は jev-seo に書かれていない。**Windows では WSL (Ubuntu) の中で回すのを勧める**。`bin/jevseo` は bash のスクリプトなので、WSL ならそのまま動く。
 - レポートは Markdown だけにする (`--formats md`)。PDF を作らないので、Pango と WeasyPrint の用意を避けられる。

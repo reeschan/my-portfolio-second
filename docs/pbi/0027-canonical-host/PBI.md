@@ -40,3 +40,4 @@
 | 3 | 既存の E2E とユニット (canonical・OGP・sitemap・robots・構造化データを `siteUrl` と突き合わせるもの) が、値を変えたあとも通る | `pnpm commit-gate` (lint・型・ユニット・必須観点・E2E) |
 | 4 | `siteUrl` が www を指すことをユニットで確かめる (Vercel の primary と一緒に変える値だと分かるように) | test/lib/metadata.test.ts |
 | 5 | ADR 0029 に、正規ホストを www にした決定と、変えたあとの確かめ方が書かれている | ADR の差分 |
+| 6 | 本番の `/rss.xml` の `<link>` と `atom:link` の href が www のホストを指す | リリース後に [WORK.md](WORK.md) の「リリース後の確かめ方」の curl (RSS の行) |

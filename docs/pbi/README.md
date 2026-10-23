@@ -28,5 +28,5 @@
 | [0023](0023-now-post-pages/PBI.md) | /now の記事ごとのページを作り、記事の内容を検索エンジンに載せる | 進行中 |
 | [0024](0024-now-post-images/PBI.md) | /now の記事に画像を載せ、押すと拡大して見られるようにする | 進行中 |
 | [0025](0025-render-load/PBI.md) | 表示した後の描画を軽くして、サイト全体をサクサクにする | 進行中 |
-| [0027](0027-canonical-host/PBI.md) | 本番の正規ホストと siteUrl を揃え、canonical が転送されない URL を指すようにする | 進行中 |
+| [0027](0027-canonical-host/PBI.md) | 本番の正規ホストと siteUrl を揃え、canonical が転送されない URL を指すようにする | 完了 |
 | [0028](0028-seo-stage2/PBI.md) | SEO の 2 段目: 構造化データ・404・説明文を整え、SEO の検査をテストに写す | 進行中 |

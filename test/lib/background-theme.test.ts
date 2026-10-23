@@ -32,6 +32,12 @@ describe("backgroundThemes", () => {
     expect(ids).toContain(defaultBackgroundThemeId)
   })
 
+  it("既定のテーマはガラスで、一覧の先頭にある", async () => {
+    const { backgroundThemes, defaultBackgroundThemeId } = await loadStore()
+    expect(defaultBackgroundThemeId).toBe("glass")
+    expect(backgroundThemes[0]?.id).toBe("glass")
+  })
+
   it("どのテーマにも 3D シーンのファイルがある", async () => {
     const { backgroundThemes } = await loadStore()
     for (const t of backgroundThemes) {

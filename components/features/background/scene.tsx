@@ -4,12 +4,21 @@ import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from 
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { PerformanceMonitor, Preload } from "@react-three/drei"
 import type { BackgroundThemeId } from "@/lib/background-theme"
-import { BACKGROUND_DPR_MAX, BACKGROUND_DPR_MIN, BACKGROUND_FPS, BACKGROUND_MIN_FPS, nextFrameTime } from "@/lib/background-frame"
+import {
+  BACKGROUND_DPR_MAX,
+  BACKGROUND_DPR_MIN,
+  BACKGROUND_FPS,
+  BACKGROUND_MIN_FPS,
+  isSoftwareRenderer,
+  lowerBackgroundDpr,
+  nextFrameTime,
+} from "@/lib/background-frame"
 import { markBackgroundReady } from "@/lib/background-load"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 // テーマごとにファイルを分け、選ばれたものだけを読み込む (使わないシェーダーをダウンロードさせない)
 const themeScenes: Record<BackgroundThemeId, ComponentType> = {
+  glass: lazy(() => import("./themes/glass").then((m) => ({ default: m.GlassTheme }))),
   grid: lazy(() => import("./themes/grid").then((m) => ({ default: m.GridTheme }))),
   aurora: lazy(() => import("./themes/aurora").then((m) => ({ default: m.AuroraTheme }))),
   "moonlit-sea": lazy(() => import("./themes/moonlit-sea").then((m) => ({ default: m.MoonlitSeaTheme }))),
@@ -63,6 +72,25 @@ function BackgroundReadyNotifier() {
   return null
 }
 
+// 描画に使う WebGL のコンテキストからレンダラー名を読み、ソフトウェア描画なら知らせる。
+// 描画はしない。ソフトウェア描画では全画面のシェーダーが重く、ページの操作を詰まらせるので、
+// 重いと判定される前に最初から解像度を最小にしておく (ADR 0012)
+function SoftwareRendererCheck({ onSoftware }: { onSoftware: () => void }) {
+  const gl = useThree((s) => s.gl)
+
+  useEffect(() => {
+    const ctx = gl.getContext()
+    const renderer = String(ctx.getParameter(ctx.RENDERER))
+    // Chromium の RENDERER は「WebKit WebGL」としか返さないので、
+    // デバッグ用の拡張があるときだけ実際の GPU の名前 (SwiftShader など) も見る
+    const extension = isSoftwareRenderer(renderer) ? null : ctx.getExtension("WEBGL_debug_renderer_info")
+    const unmasked = extension ? String(ctx.getParameter(extension.UNMASKED_RENDERER_WEBGL)) : ""
+    if (isSoftwareRenderer(renderer) || isSoftwareRenderer(unmasked)) onSoftware()
+  }, [gl, onSoftware])
+
+  return null
+}
+
 export function Scene({ themeId }: { themeId: BackgroundThemeId }) {
   const ThemeScene = themeScenes[themeId]
   // 視差効果を減らす設定では動かさず、止まった 1 枚だけを描く
@@ -84,9 +112,11 @@ export function Scene({ themeId }: { themeId: BackgroundThemeId }) {
         <>
           <FrameLimiter />
           {/* drei の既定の bounds は 40〜60fps で、30fps に間引くと常に重いと判定される。上限を Infinity にして下げる方向だけにする */}
-          <PerformanceMonitor bounds={() => [BACKGROUND_MIN_FPS, Infinity]} onDecline={() => setDpr(BACKGROUND_DPR_MIN)} />
+          <PerformanceMonitor bounds={() => [BACKGROUND_MIN_FPS, Infinity]} onDecline={() => setDpr((d) => lowerBackgroundDpr(d))} />
         </>
       )}
+      {/* 視差効果を減らす設定でも、止まった 1 枚を軽く描くために置く */}
+      <SoftwareRendererCheck onSoftware={() => setDpr(BACKGROUND_DPR_MIN)} />
       <Suspense fallback={null}>
         <ThemeScene />
         <BackgroundReadyNotifier />

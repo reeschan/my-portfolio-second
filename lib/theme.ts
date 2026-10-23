@@ -8,6 +8,15 @@ export const sceneColors = {
   grid: "#191e28", // --muted-foreground (5%) を背景に重ねた色
 } as const
 
+// 導入演出のための色。演出は常に暗い地なので、ライト・ダークで同じ値になる。
+// three.js は CSS 変数を読めないので、app/globals.css の --intro-* を 16 進で持つ
+export const introColors = {
+  backdrop: "#0e121b", // --intro-backdrop: 220 30% 8%
+  violet: "#9b7bff", // --intro-violet: 254.5 100% 74.1%
+  pink: "#ff6fb5", // --intro-pink: 330.8 100% 71.8%
+  teal: "#45d4dc", // --intro-teal: 183.2 68.3% 56.7%
+} as const
+
 // recharts など、色を文字列で受け取るライブラリに渡すトークン参照
 export const chartColors = {
   primary: "hsl(var(--primary))",

@@ -15,3 +15,11 @@ export function nextFrameTime(now: number, last: number | null, interval: number
   if (elapsed < interval) return null
   return now - (elapsed % interval)
 }
+
+// 描画に使う時刻をループの 1 周の中の値に畳む。経過時間をそのままシェーダーに渡すと、
+// 長く開いたままのときに浮動小数の精度が落ちて動きがカクつく。動きは周期なので、
+// 余りにしても見た目は変わらない。ループの長さが 0 以下なら割れないので 0 を返す
+export function loopTime(elapsedSeconds: number, loopSeconds: number): number {
+  if (loopSeconds <= 0) return 0
+  return elapsedSeconds % loopSeconds
+}

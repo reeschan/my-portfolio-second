@@ -18,7 +18,7 @@ Recruiters and clients can also ask an AI about my career.
 - A career timeline and skill radar charts
 - An AI chat that answers questions about my career (powered by Moonshot's Kimi)
 - "Now" posts written in Markdown and Mermaid, published through an API
-- A three.js 3D background with six scenes to choose from
+- A three.js 3D background with seven scenes to choose from
 - Clicking a work card opens this dialog with its architecture diagram and write-up
 - Switch between Japanese and English from the top right
 

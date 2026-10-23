@@ -68,9 +68,10 @@
 three.js (3D 背景) と recharts (レーダーチャート) は [lib/theme.ts](../../lib/theme.ts) から色を受け取る。
 
 - `sceneColors`: three.js 用の 16 進数の色。`.dark` の値と対応をコメントで示している
+- `introColors`: 導入演出のトークン (`intro-*`) の 16 進数の色。ガラスの背景テーマのシェーダーと、/theme のガラスの見本が使う (演出と背景の配色を揃えるため)
 - `chartColors`: recharts 用の `hsl(var(--x))` の文字列
 
-globals.css のトークンを変えたら、`sceneColors` も手で直す (自動では連動しない)。
+globals.css のトークンを変えたら、`sceneColors` と `introColors` も手で直す (自動では連動しない)。
 
 ## テスト
 

@@ -10,8 +10,8 @@ PBI: [PBI.md](PBI.md)
 - [x] 方式を (b) に改める (2026-10-22、持ち主の判断) — 下の「記録」
 - [x] `siteUrl` を www にし、`ogImageVersion` を 2 に上げる — lib/metadata.ts、test/lib/metadata.test.ts
 - [x] ADR 0029 の決定を「正規ホストは www」に書き直す — ADR の差分
-- [ ] リリース (develop → main) のあと、本番で canonical・sitemap・RSS が www を指すことを確かめる — 下の「リリース後の確かめ方」
-- [ ] 確かめたら PBI の状態を「完了」にする
+- [x] リリース (develop → main) のあと、本番で canonical・sitemap・RSS が www を指すことを確かめる — 下の「リリース後の確かめ方」
+- [x] 確かめたら PBI の状態を「完了」にする
 
 ## リリース後の確かめ方
 
@@ -62,9 +62,17 @@ curl -s https://www.reeschan.pink/rss.xml | grep -oE '<(link|atom:link)[^>]*>[^<
 - 2026-10-22: 持ち主が方式を (b) に改めた (「Vercel は今のまま (apex → www) にして、siteUrl を https://www.reeschan.pink に変える」)。どちらの方式でも片方のホストからの転送は残り、要るのは向きと `siteUrl` を揃えることだけなので、配信の設定に触らずコードの 1 行で揃える方を選んだ
 - 2026-10-22: `siteUrl` を www にした。テストは `siteUrl` を import して期待値を作っているので、値の変更だけで追従した。`displayHost` も `siteUrl.host` なので、アドレスバーの表示と OGP の画像の文字が `www.reeschan.pink` になる。画像が変わるので `ogImageVersion` を 2 に上げた。Vercel の primary と一緒に変える値だと分かるよう、`siteUrl` が www を指すユニットテストを足した
 
+- 2026-10-22: PR #72 で develop にマージし、リリース PR #73 (develop → main、22:13 JST) で本番に出た
+- 2026-10-23: 本番で「リリース後の確かめ方」の curl を流し、受け入れ条件 1・2・6 を満たすことを確かめた。PBI を完了にした
+  - `https://www.reeschan.pink/career` は 200 (`Location` なし)。`https://reeschan.pink/career` は 308 で `Location: https://www.reeschan.pink/career`
+  - 記事のページ (`/now/0d2a5a02-…`) も www は 200、apex は同じパスの www へ 308。canonical と `og:url` は www の自分自身の URL で、noindex は無い
+  - sitemap の `<loc>` はすべて `https://www.reeschan.pink/...` (記事も載っている)。robots の `Sitemap:` は `https://www.reeschan.pink/sitemap.xml`
+  - RSS のチャンネルの `<link>`・`atom:link` の href・記事の `<link>` は、すべて `https://www.reeschan.pink/...`
+  - Search Console の「修正を検証」と sitemap の送り直しは、持ち主が行う (この PBI の範囲外)
+
 ## 検証
 
 最後に実行したコマンドと結果。
 
 - `pnpm commit-gate` (lint・型・ユニット・必須観点・E2E)
-- 本番の確かめ (上の curl) は、リリース後に行う
+- 本番の確かめ (上の curl): 2026-10-23 にリリース後の本番で流し、すべて期待どおり (「記録」の最後の項目)

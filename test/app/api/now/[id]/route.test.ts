@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { DELETE, PUT } from "@/app/api/now/[id]/route"
 import { POST } from "@/app/api/now/route"
+import { nowPostsTag } from "@/lib/now/cached"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
 import { formRequest, jsonRequest, mdFile, memoryImageStore, paramsOf, pngFile, svgFile, useMemoryStoreEnv, useSlackMock } from "../helpers"
@@ -10,10 +11,17 @@ import { formRequest, jsonRequest, mdFile, memoryImageStore, paramsOf, pngFile, 
 // after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
 const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
 vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }))
+
+// revalidateTag はこの環境では動かないので、呼ばれたかどうかだけを見る。
+// lib/now/cached.ts が next/cache から使う関数も、モックに無いと import の時点で落ちるので並べておく
+const revalidateTag = vi.hoisted(() => vi.fn())
+vi.mock("next/cache", () => ({ revalidateTag, cacheLife: vi.fn(), cacheTag: vi.fn() }))
 const runAfterTasks = () => Promise.all(afterTasks.splice(0).map((task) => task()))
 
 async function create(title = "元の題名"): Promise<NowPost> {
   const res = await POST(jsonRequest("POST", "/api/now", { title, body: "元の本文", publishedAt: "2026-01-01T00:00:00Z" }), paramsOf({}))
+  // 記事の作成 (POST) も作り置きを捨てるので、このあとの PUT・DELETE の分だけを見られるよう消しておく
+  revalidateTag.mockClear()
   return (await res.json()) as NowPost
 }
 
@@ -27,13 +35,18 @@ async function createWithImages(): Promise<NowPost> {
   const images = [svgFile("arch-light.svg"), svgFile("arch-dark.svg", 40, 30, "dark"), pngFile("shot.png")]
   const res = await POST(formRequest("POST", "/api/now", { file: mdFile(`# 画像つき\n\n${imageBody}`), images }), paramsOf({}))
   expect(res.status).toBe(201)
+  // 記事の作成 (POST) も作り置きを捨てるので、このあとの PUT・DELETE の分だけを見られるよう消しておく
+  revalidateTag.mockClear()
   return (await res.json()) as NowPost
 }
 const urlOf = (post: NowPost | null, name: string) => post?.images?.find((image) => image.name === name)?.url
 const namesOf = (post: NowPost | null) => (post?.images ?? []).map((image) => image.name).sort()
 
 describe("PUT /api/now/[id]", () => {
-  beforeEach(useMemoryStoreEnv)
+  beforeEach(() => {
+    useMemoryStoreEnv()
+    revalidateTag.mockClear()
+  })
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
@@ -57,6 +70,7 @@ describe("PUT /api/now/[id]", () => {
     }
     expect(await res.json()).toEqual(expected)
     expect(await stored(id)).toEqual(expected)
+    expect(revalidateTag).toHaveBeenCalledWith(nowPostsTag, { expire: 0 })
   })
 
   it("公開日を渡せば変えられる", async () => {
@@ -87,18 +101,21 @@ describe("PUT /api/now/[id]", () => {
   it("ない記事なら 404 で、新しく作らない", async () => {
     expect((await put("missing", { title: "t", body: "b" })).status).toBe(404)
     expect(await stored("missing")).toBeNull()
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   it("形式が違えば 400 で、書き換えない", async () => {
     const original = await create()
     expect((await put(original.id, { title: "", body: "b" })).status).toBe(400)
     expect(await stored(original.id)).toEqual(original)
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   it("トークンが違えば 401 で、書き換えない", async () => {
     const original = await create()
     expect((await put(original.id, { title: "t", body: "b" }, "wrong")).status).toBe(401)
     expect(await stored(original.id)).toEqual(original)
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   describe("画像 (PBI-0024)", () => {
@@ -144,6 +161,7 @@ describe("PUT /api/now/[id]", () => {
       expect(res.status).toBe(400)
       expect(((await res.json()) as { issues: { code: string }[] }).issues.map((issue) => issue.code)).toContain("missing")
       expect(await stored(original.id)).toEqual(original)
+      expect(revalidateTag).not.toHaveBeenCalled()
       expect(memoryImageStore().urls()).toHaveLength(3)
     })
 
@@ -170,13 +188,17 @@ describe("PUT /api/now/[id]", () => {
       )
       expect(res.status).toBe(500)
       expect(await stored(original.id)).toEqual(original)
+      expect(revalidateTag).not.toHaveBeenCalled()
       expect(memoryImageStore().urls().sort()).toEqual((original.images ?? []).map((image) => image.url).sort())
     })
   })
 })
 
 describe("DELETE /api/now/[id]", () => {
-  beforeEach(useMemoryStoreEnv)
+  beforeEach(() => {
+    useMemoryStoreEnv()
+    revalidateTag.mockClear()
+  })
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.restoreAllMocks()
@@ -185,14 +207,19 @@ describe("DELETE /api/now/[id]", () => {
   it("正しいトークンなら 204 で消し、もう一度消すと 404", async () => {
     const { id } = await create("消す")
     expect((await del(id)).status).toBe(204)
+    expect(revalidateTag).toHaveBeenCalledWith(nowPostsTag, { expire: 0 })
     expect(await stored(id)).toBeNull()
+    // 2 回目は 404。消せていないので作り置きは捨てない
+    revalidateTag.mockClear()
     expect((await del(id)).status).toBe(404)
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   it("トークンがなければ 401 で、消さない", async () => {
     const { id } = await create("残す")
     expect((await del(id, null)).status).toBe(401)
     expect(await stored(id)).not.toBeNull()
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   it("記事を消したら、その記事の画像も置き場から消す (ほかの記事の画像は残す)", async () => {

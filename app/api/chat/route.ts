@@ -10,7 +10,6 @@ import { chatRequestSchema, sseChunkSchema } from "@/lib/chat/schema"
 import { buildSystemPrompt } from "@/lib/chat/system-prompt"
 import type { ChatMessage } from "@/types/chat-types"
 
-export const runtime = "nodejs"
 // Vercel Hobby プランの上限は 60 秒
 export const maxDuration = 60
 

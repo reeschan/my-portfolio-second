@@ -24,8 +24,10 @@ Next.js 16.4 の Cache Components と Partial Prefetching を使うと、ビル�
   - 共通のレイアウトの `<Suspense>` の中で言語を読み、`LocaleProvider` で配る (ルートのレイアウトからは外す)
   - 本文のパネルの位置に、読み込み中の枠 (`aria-busy`) を `loading.tsx` で置く
 - /now の記事は `"use cache"` と `cacheTag` で作り置きし、投稿・更新・削除の API の成功時に `revalidateTag` で作り直す。`connection()` と `no-store` は外す。保存先の失敗は作り置きしない (投げて、ページが文言を出す)
-- 旧リンクの `/now?post=<id>` の 308 は、ページの中ではなく `proxy.ts` (対象は `/now` だけ) で返す。中身を流し始めた後では状態コードを変えられないため。`next.config.ts` の `redirects` は元のクエリを転送先に付けたまま (`/now/<id>?post=<id>`) にするので使わない
-- **/now の記事のページ (`app/now/[id]`) はルートグループに入れず、要求時に全部描いてから返す** (`export const instant = false`)。知らない id で 404 を返すため。記事の読み込みは作り置きなので、外部の往復は増えない。404 のページも同じ枠を使う
+- **旧リンクの `/now?post=<id>` の 308 と、知らない id の記事 (`/now/<id>`) の 404 は、ページの中ではなく `proxy.ts` (対象は `/now` と `/now/:id` だけ) で返す**。Partial Prefetching では、`generateStaticParams` の無い動的ルートはビルドで作る「params が未確定の殻」を先に 200 で返すので、ページの中の `permanentRedirect()`・`notFound()` では状態コードを変えられない (本番ビルドで 200 になった。開発サーバーでは 404・308 になるので気付きにくい)。`instant = false`・`connection()`・`generateStaticParams` ではどれも直らなかった
+  - 記事のページの要求ごとに、proxy が保存先 (Upstash) を 1 回読んで記事の有無を確かめる。proxy は別のバンドルで `"use cache"` の作り置きと共有できないため。保存先が落ちているときは通す (本物の記事まで 404 にしない)
+  - `next.config.ts` の `redirects` は元のクエリを転送先に付けたまま (`/now/<id>?post=<id>`) にするので使わない
+- /now の記事のページ (`app/now/[id]`) はルートグループに入れず、ページ自身が共通の枠 (`SiteFrame`) で包む。記事の読み込みは作り置きなので、ページを描くときの外部の往復は増えない。404 のページも同じ枠を使う
 - グラフ (recharts) と Markdown (react-markdown) は `next/dynamic` で使うときに読み込む
 - `generateMetadata` も言語を引数にした `"use cache"` で描く。クローラーへの返し方は Next.js の既定 (`htmlLimitedBots` の一覧は metadata を待って `<head>` に入れる) に任せる
 
@@ -37,6 +39,8 @@ Next.js 16.4 の Cache Components と Partial Prefetching を使うと、ビル�
 | proxy で言語ごとの静的なページに振り分ける (`app/[locale]/` + Cookie で rewrite) | 言語ごとに全部入りの静的な HTML を配れる | 全ページの移動と、proxy・rewrite と `usePathname` の食い違いへの手当てが要る。言語の切り替えでページを丸ごと取り直す |
 | URL で言語を分ける (`/en/...`) | 英語版が検索に載る | ADR 0026 で見送った理由 (差分の大きさ、リンクと E2E の書き換え) が今も同じ |
 | 読み込み中の表示と先読みだけ足す (`loading.tsx` + `prefetch`) | 変更が小さい | 全ページが ƒ のままで、先読みは読み込み中の枠までしか届かない。押した後は今と同じだけ待つ |
+| (記事の 404) `partialPrefetching: false` + `generateStaticParams` | proxy が要らない | サイト全体の先読みが従来のリンクごとの方式に戻る。共通の枠をレイアウトに置く形とも両立しない (200 に戻る) |
+| (記事の 404) 何もしない (noindex 付きの 200 を許す) | 変更が無い | 状態コードを見る検索エンジン・監視・E2E には 404 に見えない (soft 404) |
 
 ## 結果
 

@@ -1,12 +1,18 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { BulletList, Callout } from "@/components/common"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { skillsByLocale } from "@/data/localized"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useLocale, useMessages } from "@/lib/i18n/locale-context"
 import type { SkillCategory, SkillCategoryId } from "@/types/skill-types"
-import { SkillRadar } from "./skill-radar"
+
+// recharts は重いので、グラフを描くときだけ読む (PBI-010)。SSR は切らない: 今もサーバーでカードの枠と題を描いていて、
+// そのまま残すと読み込み中もグラフの場所が確保され、表示がずれない。控えの高さはグラフの入れ物 (skill-radar) に合わせる
+const SkillRadar = dynamic(() => import("./skill-radar").then((mod) => mod.SkillRadar), {
+  loading: () => <div className="h-[350px] w-full animate-pulse rounded-md bg-muted/20 min-[641px]:h-[400px]" />,
+})
 
 // カテゴリ別に出すタブ。「その他」は概要のレーダーに含めているのでタブにはしない
 const tabCategoryIds: readonly SkillCategoryId[] = ["frontend", "backend", "aws"]

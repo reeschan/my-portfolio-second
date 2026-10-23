@@ -3,13 +3,14 @@ import { withErrorHandling } from "@/decorator/with-error-handling"
 import { withSlackNotify } from "@/decorator/with-slack-notify"
 import { HttpError } from "@/lib/api/errors"
 import { nowWriteAuth, nowWriteErrors } from "@/lib/now/auth"
+import { revalidateNowPosts } from "@/lib/now/cached"
 import { getNowImageStore, requireNowImageStore } from "@/lib/now/image-store"
 import { planImagesOrThrow, putPlannedImages, readNowPostInput, removeImagesQuietly, withImages } from "@/lib/now/input"
 import { nowPostNotification } from "@/lib/now/notify"
 import type { NowPost } from "@/lib/now/schema"
 import { requireNowStore } from "@/lib/now/store"
 
-export const runtime = "nodejs"
+// /now は記事を作り置きから読む (lib/now/cached.ts)。書き込みが成功したら、応答を返す前に作り置きを捨てる
 
 type Context = { params: Promise<{ id: string }> }
 
@@ -55,6 +56,8 @@ export const PUT = withErrorHandling(
       }
       // 外れた画像は、記事の保存が成功してから消す (保存に失敗したときに元の記事の画像が消えていないように)
       await removeImagesQuietly(imageStore, plan.removed, label)
+      // 直した記事が次の表示に出るよう、作り置きを捨てる。検証や保存に失敗したときは呼ばない
+      revalidateNowPosts()
       return Response.json(post)
     }),
   ),
@@ -73,6 +76,8 @@ export const DELETE = withErrorHandling(
       .catch((error: unknown) => {
         console.error(`DELETE /api/now/${id}: 画像を消せませんでした`, error)
       })
+    // 消した記事が一覧に残らないよう、作り置きを捨てる。見つからない (404) ときは呼ばない
+    revalidateNowPosts()
     return new Response(null, { status: 204 })
   }),
   nowWriteErrors,

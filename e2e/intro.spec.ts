@@ -6,6 +6,9 @@ import { expect, routes, test } from "./fixtures"
 // 3D 背景の canvas は、テーマの一覧ではなく背景の枠 (data-background-theme) の中から取る
 
 test.describe("トップの導入演出", () => {
+  // 全体の設定 (playwright.config.ts) は動きを止めているので、演出そのものを確かめるここでは戻す
+  test.use({ reducedMotion: "no-preference" })
+
   test("トップを開くと導入演出が出る", { tag: ["@interaction"], annotation: routes("/") }, async ({ page }) => {
     await page.goto("/")
     // 飾りの英字ではなく、読み上げ用の「読み込み中」で層を取る (data/messages/ja.ts の文言)

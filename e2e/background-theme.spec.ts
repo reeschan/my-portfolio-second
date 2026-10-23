@@ -11,6 +11,10 @@ const backgroundThemes = themeData.map((theme) => ({ ...theme, ...ja.theme.theme
 const canvasSelector = "[data-background-theme]"
 
 test.describe("背景テーマ", () => {
+  // 全体の設定 (playwright.config.ts) は動きを止めているので戻す。止めると 1 枚しか描かず、
+  // 毎フレームの処理で起きるエラーをテーマごとの描画の smoke が見逃すため
+  test.use({ reducedMotion: "no-preference" })
+
   test(
     "テーマの一覧が data の並びどおりに出て、既定のテーマが選ばれている",
     { tag: ["@content", "@responsive"], annotation: routes("/theme") },

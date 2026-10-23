@@ -38,6 +38,7 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-24: 本番ビルドで、知らない id の記事 (`/now/<id>`) が 404 ではなく 200 (本文は 404、noindex 付きの soft 404) になり、旧リンク `/now?post=<id>` の 308 も 200 になる。開発サーバーでは 404 なので手元の E2E では見えず、CI (本番ビルド) の not-found・now-post-page の E2E で落ちる。原因は `partialPrefetching: true` と `generateStaticParams` の無い動的ルートの組み合わせで、ビルドで作る「params が未確定の殻」が先に 200 で返る。`instant = false`・`connection()` の有無・`"use cache"`・`generateStaticParams` では直らず、`partialPrefetching: false` にするとサイト全体の先読みの方式が変わる。`proxy.ts` で記事の有無を先に確かめて、無ければ 404 にする (PBI-014。調べた記録は作業用のノート)
 - 2026-10-24: 本番ビルドで並列の E2E を回すと、desktop で移動・言語の切り替えのテストが 8〜10 件、1 回目に落ちて再試行で通る。PBI-011 の前の状態でも同じだけ落ちたので、PBI-011 によるものではない。ヘッドレスの Chromium が並列で WebGL をソフトウェア描画して詰まるためと見ている (CI は再試行 1 回)
 - 2026-10-24: 並列の E2E で、言語を切り替えたあとのタブの移動が 15 秒を超えて落ちる原因は、アプリではなく E2E のブラウザの 3D 背景だった。ヘッドレスのブラウザには GPU が無く、背景を CPU (SwiftShader) で描き続けるので、並列の数だけサーバーの CPU を奪う (同じテストを 8 並列で回すと `/career` の応答が 5〜27 秒、8 件とも落ちた)。`reducedMotion: "reduce"` で背景を止めると 0.4〜1 秒になり、8 件とも通った。`"use cache"` の同時の作り置きの待ち合わせ (`crossRequestPendingCacheInvocations`) も疑ったが、`NEXT_PRIVATE_DEBUG_CACHE=1` のログではすべて解決していた。持ち主の判断で、`playwright.config.ts` の全体を `reducedMotion: "reduce"` にし、動きそのものを確かめる `e2e/intro.spec.ts` の「トップの導入演出」と `e2e/background-theme.spec.ts` の「背景テーマ」(テーマごとの描画の smoke は 1 枚だけでは毎フレームの処理のエラーを見逃す) だけを `no-preference` に戻した
+- 2026-10-24: 変えたあとを測った (手元の本番ビルド + 往復 150ms、3 周、`after-local-rtt150`)。ビルドの表はタブ付きの 8 ページ・トップ・404 が ◐。タブを押してから見出しが替わるまでの中央値は、初回 340ms → 19ms、再訪 175ms → 18ms、/now の初回 353ms → 19ms。往復の遅延に左右されなくなった (殻と中身を先に読んでおき、押したときにサーバーを待たない)。本番 (Vercel) はマージ後に同じ手順で測る
 
 ## 検証
 

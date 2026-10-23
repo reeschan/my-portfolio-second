@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
 import { Callout, TextLink } from "@/components/common"
 import { NowPostList } from "@/components/features/now/now-post-list"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { now } from "@/data/now"
 import { messagesOf, type Messages } from "@/data/messages"
 import { formatDate } from "@/lib/format"
@@ -26,7 +26,16 @@ async function nowMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.now), description: messages.now.description, path: "/now" })
 }
 
-export default async function NowPage() {
+// 見出しとパネルは殻に置き、言語と記事に依る本文だけをパネルの中で待つ (ADR 0036)
+export default function NowPage() {
+  return (
+    <TabPageTemplate id="now">
+      <NowBody />
+    </TabPageTemplate>
+  )
+}
+
+async function NowBody() {
   const locale = await getLocale()
   // 記事の読み込みはキャッシュの外で行い、失敗したときの文言はここ (上位) で決める。
   // listNowPostsCached が投げた結果は作り置きされないので、次の要求でやり直せる
@@ -55,43 +64,41 @@ async function NowContent({ locale, posts, loadError }: NowContentProps) {
   const latest = posts[0]
 
   return (
-    <PageTemplate title={messages.nav.now}>
-      <div className="max-w-4xl space-y-8">
-        <p className="text-muted-foreground">
-          {messages.now.intro}
-          {latest && (
-            <>
-              {messages.now.updatedBefore}
-              <time dateTime={latest.publishedAt}>{formatDate(latest.publishedAt, locale)}</time>
-              {messages.now.updatedAfter}
-            </>
-          )}
-          {now.location && <>・{now.location}</>}
-        </p>
-
-        {loadError ? (
-          <Callout variant="tinted">
-            <p>{loadError}</p>
-          </Callout>
-        ) : (
-          <NowPostList posts={posts} />
+    <div className="max-w-4xl space-y-8">
+      <p className="text-muted-foreground">
+        {messages.now.intro}
+        {latest && (
+          <>
+            {messages.now.updatedBefore}
+            <time dateTime={latest.publishedAt}>{formatDate(latest.publishedAt, locale)}</time>
+            {messages.now.updatedAfter}
+          </>
         )}
+        {now.location && <>・{now.location}</>}
+      </p>
 
-        {messages.now.languageNote && <p className="text-sm text-muted-foreground">{messages.now.languageNote}</p>}
+      {loadError ? (
+        <Callout variant="tinted">
+          <p>{loadError}</p>
+        </Callout>
+      ) : (
+        <NowPostList posts={posts} />
+      )}
 
-        {now.availability && (
-          <Callout variant="emphasis">
-            <p>{now.availability}</p>
-          </Callout>
-        )}
+      {messages.now.languageNote && <p className="text-sm text-muted-foreground">{messages.now.languageNote}</p>}
 
-        <p className="text-sm text-muted-foreground">
-          {messages.now.inspiredBefore}
-          <TextLink href="https://nownownow.com/about">nownownow.com/about</TextLink>
-          {messages.now.inspiredAfter}
-        </p>
-      </div>
-    </PageTemplate>
+      {now.availability && (
+        <Callout variant="emphasis">
+          <p>{now.availability}</p>
+        </Callout>
+      )}
+
+      <p className="text-sm text-muted-foreground">
+        {messages.now.inspiredBefore}
+        <TextLink href="https://nownownow.com/about">nownownow.com/about</TextLink>
+        {messages.now.inspiredAfter}
+      </p>
+    </div>
   )
 }
 

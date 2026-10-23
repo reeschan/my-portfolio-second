@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { SkillsVisualization } from "@/components/features/skills/skills-visualization"
 import { messagesOf } from "@/data/messages"
 import type { Locale } from "@/lib/i18n/config"
@@ -20,19 +20,11 @@ async function skillsMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.skills), description: messages.skills.description, path: "/skills" })
 }
 
-export default async function SkillsPage() {
-  return <SkillsContent locale={await getLocale()} />
-}
-
-// Cookie は "use cache" の外で読んで引数で渡す (cookies() はキャッシュの中で読めない。next-request-in-use-cache)
-// eslint-disable-next-line @typescript-eslint/require-await
-async function SkillsContent({ locale }: { locale: Locale }) {
-  "use cache"
-  cacheLife("max")
-  const messages = messagesOf(locale)
+// 見出しとパネルは殻に置く (ADR 0036)。グラフと表はクライアントの部品が言語を読んで描くので、本文も Cookie を読まずに殻に入る
+export default function SkillsPage() {
   return (
-    <PageTemplate title={messages.nav.skills}>
+    <TabPageTemplate id="skills">
       <SkillsVisualization />
-    </PageTemplate>
+    </TabPageTemplate>
   )
 }

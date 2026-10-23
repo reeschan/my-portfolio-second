@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { ContactForm } from "@/components/features/contact/contact-form"
 import { messagesOf } from "@/data/messages"
 import type { Locale } from "@/lib/i18n/config"
@@ -20,22 +20,11 @@ async function contactMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.contact), description: messages.contact.description, path: "/contact" })
 }
 
-export default async function ContactPage() {
-  // Cookie は "use cache" の中で読めないので、外で読んだ言語を引数にして中身に渡す (ADR 0035)
-  return <ContactContent locale={await getLocale()} />
-}
-
-// 言語ごとに作り置きし、先読みのページの殻 (App Shell) に入れる。入力中の値はクライアントの部品が持つので、
-// キャッシュしてもフォームの動きは変わらない
-// eslint-disable-next-line @typescript-eslint/require-await
-async function ContactContent({ locale }: { locale: Locale }) {
-  "use cache"
-  cacheLife("max")
-  const messages = messagesOf(locale)
-
+// 見出しとパネルは殻に置く (ADR 0036)。入力中の値と文言はクライアントの部品が持つので、本文も Cookie を読まずに殻に入る
+export default function ContactPage() {
   return (
-    <PageTemplate title={messages.nav.contact}>
+    <TabPageTemplate id="contact">
       <ContactForm />
-    </PageTemplate>
+    </TabPageTemplate>
   )
 }

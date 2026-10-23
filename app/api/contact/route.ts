@@ -10,8 +10,6 @@ import { isSlackNotifyConfigured, notifySlack } from "@/lib/slack/notify"
 // Slack が唯一の届け先なので、応答のあとに失敗を許して送る通知のデコレータ (ADR 0018) は使わない。
 // 応答の前に送って結果を待ち、届いたときだけ受け付けたと返す (届かないまま「受け付けました」と見せないため)
 
-export const runtime = "nodejs"
-
 const failedMessage = "送信に失敗しました。時間をおいてもう一度お試しください。"
 
 // 連打で Slack が埋もれないよう、お問い合わせは 1 時間 5 回まで。チャットとは別の枠で数える

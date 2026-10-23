@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { POST } from "@/app/api/now/route"
 import { nowWriteErrors } from "@/lib/now/auth"
+import { nowPostsTag } from "@/lib/now/cached"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
 import {
@@ -21,13 +22,21 @@ import {
 // after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
 const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
 vi.mock("next/server", () => ({ after: (task: () => unknown) => void afterTasks.push(task) }))
+
+// revalidateTag はこの環境では動かないので、呼ばれたかどうかだけを見る。
+// lib/now/cached.ts が next/cache から使う関数も、モックに無いと import の時点で落ちるので並べておく
+const revalidateTag = vi.hoisted(() => vi.fn())
+vi.mock("next/cache", () => ({ revalidateTag, cacheLife: vi.fn(), cacheTag: vi.fn() }))
 const runAfterTasks = () => Promise.all(afterTasks.splice(0).map((task) => task()))
 
 const post = (body: unknown, auth?: string | null) => POST(jsonRequest("POST", "/api/now", body, auth), paramsOf({}))
 const listIds = async () => (await getNowStore()!.list()).map((p) => p.id)
 
 describe("POST /api/now", () => {
-  beforeEach(useMemoryStoreEnv)
+  beforeEach(() => {
+    useMemoryStoreEnv()
+    revalidateTag.mockClear()
+  })
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
@@ -44,6 +53,7 @@ describe("POST /api/now", () => {
     expect(created).toMatchObject({ title: "近況", body: "# 本文", publishedAt: "2026-10-09T03:00:00.000Z" })
     expect(res.headers.get("Location")).toBe(`/api/now/${created.id}`)
     expect(await listIds()).toContain(created.id)
+    expect(revalidateTag).toHaveBeenCalledWith(nowPostsTag, { expire: 0 })
   })
 
   it("公開日を省略したら受け付けた時刻にする", async () => {
@@ -56,12 +66,14 @@ describe("POST /api/now", () => {
     const before = await listIds()
     expect((await post({ title: "t", body: "b" }, "wrong")).status).toBe(401)
     expect(await listIds()).toEqual(before)
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   it("本番で保存先が未設定なら 503", async () => {
     vi.stubEnv("NODE_ENV", "production")
     vi.stubEnv("NOW_POSTS_STORE", "")
     expect((await post({ title: "t", body: "b" })).status).toBe(503)
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   it.each([
@@ -72,6 +84,7 @@ describe("POST /api/now", () => {
     ["公開日が日時でない", { title: "t", body: "b", publishedAt: "昨日" }],
   ])("%s なら 400", async (_, body) => {
     expect((await post(body)).status).toBe(400)
+    expect(revalidateTag).not.toHaveBeenCalled()
   })
 
   describe("multipart/form-data で Markdown のファイルを送る (Postman 向け)", () => {
@@ -167,6 +180,7 @@ describe("POST /api/now", () => {
       expect(json.issues.map((issue) => issue.code)).toContain(code)
       expect(await listIds()).toEqual(before)
       expect(memoryImageStore().urls()).toEqual([])
+      expect(revalidateTag).not.toHaveBeenCalled()
     })
 
     it("Content-Length が 4MB を超えたら、本文を読まずに 413", async () => {
@@ -217,6 +231,7 @@ describe("POST /api/now", () => {
       const res = await postImages(bodyWithImages, images())
       expect(res.status).toBe(500)
       expect(memoryImageStore().urls()).toEqual([])
+      expect(revalidateTag).not.toHaveBeenCalled()
     })
 
     it("記事の保存に失敗して画像も消せなければ、ログに残してエラーを返す", async () => {

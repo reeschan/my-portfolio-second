@@ -1,11 +1,18 @@
 "use client"
 
 import Image from "next/image"
+import dynamic from "next/dynamic"
 import { useRef, useState } from "react"
-import { ImageViewer, Markdown, Section, TagList, TextLink } from "@/components/common"
+import { ImageViewer, Section, TagList, TextLink } from "@/components/common"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { Work } from "@/data/works"
 import { useMessages } from "@/lib/i18n/locale-context"
+
+// react-markdown と remark-gfm は重いので、作品の詳細を開いたときだけ読む (PBI-010)。
+// ダイアログは開いてから読むので、読み込み中は本文の場所を取るだけの控えにして、ずれを小さくする
+const Markdown = dynamic(() => import("@/components/common/markdown").then((mod) => mod.Markdown), {
+  loading: () => <div className="h-24 w-full animate-pulse rounded-md bg-muted/20" />,
+})
 
 type WorkDetailDialogProps = {
   work: Work | null

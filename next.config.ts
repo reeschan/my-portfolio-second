@@ -1,6 +1,9 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  // 殻をビルド時に作り、Cookie に依る中身を先読みで届ける (ADR 0035)。どちらも experimental の下ではない
+  cacheComponents: true,
+  partialPrefetching: true,
   images: {
     unoptimized: true,
   },

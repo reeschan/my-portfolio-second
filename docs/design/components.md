@@ -20,6 +20,7 @@ flowchart TD
 
 - 矢印の向きにだけ import してよい。逆向き (ui → common など) や features 同士の import はしない
 - ページは `PageTemplate` で包み、中身は features / common の部品を並べるだけにする
+- タブ付きのページはルートグループ `app/(tabs)/` に置き、共通のレイアウト (`SiteFrame`) がタブバーと本文の入れ物を持つ。サイト内の移動ではタブバーを描き直さない (ADR 0035)
 - 表示する文言・数値は `data/` に置く。部品はデータを props か `data/` から受け取る
 - 文言は言語ごとに持つ (ADR 0026)。固定の文言は `data/messages/`、表示データの英語版は `data/en/` で、言語ごとの入口は `data/localized.ts`。Client Component は `useLocale()` / `useMessages()`、Server Component は `getLocale()` / `getMessages()` で今の言語を読む
 
@@ -40,6 +41,8 @@ flowchart TD
 ### common (`components/common/`): 画面をまたいで使う部品
 
 `import { Section, GlassPanel } from "@/components/common"` のように index から import する。
+例外は `Markdown`。`@/components/common/markdown` から直接 import する。barrel で再 export すると、
+Markdown を使わないページ (/skills・/works の一覧) の最初の読み込みにも react-markdown が入るため (PBI-010)。
 
 | 部品 | 役割 |
 | --- | --- |
@@ -56,7 +59,9 @@ flowchart TD
 
 | 部品 | 役割 |
 | --- | --- |
-| `PageTemplate` | タブ + h1 + 本文パネル。全ページの枠 |
+| `SiteFrame` | タブ付きのページの共通の枠。共通のレイアウト (`app/(tabs)/layout.tsx`) が使う。タブバー・アドレスバーと本文の入れ物を持ち、表示言語は `<Suspense>` の中で読んで `LocaleProvider` で配る。サイト内の移動では描き直さない |
+| `PageTemplate` | h1 + 本文パネル。タブバーと外枠は `SiteFrame` が持つ |
+| `PanelFrameFallback` | 本文のパネルが届くまでの枠 (`aria-busy`)。言語の文言を使わない殻 |
 | `BrowserTabs` | ブラウザ風のタブ (`nav`「ページ切り替え」、現在地に `aria-current="page"`) とアドレスバー。タブの中身は `lib/navigation.ts` |
 | `LocaleSwitch` | 右上 (アドレスバーの右端) の EN / JP スイッチ (`group`「表示言語」、選択中に `aria-pressed`)。Cookie に言語を残す (ADR 0026) |
 | `RssButton` | RSS フィードへのリンク |

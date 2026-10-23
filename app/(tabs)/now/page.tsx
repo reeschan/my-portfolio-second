@@ -1,38 +1,57 @@
 import type { Metadata } from "next"
-import { permanentRedirect } from "next/navigation"
-import { connection } from "next/server"
+import { cacheLife } from "next/cache"
 import { Callout, TextLink } from "@/components/common"
 import { NowPostList } from "@/components/features/now/now-post-list"
 import { PageTemplate } from "@/components/layout/page-template"
 import { now } from "@/data/now"
 import { messagesOf, type Messages } from "@/data/messages"
 import { formatDate } from "@/lib/format"
+import type { Locale } from "@/lib/i18n/config"
 import { getLocale } from "@/lib/i18n/server"
 import { pageMetadata, pageTitle } from "@/lib/metadata"
-import { nowPostPath } from "@/lib/now/feed"
+import { listNowPostsCached } from "@/lib/now/cached"
 import type { NowPost } from "@/lib/now/schema"
-import { getNowStore } from "@/lib/now/store"
 
 export async function generateMetadata(): Promise<Metadata> {
-  const messages = messagesOf(await getLocale())
+  return nowMetadata(await getLocale())
+}
+
+// 言語ごとに作り置きする。題名と説明は data/messages の固定の値なので max (ADR 0035)。
+// "use cache" の関数は async でなければならない (Next.js の決まり) が、ここに待つ処理は無い
+// eslint-disable-next-line @typescript-eslint/require-await
+async function nowMetadata(locale: Locale): Promise<Metadata> {
+  "use cache"
+  cacheLife("max")
+  const messages = messagesOf(locale)
   return pageMetadata({ title: pageTitle(messages.nav.now), description: messages.now.description, path: "/now" })
 }
 
-type NowPageProps = {
-  // 旧 RSS の item のリンク (/now?post=<id>)。ADR 0030 で、その記事のページ (/now/<id>) に転送する
-  searchParams: Promise<{ post?: string | string[] }>
+export default async function NowPage() {
+  const locale = await getLocale()
+  // 記事の読み込みはキャッシュの外で行い、失敗したときの文言はここ (上位) で決める。
+  // listNowPostsCached が投げた結果は作り置きされないので、次の要求でやり直せる
+  const { posts, loadError } = await loadPosts(messagesOf(locale).now)
+  return <NowContent locale={locale} posts={posts} loadError={loadError} />
 }
 
-export default async function NowPage({ searchParams }: NowPageProps) {
-  // 記事は POST /api/now でいつでも増えるので、ビルド時に固めずリクエストごとに読む
-  await connection()
-  // 記事を読む前に転送する。id を保存先で確かめない (知らない id は記事のページが 404 を返す)
-  const { post: requestedPost } = await searchParams
-  if (typeof requestedPost === "string") permanentRedirect(nowPostPath(requestedPost))
+type NowContentProps = {
+  locale: Locale
+  // 新しい順に並べ済みのもの (lib/now/cached.ts)
+  posts: NowPost[]
+  loadError: string | null
+}
 
-  const locale = await getLocale()
+// 言語と記事の一覧を作り置きの鍵にする。記事が変われば引数が変わるので、古い中身は使われない。
+// 投稿の直後は API の revalidateTag が記事の作り置きを捨て、この部品も新しい一覧で描き直される。
+// stale を 5 分にして App Shell に入れる (ADR 0035)。別のインスタンスに残った古い作り置きの上限も、
+// 記事の作り置き (lib/now/cached.ts) と同じ 5 分に揃える。
+// "use cache" の部品は async でなければならない (Next.js の決まり) が、ここに待つ処理は無い
+// eslint-disable-next-line @typescript-eslint/require-await
+async function NowContent({ locale, posts, loadError }: NowContentProps) {
+  "use cache"
+  cacheLife({ stale: 300, revalidate: 300, expire: 86400 })
+
   const messages = messagesOf(locale)
-  const { posts, loadError } = await loadPosts(messages.now)
   const latest = posts[0]
 
   return (
@@ -78,10 +97,8 @@ export default async function NowPage({ searchParams }: NowPageProps) {
 
 // 記事を読む。保存先が落ちていても (ApiError) ページは出し、文言はここ (上位) で決める
 async function loadPosts(messages: Messages["now"]): Promise<{ posts: NowPost[]; loadError: string | null }> {
-  const store = getNowStore()
-  if (!store) return { posts: [], loadError: null }
   try {
-    return { posts: await store.list(), loadError: null }
+    return { posts: await listNowPostsCached(), loadError: null }
   } catch (error) {
     console.error("Failed to load now posts", error)
     return { posts: [], loadError: messages.loadError }

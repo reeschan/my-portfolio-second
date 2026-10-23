@@ -25,6 +25,10 @@ export const ja = {
     language: "表示言語",
     close: "閉じる",
   },
+  // トップの導入演出の読み上げ用。飾りの英字は読み上げず、ここだけ伝える
+  intro: {
+    loading: "読み込み中",
+  },
   overview: {
     description:
       "フルスタックデベロッパー Ryuki Tobita のプロフィール。フロントエンドからクラウド基盤まで一人で作る経歴の要約と、GitHub・LinkedIn へのリンク、このサイトの各ページの案内を載せています。",

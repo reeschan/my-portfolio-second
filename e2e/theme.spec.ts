@@ -17,6 +17,12 @@ const requiredTokens = [
   "--chart-3",
   "--chart-4",
   "--rss",
+  "--intro-backdrop",
+  "--intro-pink",
+  "--intro-violet",
+  "--intro-teal",
+  "--intro-red",
+  "--glass-highlight",
   "--radius",
 ]
 

@@ -1,10 +1,11 @@
 "use client"
 
-import { lazy, Suspense, useEffect, useState, type ComponentType } from "react"
-import { Canvas, useThree } from "@react-three/fiber"
+import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { PerformanceMonitor, Preload } from "@react-three/drei"
 import type { BackgroundThemeId } from "@/lib/background-theme"
 import { BACKGROUND_DPR_MAX, BACKGROUND_DPR_MIN, BACKGROUND_FPS, BACKGROUND_MIN_FPS, nextFrameTime } from "@/lib/background-frame"
+import { markBackgroundReady } from "@/lib/background-load"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
 // テーマごとにファイルを分け、選ばれたものだけを読み込む (使わないシェーダーをダウンロードさせない)
@@ -46,6 +47,22 @@ function FrameLimiter() {
   return null
 }
 
+// 最初の 1 フレームを描き終えたら「背景の準備完了」を知らせる。
+// トップの導入演出がこれを待って 3D 背景へ引き継ぐ。
+// frameloop が "never" (30fps に間引き) でも "demand" (視差効果を減らす設定) でも、
+// 最初の描画で useFrame は呼ばれる
+function BackgroundReadyNotifier() {
+  const notified = useRef(false)
+
+  useFrame(() => {
+    if (notified.current) return
+    notified.current = true
+    markBackgroundReady()
+  })
+
+  return null
+}
+
 export function Scene({ themeId }: { themeId: BackgroundThemeId }) {
   const ThemeScene = themeScenes[themeId]
   // 視差効果を減らす設定では動かさず、止まった 1 枚だけを描く
@@ -72,6 +89,7 @@ export function Scene({ themeId }: { themeId: BackgroundThemeId }) {
       )}
       <Suspense fallback={null}>
         <ThemeScene />
+        <BackgroundReadyNotifier />
         <Preload all />
       </Suspense>
     </Canvas>

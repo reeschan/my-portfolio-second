@@ -1,0 +1,928 @@
+/*
+ * トップの導入演出 (docs/specs/intro-handoff.md)。5 秒の流れは CSS のアニメーションだけで作り、
+ * React は「演出が終わった」の合図と、名前を 1 文字ずつ出すための分割だけを受け持つ。
+ * 色は必ずトークンから取り、この部品の層の中に閉じる (body や html には触らない)。
+ */
+
+@property --sweep {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: -60%;
+}
+
+.intro {
+  --intro-duration: 5s;
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: hsl(var(--intro-backdrop));
+  color: hsl(var(--glass-highlight));
+  font-family: var(--font-sans);
+  opacity: 1;
+  visibility: visible;
+  /* 引き継ぎでは透明度だけを 1 秒かけて下げ、そのあと visibility を変える。E2E が「消えた」と判定できるようにする */
+  transition:
+    opacity 1s ease,
+    visibility 0s linear;
+  /* 層に押せるものは無い。後ろの頁の操作を邪魔しない */
+  pointer-events: none;
+}
+
+/* ---- 背景: にじむ色の玉がゆっくり漂う。ガラス越しに色がにじむための素材 ---- */
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+.blobA {
+  width: 46vmin;
+  height: 46vmin;
+  background: hsl(var(--intro-pink));
+  left: 18%;
+  top: 14%;
+  animation: drift-a var(--intro-duration) ease-in-out both;
+}
+
+.blobB {
+  width: 40vmin;
+  height: 40vmin;
+  background: hsl(var(--intro-teal));
+  right: 16%;
+  bottom: 10%;
+  animation: drift-b var(--intro-duration) ease-in-out both;
+}
+
+.blobC {
+  width: 30vmin;
+  height: 30vmin;
+  background: hsl(var(--intro-violet));
+  right: 30%;
+  top: 8%;
+  animation: drift-c var(--intro-duration) ease-in-out both;
+}
+
+.blobD {
+  width: 18vmin;
+  height: 18vmin;
+  background: hsl(var(--intro-red));
+  left: 30%;
+  bottom: 14%;
+  opacity: 0.4;
+  animation: drift-a var(--intro-duration) ease-in-out reverse both;
+}
+
+@keyframes drift-a {
+  from {
+    transform: translate(-6vmin, -4vmin) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.55;
+  }
+  to {
+    transform: translate(6vmin, 3vmin) scale(1.05);
+  }
+}
+
+@keyframes drift-b {
+  from {
+    transform: translate(5vmin, 6vmin) scale(0.8);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.5;
+  }
+  to {
+    transform: translate(-4vmin, -2vmin) scale(1.1);
+  }
+}
+
+@keyframes drift-c {
+  from {
+    transform: translate(0, -6vmin) scale(0.7);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.5;
+  }
+  to {
+    transform: translate(-5vmin, 4vmin) scale(1);
+  }
+}
+
+/* 細かい粒 (光の塵) */
+.dust {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, hsl(var(--glass-highlight) / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 78% 30%, hsl(var(--glass-highlight) / 0.53), transparent 60%),
+    radial-gradient(1.5px 1.5px at 64% 76%, hsl(var(--intro-pink) / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 28% 84%, hsl(var(--intro-teal) / 0.6), transparent 60%),
+    radial-gradient(1px 1px at 88% 66%, hsl(var(--glass-highlight) / 0.47), transparent 60%),
+    radial-gradient(1.5px 1.5px at 40% 12%, hsl(var(--glass-highlight) / 0.6), transparent 60%);
+  animation: dust var(--intro-duration) linear both;
+}
+
+@keyframes dust {
+  from {
+    transform: translateY(2vmin);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-3vmin);
+    opacity: 0.8;
+  }
+}
+
+/* ---- 中央の構成 ---- */
+
+.composition {
+  position: relative;
+  width: min(34vmin + 120px, 380px, 44vh);
+  aspect-ratio: 3 / 4;
+  /* 入口を下に置くぶん、構成を上へ寄せる */
+  margin-top: -8vh;
+  animation: float var(--intro-duration) cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(2%) rotate(-1.2deg);
+  }
+  100% {
+    transform: translateY(-2%) rotate(0.8deg);
+  }
+}
+
+/* 背面の光の輪 (ガラスの縁に回る反射) */
+.halo {
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 20%,
+    hsl(var(--intro-pink)) 30%,
+    transparent 40% 60%,
+    hsl(var(--intro-teal)) 72%,
+    transparent 82%
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent 92%, hsl(var(--glass-highlight)) 93% 95%, transparent 96%);
+  mask: radial-gradient(closest-side, transparent 92%, hsl(var(--glass-highlight)) 93% 95%, transparent 96%);
+  opacity: 0;
+  animation: halo var(--intro-duration) cubic-bezier(0.3, 0.7, 0.2, 1) both;
+}
+
+@keyframes halo {
+  0%,
+  22% {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.85);
+  }
+  40% {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0.7;
+    transform: rotate(200deg) scale(1);
+  }
+}
+
+/* ガラスの破片: 外から飛んできて 1 枚のカードに集まる */
+.shards {
+  position: absolute;
+  inset: 0;
+}
+
+.shard {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--glass-highlight) / 0.22),
+    hsl(var(--glass-highlight) / 0.04) 55%,
+    hsl(var(--glass-highlight) / 0.12)
+  );
+  border: 1px solid hsl(var(--glass-highlight) / 0.33);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  animation: shard var(--intro-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.shard:nth-child(1) {
+  clip-path: polygon(0 0, 55% 0, 38% 34%, 0 46%);
+  --x: -42vmin;
+  --y: -30vmin;
+  --r: -38deg;
+}
+.shard:nth-child(2) {
+  clip-path: polygon(55% 0, 100% 0, 100% 38%, 38% 34%);
+  --x: 46vmin;
+  --y: -34vmin;
+  --r: 42deg;
+}
+.shard:nth-child(3) {
+  clip-path: polygon(0 46%, 38% 34%, 62% 62%, 0 78%);
+  --x: -54vmin;
+  --y: 6vmin;
+  --r: 24deg;
+}
+.shard:nth-child(4) {
+  clip-path: polygon(38% 34%, 100% 38%, 100% 70%, 62% 62%);
+  --x: 56vmin;
+  --y: 10vmin;
+  --r: -30deg;
+}
+.shard:nth-child(5) {
+  clip-path: polygon(0 78%, 62% 62%, 48% 100%, 0 100%);
+  --x: -36vmin;
+  --y: 40vmin;
+  --r: -18deg;
+}
+.shard:nth-child(6) {
+  clip-path: polygon(62% 62%, 100% 70%, 100% 100%, 48% 100%);
+  --x: 40vmin;
+  --y: 42vmin;
+  --r: 34deg;
+}
+.shard:nth-child(2) {
+  animation-delay: 0.05s;
+}
+.shard:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.shard:nth-child(4) {
+  animation-delay: 0.14s;
+}
+.shard:nth-child(5) {
+  animation-delay: 0.18s;
+}
+.shard:nth-child(6) {
+  animation-delay: 0.22s;
+}
+
+@keyframes shard {
+  0% {
+    transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(0.9);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  26% {
+    transform: none;
+    opacity: 1;
+  }
+  34%,
+  100% {
+    transform: none;
+    opacity: 0;
+  }
+}
+
+/*
+ * 集まったあとの 1 枚のガラスのカード。
+ * ガラスの見た目 (背景・縁・影) は疑似要素に分ける。カード自体を透明度 0 から始めると、
+ * 最初のコマから薄く見せたいキャラクターまで一緒に消えてしまうため (docs/specs/intro-handoff.md)
+ */
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  overflow: hidden;
+  animation: card var(--intro-duration) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(120% 80% at 50% 110%, hsl(var(--intro-pink) / 0.25), transparent 60%),
+    linear-gradient(160deg, hsl(var(--glass-highlight) / 0.18), hsl(var(--glass-highlight) / 0.03) 45%, hsl(var(--glass-highlight) / 0.08));
+  border: 1px solid hsl(var(--glass-highlight) / 0.35);
+  box-shadow:
+    0 30px 80px -20px hsl(var(--intro-backdrop) / 0.65),
+    inset 0 1px 0 hsl(var(--glass-highlight) / 0.5),
+    inset 0 -1px 0 hsl(var(--glass-highlight) / 0.1);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  /* 1.2 秒 (24%) までは面を出さず、1.6 秒 (32%) で集まったガラスを見せる */
+  animation: card-glass var(--intro-duration) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes card {
+  0%,
+  24% {
+    transform: scale(0.96);
+  }
+  32% {
+    transform: scale(1.015);
+  }
+  40%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes card-glass {
+  0%,
+  24% {
+    opacity: 0;
+  }
+  32%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 光の帯がガラスを横切る (2 回) */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    115deg,
+    transparent calc(var(--sweep) - 10%),
+    hsl(var(--glass-highlight) / 0.08) calc(var(--sweep) - 4%),
+    hsl(var(--glass-highlight) / 0.45) var(--sweep),
+    hsl(var(--intro-pink) / 0.25) calc(var(--sweep) + 2%),
+    transparent calc(var(--sweep) + 9%)
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: sweep var(--intro-duration) cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+
+@keyframes sweep {
+  0%,
+  34% {
+    --sweep: -60%;
+  }
+  52% {
+    --sweep: 160%;
+  }
+  52.01%,
+  76% {
+    --sweep: -60%;
+  }
+  92%,
+  100% {
+    --sweep: 160%;
+  }
+}
+
+/*
+ * キャラクター: ガラスの奥でぼけた状態から、ピンクと水色にずれた像が重なってくっきりする。
+ * 絵は 2 枚を重ねて切り替える: 目を閉じた絵 (眠っている) → 目を開けた絵 (起きる・瞬き)。
+ * 最初のコマから薄く強くぼかして見せ (透明度 0 にしない)、LCP を遅らせない。
+ */
+.chara {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 112%;
+  translate: -50% 0;
+  pointer-events: none;
+  animation: chara var(--intro-duration) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.chara img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chara .base {
+  position: relative;
+  filter: drop-shadow(0 0 18px hsl(var(--intro-pink) / 0.33));
+}
+
+.chara .pose {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 0 18px hsl(var(--intro-pink) / 0.33));
+}
+
+.chara .closed {
+  animation: pose-closed var(--intro-duration) linear both;
+}
+
+@keyframes chara {
+  0% {
+    opacity: 0.3;
+    filter: blur(16px);
+    transform: translateY(6%) scale(1.04);
+  }
+  46% {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(-1%);
+  }
+}
+
+/* 2.4 秒から 0.35 秒かけて目を開け、3.5 秒からゆっくり 1 回瞬きする (0.2 秒で閉じ、0.15 秒そのまま、0.35 秒で開く) */
+@keyframes pose-closed {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  55%,
+  70% {
+    opacity: 0;
+  }
+  74%,
+  77% {
+    opacity: 1;
+  }
+  84%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.chara .ghost {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.chara .ghostPink {
+  filter: sepia(1) saturate(6) hue-rotate(290deg);
+  animation: ghost-pink var(--intro-duration) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.chara .ghostTeal {
+  filter: sepia(1) saturate(6) hue-rotate(140deg);
+  animation: ghost-teal var(--intro-duration) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes ghost-pink {
+  0%,
+  30% {
+    opacity: 0;
+    transform: translateX(-4%);
+  }
+  38% {
+    opacity: 0.55;
+  }
+  52%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+@keyframes ghost-teal {
+  0%,
+  30% {
+    opacity: 0;
+    transform: translateX(4%);
+  }
+  38% {
+    opacity: 0.5;
+  }
+  52%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+
+/* カードの縁からはみ出す頭 (カードの外に飛び出して見せるため、上半分だけを前面に重ねる) */
+.popout {
+  position: absolute;
+  inset: -18% 0 0 0;
+  pointer-events: none;
+  -webkit-mask: linear-gradient(hsl(var(--glass-highlight)) 0 30%, transparent 34%);
+  mask: linear-gradient(hsl(var(--glass-highlight)) 0 30%, transparent 34%);
+}
+
+.popout .chara {
+  bottom: 0;
+}
+
+/* 前面のすりガラスの板: ジャケットのあたりを曇らせ、顔は澄んだまま見せる */
+.frontGlass {
+  position: absolute;
+  left: -9%;
+  right: -9%;
+  bottom: -5%;
+  height: 36%;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    hsl(var(--glass-highlight) / 0.18),
+    hsl(var(--glass-highlight) / 0.06) 60%,
+    hsl(var(--intro-pink) / 0.12)
+  );
+  border: 1px solid hsl(var(--glass-highlight) / 0.3);
+  box-shadow:
+    inset 0 1px 0 hsl(var(--glass-highlight) / 0.63),
+    0 20px 50px -20px hsl(var(--intro-backdrop) / 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  animation: front var(--intro-duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.frontGlass::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(
+    115deg,
+    transparent calc(var(--sweep) - 10%),
+    hsl(var(--glass-highlight) / 0.1) calc(var(--sweep) - 4%),
+    hsl(var(--glass-highlight) / 0.5) var(--sweep),
+    hsl(var(--intro-teal) / 0.25) calc(var(--sweep) + 2%),
+    transparent calc(var(--sweep) + 9%)
+  );
+  mix-blend-mode: screen;
+  animation: sweep var(--intro-duration) cubic-bezier(0.5, 0, 0.2, 1) both;
+  animation-delay: 0.12s;
+}
+
+@keyframes front {
+  0%,
+  36% {
+    opacity: 0;
+    transform: translateY(40%) scale(0.96);
+  }
+  50%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- 文字と進み具合 ---- */
+
+.caption {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 52px);
+  translate: -50% 0;
+  width: max-content;
+  text-align: center;
+}
+
+.name {
+  display: flex;
+  gap: 0.02em;
+  font-size: clamp(18px, 2.4vmin + 8px, 30px);
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+}
+
+.name span {
+  display: inline-block;
+  background: linear-gradient(180deg, hsl(var(--glass-highlight)), hsl(var(--intro-pink) / 0.55));
+  background: linear-gradient(
+    180deg,
+    hsl(var(--glass-highlight)),
+    color-mix(in srgb, hsl(var(--intro-pink)) 35%, hsl(var(--glass-highlight)))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: letter var(--intro-duration) cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+@keyframes letter {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translateY(70%);
+    filter: blur(6px);
+  }
+  50%,
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.meta {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: hsl(var(--glass-highlight) / 0.66);
+  text-transform: uppercase;
+  animation: fade var(--intro-duration) ease-out both;
+}
+
+@keyframes fade {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  56%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.bar {
+  position: relative;
+  margin: 14px auto 0;
+  width: min(54vmin, 300px);
+  height: 2px;
+  border-radius: 2px;
+  background: hsl(var(--glass-highlight) / 0.12);
+  overflow: hidden;
+  animation: fade var(--intro-duration) ease-out both;
+}
+
+.bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  background: linear-gradient(90deg, hsl(var(--intro-teal)), hsl(var(--intro-violet)), hsl(var(--intro-pink)));
+  box-shadow: 0 0 12px hsl(var(--intro-pink));
+  animation: bar var(--intro-duration) cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes bar {
+  0%,
+  6% {
+    transform: scaleX(0);
+  }
+  96%,
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+/* 最後のきらめき (読み込みが終わった合図) */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60vmin 60vmin at 50% 45%, hsl(var(--glass-highlight) / 0.25), transparent 70%);
+  opacity: 0;
+  animation: flash var(--intro-duration) ease-out both;
+  pointer-events: none;
+}
+
+@keyframes flash {
+  0%,
+  92% {
+    opacity: 0;
+  }
+  96% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+/* 演出の長さをはかるための、見えない時計。このアニメーションの終わりが「演出の終わり」 */
+.clock {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  animation: clock var(--intro-duration) linear both;
+}
+
+@keyframes clock {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* ---- 状態ごとの見た目 ---- */
+
+/* 背景待ちとあきらめでは、目を閉じた絵を 4 秒おきにゆっくり瞬かせる。
+   閉じる 0.2 秒・閉じたまま 0.15 秒・開く 0.35 秒で、残り 3.3 秒は目を開けている */
+.intro[data-intro-phase="waiting-background"] .closed,
+.intro[data-intro-phase="gave-up"] .closed {
+  animation: blink 4s linear infinite;
+}
+
+@keyframes blink {
+  0%,
+  82.5% {
+    opacity: 0;
+  }
+  87.5%,
+  91.25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 引き継ぎと打ち切りでは、層を 1 秒かけて透明にし、そのあと visibility を hidden にする */
+.intro[data-intro-phase="handed-off"],
+.intro[data-intro-phase="dismissed"] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 1s ease,
+    visibility 0s linear 1s;
+}
+
+/*
+ * 演出が終わったあとは目を開けた姿のままにする。閉じた絵のアニメーションを外して透明度 0 にするので、
+ * 待ちから引き継ぎに移ってもアニメーションが頭から再生し直さず、閉じた絵がちらつかない
+ */
+.intro[data-intro-phase="handed-off"] .closed,
+.intro[data-intro-phase="dismissed"] .closed {
+  animation: none;
+  opacity: 0;
+}
+
+/* サイト内の移動でトップに戻ったときは、最初から層を出さない (フェードもしない) */
+.intro.skipped {
+  opacity: 0;
+  visibility: hidden;
+  transition: none;
+}
+
+/* ---- 見出しと入口 ---- */
+
+.heading {
+  /* 透明でも配置は動かさない。見え方だけをふわっと変える */
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.headingShown {
+  opacity: 1;
+}
+
+.entrance {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(1rem, 4vh, 2.5rem);
+  z-index: 1;
+  translate: -50% 0;
+}
+
+/* 縦に短い画面では、演出を小さくして入口と重ならないようにする */
+@media (max-height: 720px) {
+  .composition {
+    width: min(34vmin + 120px, 360px, 38vh);
+    margin-top: -4vh;
+  }
+
+  .caption {
+    top: calc(100% + 24px);
+  }
+
+  .name {
+    font-size: clamp(16px, 2.2vmin + 6px, 24px);
+  }
+
+  .meta {
+    margin-top: 8px;
+  }
+
+  .bar {
+    margin-top: 10px;
+  }
+
+  .entrance {
+    bottom: 1rem;
+  }
+}
+
+/* 縦がかなり短い画面では、さらに演出を小さくして名前とバーを入口の上に収める */
+@media (max-height: 560px) {
+  .composition {
+    width: min(34vmin + 120px, 360px, 32vh);
+    margin-top: -3vh;
+  }
+
+  .caption {
+    top: calc(100% + 16px);
+  }
+
+  .name {
+    font-size: clamp(14px, 2vmin + 4px, 20px);
+  }
+
+  .meta {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+
+  .bar {
+    margin-top: 6px;
+  }
+
+  .entrance {
+    bottom: 0.5rem;
+  }
+}
+
+/* 視差効果を減らす設定では演出を止め、最後の姿 (目を開けたカード・名前・満ちたバー) を出す */
+@media (prefers-reduced-motion: reduce) {
+  .intro *,
+  .intro *::before,
+  .intro *::after {
+    animation: none !important;
+  }
+
+  /* 時計だけは 1 秒で終わらせ、1 秒後に導入演出が終わるようにする */
+  .intro .clock {
+    animation: clock 1s linear both !important;
+  }
+
+  .blob {
+    opacity: 0.55;
+  }
+
+  .blobD {
+    opacity: 0.4;
+  }
+
+  .dust {
+    opacity: 0.8;
+  }
+
+  .halo {
+    opacity: 0.7;
+  }
+
+  .shard {
+    opacity: 0;
+  }
+
+  .card {
+    opacity: 1;
+    transform: none;
+  }
+
+  .card::after,
+  .frontGlass::after {
+    opacity: 0;
+  }
+
+  .chara {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+
+  .closed,
+  .ghost {
+    opacity: 0;
+  }
+
+  .frontGlass {
+    opacity: 1;
+    transform: none;
+  }
+
+  .flash {
+    opacity: 0.2;
+  }
+
+  .name span {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .meta {
+    opacity: 1;
+  }
+
+  .bar::before {
+    transform: scaleX(1);
+  }
+}

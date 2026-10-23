@@ -44,6 +44,12 @@
   --color-chart-4: hsl(var(--chart-4));
   /* RSS アイコンのホバー色。ブランド色なのでテーマに依らず固定 */
   --color-rss: hsl(var(--rss));
+  /* トップの導入演出用。演出は常に暗い地で見せるので、ライト・ダークで同じ値にする */
+  --color-intro-backdrop: hsl(var(--intro-backdrop));
+  --color-intro-pink: hsl(var(--intro-pink));
+  --color-intro-violet: hsl(var(--intro-violet));
+  --color-intro-teal: hsl(var(--intro-teal));
+  --color-intro-red: hsl(var(--intro-red));
 
   /* --- 文字 --- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
@@ -115,6 +121,16 @@
 
     --rss: 25 95% 53%;
 
+    /* トップの導入演出用 (キャラクターの髪・ピアスに合わせた色)。演出は常に暗い地なので、ライト・ダークで同じ値にする */
+    --intro-backdrop: 220 30% 8%;
+    --intro-pink: 330.8 100% 71.8%;
+    --intro-violet: 254.5 100% 74.1%;
+    --intro-teal: 183.2 68.3% 56.7%;
+    --intro-red: 351.6 79.5% 56.1%;
+
+    /* ガラスの縁と内側の光に使う白 */
+    --glass-highlight: 0 0% 100%;
+
     --radius: 0.5rem;
   }
 
@@ -172,6 +188,75 @@
 @utility glass-bar {
   background-color: hsl(var(--background) / 0.6);
   backdrop-filter: blur(var(--blur-glass));
+}
+
+/*
+ * ガラス調のボタン。入口など、押せる面をガラスに見せる。
+ * 質感は導入演出のガラスのカードに合わせる。
+ * - 面は card を 35% で透かし、ぼかしと彩度で背後の色をにじませる
+ * - 縁と上辺の内側に白の光を入れて、ガラスの厚みを出す
+ * - ホバーでは ::after の斜めの帯を左から右へ動かし、光が横切ったように見せる
+ */
+@utility glass-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-width: 1px;
+  border-color: hsl(var(--glass-highlight) / 0.35);
+  border-radius: 9999px;
+  background-color: hsl(var(--card) / 0.35);
+  background-image: linear-gradient(
+    160deg,
+    hsl(var(--glass-highlight) / 0.18),
+    hsl(var(--glass-highlight) / 0.03) 45%,
+    hsl(var(--glass-highlight) / 0.1)
+  );
+  box-shadow:
+    var(--shadow-panel),
+    inset 0 1px 0 hsl(var(--glass-highlight) / 0.5);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+
+  /* 左から右へ通す光の帯。z-index を下げ、文字より後ろに置く */
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      hsl(var(--glass-highlight) / 0.08) 42%,
+      hsl(var(--glass-highlight) / 0.5) 50%,
+      hsl(var(--glass-highlight) / 0.08) 58%,
+      transparent 65%
+    );
+    pointer-events: none;
+    transform: translateX(-120%);
+    transition: transform 0.6s ease;
+  }
+
+  &:hover::after {
+    transform: translateX(120%);
+  }
+
+  /* キーボード操作のときだけ輪を出し、マウス操作の見た目を変えない */
+  &:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* 視差効果を減らす設定では帯を動かさない。動かさない代わりに、静止した光として見せる */
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      transform: none;
+      transition: none;
+      opacity: 0.35;
+    }
+
+    &:hover::after {
+      transform: none;
+    }
+  }
 }
 
 @layer base {

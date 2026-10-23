@@ -1,9 +1,12 @@
 import { ja } from "../data/messages/ja"
 import { expect, routes, test } from "./fixtures"
 
-// トップの導入演出と、3D 背景への引き継ぎ (docs/specs/intro-handoff.md の合意済みの seam 1)。
-// 演出の途中のコマや内部の状態には依らず、閲覧者から見えるもの・押せるもの・移る先だけを確かめる。
+// トップの導入演出と、その完了 (docs/specs/intro-complete.md の合意済みの seam 1)。
+// 演出の途中のコマや内部の状態には依らず、閲覧者から見えるもの・押せるもの・移る先・領域と見出しの名前だけを確かめる。
 // 3D 背景の canvas は、テーマの一覧ではなく背景の枠 (data-background-theme) の中から取る
+
+// 見出しは導入演出の最後のコマの名前と「Portfolio」
+const heading = { level: 1, name: /Ryuki Tobita\s*Portfolio/ } as const
 
 test.describe("トップの導入演出", () => {
   // 全体の設定 (playwright.config.ts) は動きを止めているので、演出そのものを確かめるここでは戻す
@@ -22,38 +25,38 @@ test.describe("トップの導入演出", () => {
     await expect(page).toHaveURL(/\/overview$/)
   })
 
-  test("導入演出が終わると 3D 背景と見出しに引き継がれる", { tag: ["@interaction"], annotation: routes("/") }, async ({ page }) => {
-    // 演出の 5 秒と、背景の準備完了 (CI のソフトウェア描画では遅い) の両方を待つので、テスト全体を長めにする
+  test("演出のあと、最後の姿のまま完了になる", { tag: ["@interaction"], annotation: routes("/") }, async ({ page }) => {
+    // 演出の 5 秒と、背景の準備完了 (CI のソフトウェア描画では遅い。来なければ 8 秒の上限) を待つので、長めにする
     test.setTimeout(60_000)
     await page.goto("/")
 
-    // 背景のシーンは遅延読み込みなので、canvas が出るまで長めに待つ (e2e/background-theme.spec.ts の先例)
-    await expect(page.locator("[data-background-theme] canvas")).toBeVisible({ timeout: 15_000 })
-    // 引き継ぎでは層を 1 秒かけて薄くし、そのあと visibility を hidden にする
-    await expect(page.getByRole("region", { name: ja.intro.loading })).toBeHidden({ timeout: 15_000 })
-    // 見出しは導入演出のあいだ透明で、引き継ぎのあとに 0.8 秒かけて不透明になる
-    await expect(page.getByRole("heading", { level: 1, name: /Ryuki Tobita\s*Portfolio/ })).toHaveCSS("opacity", "1", {
-      timeout: 15_000,
-    })
+    // 完了すると、領域の名前が「読み込み完了」に替わる。層は消えずに残る
+    await expect(page.getByRole("region", { name: ja.intro.complete })).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByRole("region", { name: ja.intro.loading })).toHaveCount(0)
+    // 見出しは最後のコマの名前。完了のあとも見えていて、入口も押せる
+    await expect(page.getByRole("heading", heading)).toBeVisible()
+    await expect(page.getByRole("link", { name: "Enter" })).toBeVisible()
   })
 
   test(
-    "サイト内の移動でトップに戻ったときは導入演出が出ない",
+    "完了してから本文に入ると 3D 背景が出て、トップに戻ると最初から完了の姿で出る",
     { tag: ["@interaction", "@navigation"], annotation: routes("/") },
     async ({ page }) => {
       test.setTimeout(60_000)
       await page.goto("/")
-      // 一度引き継ぎまで進めて、背景の準備完了を済ませてから移動する
-      await expect(page.locator("[data-background-theme] canvas")).toBeVisible({ timeout: 15_000 })
-      await expect(page.getByRole("region", { name: ja.intro.loading })).toBeHidden({ timeout: 15_000 })
+      await expect(page.getByRole("region", { name: ja.intro.complete })).toBeVisible({ timeout: 20_000 })
 
       await page.getByRole("link", { name: "Enter" }).click()
       await expect(page).toHaveURL(/\/overview$/)
+      // トップでは裏で読み込むだけだった 3D 背景が、本文に入ると見える (遅延読み込みなので長めに待つ)
+      await expect(page.locator("[data-background-theme] canvas")).toBeVisible({ timeout: 15_000 })
+
       await page.goBack()
       await expect(page).toHaveURL(/\/$/)
-
-      // 準備完了が済んでいるので、戻ったときは層を最初から出さない。層が無い場合も hidden と判定される
-      await expect(page.getByRole("region", { name: ja.intro.loading })).toBeHidden()
+      // 戻ったときは演出を流し直さず、最初から完了の姿で出る (読み込み中の名前を経ない)
+      await expect(page.getByRole("region", { name: ja.intro.loading })).toHaveCount(0)
+      await expect(page.getByRole("region", { name: ja.intro.complete })).toBeVisible()
+      await expect(page.getByRole("heading", heading)).toBeVisible()
     },
   )
 
@@ -77,19 +80,12 @@ test.describe("トップの導入演出", () => {
 test.describe("視差効果を減らす設定", () => {
   test.use({ reducedMotion: "reduce" })
 
-  test(
-    "演出を止めても、3D 背景と見出しへの引き継ぎが起きる",
-    { tag: ["@interaction", "@a11y"], annotation: routes("/") },
-    async ({ page }) => {
-      test.setTimeout(60_000)
-      await page.goto("/")
+  test("演出を止めても、完了になる", { tag: ["@interaction", "@a11y"], annotation: routes("/") }, async ({ page }) => {
+    test.setTimeout(60_000)
+    await page.goto("/")
 
-      // 視差効果を減らす設定では、演出の時計だけが 1 秒で終わり、止まった 3D 背景に引き継ぐ
-      await expect(page.locator("[data-background-theme] canvas")).toBeVisible({ timeout: 15_000 })
-      await expect(page.getByRole("region", { name: ja.intro.loading })).toBeHidden({ timeout: 15_000 })
-      await expect(page.getByRole("heading", { level: 1, name: /Ryuki Tobita\s*Portfolio/ })).toHaveCSS("opacity", "1", {
-        timeout: 15_000,
-      })
-    },
-  )
+    // 視差効果を減らす設定では、開いた瞬間に演出が終わったとみなし、背景の準備完了 (か 8 秒の上限) で完了になる
+    await expect(page.getByRole("region", { name: ja.intro.complete })).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByRole("heading", heading)).toBeVisible()
+  })
 })

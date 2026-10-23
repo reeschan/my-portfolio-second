@@ -35,5 +35,10 @@ describe("htmlLangScript", () => {
   it("ほかの Cookie と並んでいても locale を読める (名前の一部には反応しない)", () => {
     expect(run("theme=dark; locale=en; session=abc")).toBe("en")
     expect(run("my-locale=en")).toBe("ja")
+    expect(run("theme=dark; my-locale=en")).toBe("ja")
+  })
+
+  it("埋め込んだ値が <script> を閉じたり、山かっこを持ち込んだりしない", () => {
+    expect(htmlLangScript()).not.toMatch(/<\/|[<>]\w*script/i)
   })
 })

@@ -26,11 +26,14 @@
    - `chart-1`〜`chart-4`: 図やグラフの塗り分け
    - `rss`: RSS のブランド色
    - `shadow-panel` / `blur-glass`: 3D 背景の上に浮くパネルの質感
+   - `intro-backdrop`・`intro-pink`・`intro-violet`・`intro-teal`・`intro-red`: トップの導入演出の地と光の色。演出は常に暗い地で見せるので、ライト・ダークで同じ値 (2026-10-23、[PBI-0029](../pbi/0029-intro-loader/PBI.md))
+   - `glass-highlight`: ガラスの縁と内側の光に使う白。`glass-button` の縁・上辺の内側・ホバーの光の帯に使う (2026-10-23、[PBI-0029](../pbi/0029-intro-loader/PBI.md))
    - `blur-glass-panel` (6px): 本文パネル (`glass-panel`) のぼかし。2026-10-21 に足した ([PBI-0025](../pbi/0025-render-load/PBI.md))
      - 本文パネルは大きく、動く 3D 背景の上で毎フレームぼかし直すので、帯の `blur-glass` (12px) より弱める
      - 弱めた分、面の不透明度を 0.6 から 0.75 に上げて、文字の読みやすさを保つ
      - 帯 (`glass-bar`) は `blur-glass` (12px) のまま
-4. 質感は **ユーティリティ 1 つ** にまとめる: `glass-panel` (本文のパネル)、`glass-bar` (タブバー・アドレスバー)
+4. 質感は **ユーティリティ 1 つ** にまとめる: `glass-panel` (本文のパネル)、`glass-bar` (タブバー・アドレスバー)、`glass-button` (入口などのガラス調のボタン。2026-10-23、[PBI-0029](../pbi/0029-intro-loader/PBI.md))
+   - `glass-button` は、面 `card` を 35% で透かし、縁と上辺の内側に `glass-highlight` の光を入れ、`blur-glass` (12px) と彩度 1.2 で背後をにじませる。ホバーでは光の帯が左から右へ横切る
 5. CSS 変数を読めない描画先 (three.js) の色は `lib/theme.ts` に集め、globals.css の値と対応をコメントで示す
 6. 文字は Inter (`--font-sans`)。日本語はシステムのフォントに任せる
 7. 画面側では生の色 (`bg-blue-500`、`#3399ff`) を書かない。足りなければトークンを足す (この ADR を更新するか、新しい ADR を書く)

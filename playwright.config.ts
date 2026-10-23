@@ -24,6 +24,10 @@ export default defineConfig({
     locale: "ja-JP",
     timezoneId: "Asia/Tokyo",
     trace: "retain-on-failure",
+    // 3D 背景と導入演出の動きを止める。ヘッドレスのブラウザには GPU が無く、背景を CPU (SwiftShader) で描き続けるので、
+    // 並列で回すとサーバーの CPU が足りなくなり、ページの移動が 15 秒を超えて落ちていた (PBI-0031)。
+    // 動きそのものを確かめるテスト (e2e/intro.spec.ts・e2e/background-theme.spec.ts) だけが no-preference に戻す
+    reducedMotion: "reduce",
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },

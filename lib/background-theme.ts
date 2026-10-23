@@ -1,7 +1,9 @@
 // 3D 背景のテーマ。/theme ページで選び、全ページの背景 (components/features/background) に反映する。
 // 選んだテーマは localStorage に残し、次に開いたときも同じ背景にする (docs/adr/0012-background-themes.md)
 
-export type BackgroundThemeId = "grid" | "aurora" | "moonlit-sea" | "firefly-forest" | "lunar-surface" | "eclipse"
+import { introColors } from "@/lib/theme"
+
+export type BackgroundThemeId = "glass" | "grid" | "aurora" | "moonlit-sea" | "firefly-forest" | "lunar-surface" | "eclipse"
 
 export type BackgroundTheme = {
   id: BackgroundThemeId
@@ -11,6 +13,16 @@ export type BackgroundTheme = {
 
 // 並び順がそのまま /theme の一覧の順になる。表示名と説明は言語ごとに data/messages/ に持つ
 export const backgroundThemes: readonly BackgroundTheme[] = [
+  {
+    id: "glass",
+    // ガラスのシーンは導入演出と同じ配色なので、見本も introColors から取る
+    swatch: [
+      introColors.backdrop,
+      // 地の紺 (#0e121b) に紫 (#9b7bff) を 25% 混ぜた、光の届く暗い紫
+      "#312c54",
+      introColors.violet,
+    ],
+  },
   {
     id: "grid",
     swatch: ["#0b1020", "#13203a", "#3399ff"],
@@ -37,7 +49,7 @@ export const backgroundThemes: readonly BackgroundTheme[] = [
   },
 ]
 
-export const defaultBackgroundThemeId: BackgroundThemeId = "grid"
+export const defaultBackgroundThemeId: BackgroundThemeId = "glass"
 
 const storageKey = "background-theme"
 

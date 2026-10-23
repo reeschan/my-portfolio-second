@@ -1,3 +1,4 @@
+import { ja } from "../data/messages/ja"
 import { expect, pages, routes, test } from "./fixtures"
 
 test.describe("ナビゲーション", () => {
@@ -44,6 +45,28 @@ test.describe("ナビゲーション", () => {
   test("RSS ボタンがフィードを指している", { tag: "@navigation", annotation: routes("/overview") }, async ({ page }) => {
     await page.goto("/overview")
     await expect(page.getByRole("link", { name: "RSSフィード" })).toHaveAttribute("href", "/rss.xml")
+  })
+
+  test("タブを押してもタブバーが描き直されない", { tag: "@navigation", annotation: routes("/overview", "/career") }, async ({ page }) => {
+    await page.goto("/overview")
+    const nav = page.getByRole("navigation", { name: ja.layout.pages })
+    // 押す前のタブバーの要素を取っておく
+    const handle = await nav.elementHandle()
+    if (!handle) throw new Error("タブバーが見つからない")
+
+    await nav.getByRole("link", { name: ja.nav.career, exact: true }).click()
+    await expect(page.getByRole("heading", { level: 1, name: ja.nav.career })).toBeVisible()
+
+    // Cache Components は移動したページを unmount せず <Activity> で display: none のまま残す。
+    // そのため「DOM に残っているか」(isConnected) だけでは、ページごとにタブバーを描いていた
+    // 構成でも古い要素が隠れて残って true になり、描き直しを見分けられない。
+    // 移動後に「いま見えている」タブバーを取り直し (getByRole は display: none の要素を拾わない)、
+    // 押す前に取っておいた要素と同じノードかどうかで、描き直されていないことを確かめる
+    const after = await nav.elementHandle()
+    if (!after) throw new Error("移動後のタブバーが見つからない")
+    expect(await handle.evaluate((el, current) => el === current, after)).toBe(true)
+    // 念のため、取っておいた要素が隠れず見えたままであることも確かめる
+    expect(await handle.evaluate((el) => el.checkVisibility())).toBe(true)
   })
 })
 

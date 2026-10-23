@@ -60,7 +60,64 @@ test.describe("表示言語", () => {
       await expect(page.locator("html")).toHaveAttribute("lang", "ja")
     },
   )
+
+  test(
+    "英語に切り替えたあと、別のタブを押すと英語の中身が出る",
+    { tag: ["@interaction", "@navigation"], annotation: routes("/overview", "/career") },
+    async ({ page }) => {
+      await page.goto("/overview")
+      await page.getByRole("group", { name: ja.layout.language }).getByRole("button", { name: "EN" }).click()
+      await expect(page.getByRole("heading", { level: 1, name: en.nav.overview })).toBeVisible()
+
+      // 言語を切り替えると枠は英語で描き直される。そのあとの移動でも、言語に依らない殻に引きずられず英語の中身が出る
+      const tabs = page.getByRole("navigation", { name: en.layout.pages })
+      await tabs.getByRole("link", { name: en.nav.career, exact: true }).click()
+      await expect(page.getByRole("heading", { level: 1, name: en.nav.career })).toBeVisible()
+    },
+  )
 })
+
+test.describe("html の lang (直接開いたとき)", () => {
+  // <head> のインラインのスクリプトが Cookie を読む経路を、クライアントの操作を挟まずに確かめる (PBI-009)
+  test(
+    '英語の Cookie で直接開くと <html lang="en"> になる',
+    { tag: ["@content"], annotation: routes("/overview") },
+    async ({ page, baseURL }) => {
+      if (!baseURL) throw new Error("baseURL が設定されていない")
+      await page.context().addCookies([{ name: localeCookieName, value: "en", url: baseURL }])
+      await page.goto("/overview")
+      await expect(page.locator("html")).toHaveAttribute("lang", "en")
+    },
+  )
+
+  test(
+    '日本語の Cookie で直接開くと <html lang="ja"> になる',
+    { tag: ["@content"], annotation: routes("/overview") },
+    async ({ page, baseURL }) => {
+      if (!baseURL) throw new Error("baseURL が設定されていない")
+      await page.context().addCookies([{ name: localeCookieName, value: "ja", url: baseURL }])
+      await page.goto("/overview")
+      await expect(page.locator("html")).toHaveAttribute("lang", "ja")
+    },
+  )
+})
+
+test(
+  "トップ: 英語の Cookie で開くと、言語のスイッチの EN が選ばれ、導入演出の領域の名前が英語",
+  { tag: ["@content", "@interaction"], annotation: routes("/") },
+  async ({ page, baseURL }) => {
+    if (!baseURL) throw new Error("baseURL が設定されていない")
+    await page.context().addCookies([{ name: localeCookieName, value: "en", url: baseURL }])
+    await page.goto("/")
+
+    await expect(page.getByRole("group", { name: en.layout.language }).getByRole("button", { name: "EN" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+    // 領域の名前は殻ではなく言語の島が描き、aria-labelledby で渡す。島が流れてくるまで待つ
+    await expect(page.getByRole("region", { name: en.intro.loading })).toBeVisible()
+  },
+)
 
 test(
   "トップ: 右上のスイッチで英語にすると、Enter の先も英語で出る",

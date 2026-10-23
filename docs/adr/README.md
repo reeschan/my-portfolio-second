@@ -57,3 +57,4 @@
 | [0031](0031-now-post-images.md) | /now の記事の画像: 記事と一緒に multipart で受け、public の Blob に置いて対応表で描く | 提案中 |
 | [0033](0033-seo-test-perspective.md) | テスト観点 seo を新しく作り、app の全ページで必須にする | 提案中 |
 | [0034](0034-intro-and-background-handoff.md) | トップの導入演出と、3D 背景への引き継ぎ | 提案中 |
+| [0035](0035-cache-components-and-prefetch.md) | ページは言語に依らない殻と言語ごとの中身に分け、Cache Components と先読みですぐ切り替える | 提案中 |

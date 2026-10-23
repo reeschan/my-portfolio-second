@@ -2,14 +2,14 @@ import { withBearerAuth } from "@/decorator/with-bearer-auth"
 import { withErrorHandling } from "@/decorator/with-error-handling"
 import { withSlackNotify } from "@/decorator/with-slack-notify"
 import { nowWriteAuth, nowWriteErrors } from "@/lib/now/auth"
+import { revalidateNowPosts } from "@/lib/now/cached"
 import { requireNowImageStore } from "@/lib/now/image-store"
 import { planImagesOrThrow, putPlannedImages, readNowPostInput, removeImagesQuietly, withImages } from "@/lib/now/input"
 import { nowPostNotification } from "@/lib/now/notify"
 import type { NowPost } from "@/lib/now/schema"
 import { requireNowStore } from "@/lib/now/store"
 
-export const runtime = "nodejs"
-// /now は毎リクエスト保存先から読む (app/now/page.tsx) ので、書き込み後のキャッシュの破棄は要らない
+// /now は記事を作り置きから読む (lib/now/cached.ts)。書き込みが成功したら、応答を返す前に作り置きを捨てる
 
 // /now に記事を 1 件足す。Authorization: Bearer <NOW_POST_TOKEN> が必要
 // 本文: { "title": "...", "body": "Markdown", "publishedAt"?: "2026-10-09T12:00:00+09:00" }
@@ -36,6 +36,8 @@ export const POST = withErrorHandling(
         await removeImagesQuietly(imageStore, placed, `POST /api/now (${id})`)
         throw error
       }
+      // 保存できた記事が次の表示に出るよう、作り置きを捨てる。検証や保存に失敗したときは呼ばない
+      revalidateNowPosts()
       return Response.json(post, { status: 201, headers: { Location: `/api/now/${post.id}` } })
     }),
   ),

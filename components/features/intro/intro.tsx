@@ -4,7 +4,6 @@ import Image from "next/image"
 import { useCallback, useEffect, useReducer, useRef, useSyncExternalStore, type MouseEvent, type ReactNode } from "react"
 import { getBackgroundReady, getServerBackgroundReady, subscribeBackgroundReady } from "@/lib/background-load"
 import { INTRO_WAIT_LIMIT_MS, IntroEvent, initialIntroProgress, introPhase, isHeadingShown, reduceIntroProgress } from "@/lib/intro/handoff"
-import { useMessages } from "@/lib/i18n/locale-context"
 import { cn } from "@/lib/utils"
 import styles from "./intro.module.css"
 
@@ -14,11 +13,13 @@ const NAME = "RYUKI TOBITA"
 type IntroProps = {
   heading: ReactNode
   entrance: ReactNode
+  // 領域の名前 (読み込み中) を持つ要素の id。トップの殻は言語を読めないので、名前は言語の島が描いた
+  // 隠れた要素から aria-labelledby で受け取る (ADR 0035)。この部品の中で Cookie は読まない
+  labelId: string
 }
 
 // トップの導入演出。背景の層に 5 秒の演出を描き、背景の準備完了との引き継ぎを決める (docs/specs/intro-handoff.md)
-export function Intro({ heading, entrance }: IntroProps) {
-  const messages = useMessages()
+export function Intro({ heading, entrance, labelId }: IntroProps) {
   // 描いた時点で背景の準備ができていれば、演出を流さずに済む (サイト内の移動で戻ったとき)
   const [progress, dispatch] = useReducer(reduceIntroProgress, getBackgroundReady(), initialIntroProgress)
   // 準備完了は、購読と取得の形のストアから受け取る。サーバーでは未完了として描き、最初の HTML と食い違わせない
@@ -87,12 +88,8 @@ export function Intro({ heading, entrance }: IntroProps) {
 
   return (
     <>
-      <section
-        className={cn(styles.intro, progress.skipped && styles.skipped)}
-        data-intro-phase={phase}
-        aria-label={messages.intro.loading}
-      >
-        {/* 飾りは読み上げず、読み込み中であることだけを aria-label で伝える */}
+      <section className={cn(styles.intro, progress.skipped && styles.skipped)} data-intro-phase={phase} aria-labelledby={labelId}>
+        {/* 飾りは読み上げない。読み込み中であることは aria-labelledby の先の要素が伝える */}
         <div className={cn(styles.blob, styles.blobA)} aria-hidden />
         <div className={cn(styles.blob, styles.blobB)} aria-hidden />
         <div className={cn(styles.blob, styles.blobC)} aria-hidden />

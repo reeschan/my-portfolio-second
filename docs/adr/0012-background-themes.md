@@ -50,3 +50,4 @@
   - `prefers-reduced-motion: reduce` では `frameloop="demand"` にし、止まった 1 枚だけを描く。間引きと PerformanceMonitor は使わない
   - 定数 (fps・dpr の上限と下限・下げる閾値) と間引きの判定は `lib/background-frame.ts` に置く
   - 新しいテーマは時間の経過 (`delta` / `clock.elapsedTime`) で動かし、フレームの数で動かさない。30fps に間引いても動く速さを保つため
+- 2026-10-23 追記 ([ADR 0034](0034-intro-and-background-handoff.md)): 3D 背景の読み込みの時刻 (全ページでブラウザの手が空いてから) と、「背景の準備完了」の知らせ、トップの導入演出からの引き継ぎは ADR 0034 で決めた

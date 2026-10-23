@@ -24,6 +24,9 @@ export const en: Messages = {
     language: "Language",
     close: "Close",
   },
+  intro: {
+    loading: "Loading",
+  },
   overview: {
     description:
       "Profile of Ryuki Tobita, a full-stack developer who builds everything from the front end to cloud infrastructure, with links to GitHub and LinkedIn and a guide to this site.",

@@ -1,4 +1,5 @@
 import { ja } from "../data/messages/ja"
+import { BACKGROUND_DPR_MIN, isSoftwareRenderer } from "../lib/background-frame"
 import { backgroundThemes as themeData, defaultBackgroundThemeId } from "../lib/background-theme"
 import { expect, routes, test } from "./fixtures"
 
@@ -55,21 +56,24 @@ test.describe("背景テーマ", () => {
     await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", second.id)
   })
 
+  // 保存済みのテーマは、既定のテーマが替わっても上書きしない (閲覧者が選んだものを尊重する)。
+  // localStorage のキーは lib/background-theme.ts の storageKey と同じ値。あちらはキーを export していないので、ここでは定数で持つ
+  const storageKey = "background-theme"
+
   test(
-    "選んだテーマは他のページに移っても、再読み込みしても残る",
-    { tag: ["@interaction", "@navigation"], annotation: routes("/theme", "/overview") },
+    "保存済みのテーマは、既定のテーマが変わってもそのまま出る",
+    { tag: ["@interaction", "@navigation"], annotation: routes("/overview", "/theme") },
     async ({ page }) => {
-      const moon = backgroundThemes.find((t) => t.id === "moonlit-sea")!
+      const theme = backgroundThemes.find((t) => t.id !== defaultBackgroundThemeId)
+      if (!theme) throw new Error("既定でない背景テーマが要る")
+      // 読み込みの最初から保存を優先することを確かめたいので、ページを開く前に保存済みの閲覧者を作る
+      await page.addInitScript(({ key, id }) => window.localStorage.setItem(key, id), { key: storageKey, id: theme.id })
+
+      await page.goto("/overview")
+      await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", theme.id)
+
       await page.goto("/theme")
-      await page.getByRole("group", { name: "背景のテーマ" }).getByText(moon.label, { exact: true }).click()
-      await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", moon.id)
-
-      await page.getByRole("link", { name: "概要", exact: true }).click()
-      await expect(page.getByRole("heading", { level: 1, name: "概要" })).toBeVisible()
-      await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", moon.id)
-
-      await page.reload()
-      await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", moon.id)
+      await expect(page.getByRole("group", { name: "背景のテーマ" }).getByRole("radio", { name: theme.label })).toBeChecked()
     },
   )
 
@@ -93,6 +97,44 @@ test.describe("背景テーマ", () => {
         .toBeGreaterThan(0)
     })
   }
+
+  // ソフトウェア描画 (GPU の無い CI など) では、全画面のシェーダーがページの操作を詰まらせないよう、
+  // 最初から最小の解像度で描く (ADR 0012)。判定はアプリと同じ isSoftwareRenderer に任せる
+  test("ソフトウェア描画では背景を最小の解像度で描く", { tag: "@performance", annotation: routes("/") }, async ({ page }) => {
+    // 待ちの上限が 15 秒 × 2 あり、GPU の無い環境ではシェーダーの準備も遅いので、テスト全体を長めにする
+    test.setTimeout(60_000)
+    await page.goto("/overview")
+    const canvas = page.locator(`${canvasSelector} canvas`)
+    await expect(canvas).toBeVisible({ timeout: 15_000 })
+
+    // page.evaluate の中では Node 側の関数を呼べないので、レンダラー名の文字列だけを返して、判定はここで行う。
+    // Chromium の RENDERER は「WebKit WebGL」としか返さないため、デバッグ用の拡張があるときだけ実際の名前も見る
+    const renderer = await page.evaluate(() => {
+      const gl = document.createElement("canvas").getContext("webgl")
+      if (!gl) return ""
+      const names = [String(gl.getParameter(gl.RENDERER))]
+      const extension = gl.getExtension("WEBGL_debug_renderer_info")
+      if (extension) names.push(String(gl.getParameter(extension.UNMASKED_RENDERER_WEBGL)))
+      return names.join(" ")
+    })
+    // 本物の GPU では解像度を最小にする分岐を通らないので、確かめようがない
+    if (!isSoftwareRenderer(renderer)) test.skip(true, "GPU のある環境ではソフトウェア描画の分岐を通らない")
+
+    // 解像度はレンダラーを知ってから切り替わるので、反映されるまで待つ。
+    // 期待値は表示の幅と最小の倍率からその都度計算する (描画バッファは端末の画素で数える)
+    await expect
+      .poll(
+        async () => {
+          const { width, clientWidth } = await canvas.evaluate((el: HTMLCanvasElement) => ({
+            width: el.width,
+            clientWidth: el.clientWidth,
+          }))
+          return Math.abs(width - clientWidth * BACKGROUND_DPR_MIN)
+        },
+        { timeout: 15_000 },
+      )
+      .toBeLessThanOrEqual(2)
+  })
 })
 
 // prefers-reduced-motion: reduce のときは、背景を動かさず止まった 1 枚だけを描く (frameloop "demand"。PBI-0025)。

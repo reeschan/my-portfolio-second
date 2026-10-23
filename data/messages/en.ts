@@ -151,12 +151,13 @@ export const en: Messages = {
     works: "See the works",
   },
   theme: {
-    description: "Choose the 3D scene that plays behind this site, from six options such as Grid, Aurora and Moonlit Sea.",
+    description: "Choose the 3D scene that plays behind this site, from seven options such as Glass, Grid and Aurora.",
     heading: "Choose a background",
     intro: "Switch the 3D scene that plays behind the whole site. Your choice is saved in this browser and used the next time you visit.",
     legend: "Background theme",
     themes: {
-      grid: { label: "Grid", description: "Floating polyhedra and particles. The default background since launch" },
+      glass: { label: "Glass", description: "Glass shards drifting through violet light and smoke" },
+      grid: { label: "Grid", description: "Floating polyhedra and particles" },
       aurora: { label: "Aurora", description: "An aurora over snowy ridges, mirrored in a frozen lake" },
       "moonlit-sea": { label: "Moonlit sea", description: "A full moon between clouds and its path across the waves" },
       "firefly-forest": { label: "Firefly forest", description: "Fireflies drifting through a misty conifer forest" },

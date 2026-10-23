@@ -21,15 +21,25 @@ Vercel の Domains は変えない (www が primary、apex は www へ 308)。�
 curl -sI https://www.reeschan.pink/career | grep -iE "^(HTTP|location)"
 curl -sI https://reeschan.pink/career | grep -iE "^(HTTP|location)"
 curl -s -A Googlebot https://www.reeschan.pink/career | grep -oE '<link rel="canonical"[^>]*>'
-curl -s https://www.reeschan.pink/sitemap.xml | grep -oE '<loc>[^<]*</loc>' | head -3
+curl -s https://www.reeschan.pink/sitemap.xml | grep -oE '<loc>https?://[^/<]+' | sort | uniq -c
 curl -s https://www.reeschan.pink/robots.txt | grep -i sitemap
-curl -s https://www.reeschan.pink/rss.xml | grep -oE '<(link|atom:link)[^>]*>[^<]*' | head -3
+curl -s https://www.reeschan.pink/rss.xml | grep -oE '<link>https?://[^/<]+|atom:link href="https?://[^/"]+' | sort | uniq -c
+```
+
+記事のページは sitemap に載っている分を 1 本ずつ見る (ステータス・canonical・`og:url`・noindex)。
+
+```bash
+for u in $(curl -s https://www.reeschan.pink/sitemap.xml | grep -oE '<loc>[^<]*/now/[^<]+' | sed 's/<loc>//'); do
+  h=$(curl -s -A Googlebot -D - "$u")
+  echo "$u | $(printf '%s' "$h" | head -1 | tr -d '\r') | $(printf '%s' "$h" | grep -oE '<link rel="canonical" href="[^"]*"') | $(printf '%s' "$h" | grep -oE '<meta property="og:url" content="[^"]*"') | noindex=$(printf '%s' "$h" | grep -ciE noindex)"
+done
 ```
 
 - 1 行目は `HTTP/1.1 200 OK` で `Location` が無い
 - 2 行目は `HTTP/1.1 308 Permanent Redirect` と `Location: https://www.reeschan.pink/career`
-- 3〜5 行目は、canonical・`<loc>`・`Sitemap:` がすべて `https://www.reeschan.pink/...` (転送されない URL を指している)
-- 6 行目は、RSS の `<link>` と `atom:link` の href がどちらも `https://www.reeschan.pink/...`
+- 3〜5 行目は、canonical・`<loc>`・`Sitemap:` がすべて `https://www.reeschan.pink/...` (転送されない URL を指している)。4 行目はホストごとの件数で、`https://www.reeschan.pink` の 1 行だけになる
+- 6 行目は、RSS のチャンネルと記事の `<link>`、`atom:link` の href のホストごとの件数で、`https://www.reeschan.pink` だけになる
+- 記事のページは、どれも `HTTP/1.1 200 OK`、canonical と `og:url` が自分自身の www の URL、`noindex=0`
 - 確かめたら、Search Console のインデックス登録レポートで「ページにリダイレクトがあります」の「修正を検証」を押し、sitemap (`https://www.reeschan.pink/sitemap.xml`) を送り直す。apex の URL は転送元としてこの項目に残るが、正常
 
 ## 比較
@@ -64,15 +74,15 @@ curl -s https://www.reeschan.pink/rss.xml | grep -oE '<(link|atom:link)[^>]*>[^<
 
 - 2026-10-22: PR #72 で develop にマージし、リリース PR #73 (develop → main、22:13 JST) で本番に出た
 - 2026-10-23: 本番で「リリース後の確かめ方」の curl を流し、受け入れ条件 1・2・6 を満たすことを確かめた。PBI を完了にした
-  - `https://www.reeschan.pink/career` は 200 (`Location` なし)。`https://reeschan.pink/career` は 308 で `Location: https://www.reeschan.pink/career`
-  - 記事のページ (`/now/0d2a5a02-…`) も www は 200、apex は同じパスの www へ 308。canonical と `og:url` は www の自分自身の URL で、noindex は無い
-  - sitemap の `<loc>` はすべて `https://www.reeschan.pink/...` (記事も載っている)。robots の `Sitemap:` は `https://www.reeschan.pink/sitemap.xml`
-  - RSS のチャンネルの `<link>`・`atom:link` の href・記事の `<link>` は、すべて `https://www.reeschan.pink/...`
+  - `https://www.reeschan.pink/career` は 200 (`Location` なし)。`https://reeschan.pink/career` は 308 で `Location: https://www.reeschan.pink/career`。canonical は `https://www.reeschan.pink/career`
+  - sitemap の `<loc>` は 11 件すべて `https://www.reeschan.pink`。robots の `Sitemap:` は `https://www.reeschan.pink/sitemap.xml`
+  - RSS は `<link>` 4 件 (チャンネル 1・記事 3) と `atom:link` 1 件が、すべて `https://www.reeschan.pink`
+  - sitemap に載っている記事 3 件は、どれも 200、canonical と `og:url` が自分自身の www の URL、noindex なし
   - Search Console の「修正を検証」と sitemap の送り直しは、持ち主が行う (この PBI の範囲外)
 
 ## 検証
 
 最後に実行したコマンドと結果。
 
-- `pnpm commit-gate` (lint・型・ユニット・必須観点・E2E)
+- `pnpm commit-gate` (lint・型・ユニット・必須観点・E2E): 2026-10-22、PR #72 のコミットの前に合格 (E2E 224 件)。RSS のホストのアサーションを足したコミット (81a8f33) の前にも合格 (E2E 224 件)
 - 本番の確かめ (上の curl): 2026-10-23 にリリース後の本番で流し、すべて期待どおり (「記録」の最後の項目)

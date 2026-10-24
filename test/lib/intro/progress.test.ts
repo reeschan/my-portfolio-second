@@ -7,11 +7,9 @@ import {
   IntroPhase,
   initialIntroProgress,
   introPhase,
-  isHeadingShown,
-  isIntroShown,
   reduceIntroProgress,
   type IntroProgress,
-} from "@/lib/intro/handoff"
+} from "@/lib/intro/progress"
 
 // 出来事を順に送ったあとの進み具合を作る
 function run(events: IntroEvent[], backgroundReadyAtMount = false): IntroProgress {
@@ -91,28 +89,28 @@ const phaseCases: PhaseCase[] = [
     expected: IntroPhase.WaitingBackground,
   },
   {
-    name: "導入演出が終わって背景の準備もできていれば引き継ぎ済み",
+    name: "導入演出が終わって背景の準備もできていれば完了",
     events: [IntroEvent.IntroEnded],
     backgroundReady: true,
-    expected: IntroPhase.HandedOff,
+    expected: IntroPhase.Complete,
   },
   {
-    name: "待ち時間が来ても、導入演出が終わっていなければ演出中",
+    name: "待ちの上限が来ても、導入演出が終わっていなければ演出中",
     events: [IntroEvent.WaitTimedOut],
     backgroundReady: false,
     expected: IntroPhase.Playing,
   },
   {
-    name: "待ち時間を過ぎたらあきらめ",
+    name: "導入演出が終わって待ちの上限を過ぎたら、背景の準備ができていなくても完了",
     events: [IntroEvent.IntroEnded, IntroEvent.WaitTimedOut],
     backgroundReady: false,
-    expected: IntroPhase.GaveUp,
+    expected: IntroPhase.Complete,
   },
   {
-    name: "あきらめたあとに準備完了になってもあきらめのまま",
+    name: "待ちの上限で完了したあとに準備完了になっても完了のまま",
     events: [IntroEvent.IntroEnded, IntroEvent.WaitTimedOut],
     backgroundReady: true,
-    expected: IntroPhase.GaveUp,
+    expected: IntroPhase.Complete,
   },
   {
     name: "演出中に入口が押されたら打ち切り",
@@ -127,28 +125,22 @@ const phaseCases: PhaseCase[] = [
     expected: IntroPhase.Dismissed,
   },
   {
-    name: "引き継ぎ済みに入口が押されたら打ち切り",
+    name: "完了のあとに入口が押されたら打ち切り",
     events: [IntroEvent.IntroEnded, IntroEvent.EntranceClicked],
     backgroundReady: true,
     expected: IntroPhase.Dismissed,
   },
   {
-    name: "あきらめに入口が押されたら打ち切り",
-    events: [IntroEvent.IntroEnded, IntroEvent.WaitTimedOut, IntroEvent.EntranceClicked],
-    backgroundReady: true,
-    expected: IntroPhase.Dismissed,
-  },
-  {
-    name: "飛ばすなら引き継ぎ済み",
+    name: "飛ばすなら、出来事が無くても最初から完了",
     skipped: true,
     backgroundReady: false,
-    expected: IntroPhase.HandedOff,
+    expected: IntroPhase.Complete,
   },
   {
     name: "飛ばすときでも入口が押されたら打ち切り",
     skipped: true,
     events: [IntroEvent.EntranceClicked],
-    backgroundReady: false,
+    backgroundReady: true,
     expected: IntroPhase.Dismissed,
   },
 ]
@@ -159,22 +151,26 @@ describe("introPhase", () => {
     expect(introPhase(progress, backgroundReady)).toBe(expected)
   })
 
-  it("背景の準備完了は進み具合に持たないので、導入演出の終わりとの前後で結果は変わらない", () => {
-    // 演出中に準備完了が届いても、進み具合はまだ空。導入演出が終わった時点で引き継ぎ済みになる
-    const readyDuringIntro = initialIntroProgress(false)
-    expect(introPhase(readyDuringIntro, true)).toBe(IntroPhase.Playing)
-    expect(introPhase(reduceIntroProgress(readyDuringIntro, IntroEvent.IntroEnded), true)).toBe(IntroPhase.HandedOff)
+  it("導入演出の終わりと背景の準備完了は、どちらが先でも完了になる", () => {
+    // 準備完了が先: 演出中に準備完了が届いても演出中のまま。演出が終わった時点で完了になる
+    const readyFirst = initialIntroProgress(false)
+    expect(introPhase(readyFirst, true)).toBe(IntroPhase.Playing)
+    expect(introPhase(reduceIntroProgress(readyFirst, IntroEvent.IntroEnded), true)).toBe(IntroPhase.Complete)
+
+    // 演出の終わりが先: 背景待ちを経て、準備完了が届いた時点で完了になる
+    const endedFirst = run([IntroEvent.IntroEnded])
+    expect(introPhase(endedFirst, false)).toBe(IntroPhase.WaitingBackground)
+    expect(introPhase(endedFirst, true)).toBe(IntroPhase.Complete)
   })
 
-  it("導入演出の終わりと待ち時間切れは、どちらが先でもあきらめになる", () => {
-    const readyLater = [
+  it("導入演出の終わりと待ちの上限は、どちらの順で届いても完了になる", () => {
+    const orders = [
       [IntroEvent.IntroEnded, IntroEvent.WaitTimedOut],
       [IntroEvent.WaitTimedOut, IntroEvent.IntroEnded],
     ]
-    for (const events of readyLater) {
-      // 待ち時間切れのフラグが立っていれば、あとから準備完了になっても状態は変わらない
-      expect(introPhase(run(events), false)).toBe(IntroPhase.GaveUp)
-      expect(introPhase(run(events), true)).toBe(IntroPhase.GaveUp)
+    for (const events of orders) {
+      expect(introPhase(run(events), false)).toBe(IntroPhase.Complete)
+      expect(introPhase(run(events), true)).toBe(IntroPhase.Complete)
     }
   })
 
@@ -193,37 +189,12 @@ describe("introPhase", () => {
     }
   })
 
-  it("引き継ぎ済みとあきらめは、同じ出来事が繰り返されても変わらない", () => {
-    const handedOff = run([IntroEvent.IntroEnded, IntroEvent.IntroEnded])
-    expect(introPhase(handedOff, true)).toBe(IntroPhase.HandedOff)
+  it("完了は、同じ出来事が繰り返されても変わらない", () => {
+    expect(introPhase(run([IntroEvent.IntroEnded, IntroEvent.IntroEnded]), true)).toBe(IntroPhase.Complete)
 
-    const gaveUp = run([IntroEvent.IntroEnded, IntroEvent.WaitTimedOut, IntroEvent.WaitTimedOut])
-    expect(introPhase(gaveUp, false)).toBe(IntroPhase.GaveUp)
-    expect(introPhase(gaveUp, true)).toBe(IntroPhase.GaveUp)
-  })
-})
-
-describe("isIntroShown", () => {
-  it.each([
-    { phase: IntroPhase.Playing, expected: true },
-    { phase: IntroPhase.WaitingBackground, expected: true },
-    { phase: IntroPhase.HandedOff, expected: false },
-    { phase: IntroPhase.GaveUp, expected: true },
-    { phase: IntroPhase.Dismissed, expected: false },
-  ])("$phase のときに $expected", ({ phase, expected }) => {
-    expect(isIntroShown(phase)).toBe(expected)
-  })
-})
-
-describe("isHeadingShown", () => {
-  it.each([
-    { phase: IntroPhase.Playing, expected: false },
-    { phase: IntroPhase.WaitingBackground, expected: false },
-    { phase: IntroPhase.HandedOff, expected: true },
-    { phase: IntroPhase.GaveUp, expected: true },
-    { phase: IntroPhase.Dismissed, expected: false },
-  ])("$phase のときに $expected", ({ phase, expected }) => {
-    expect(isHeadingShown(phase)).toBe(expected)
+    const timedOut = run([IntroEvent.IntroEnded, IntroEvent.WaitTimedOut, IntroEvent.WaitTimedOut])
+    expect(introPhase(timedOut, false)).toBe(IntroPhase.Complete)
+    expect(introPhase(timedOut, true)).toBe(IntroPhase.Complete)
   })
 })
 

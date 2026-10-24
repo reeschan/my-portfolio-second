@@ -3,32 +3,40 @@
 import Image from "next/image"
 import { useCallback, useEffect, useReducer, useRef, useSyncExternalStore, type MouseEvent, type ReactNode } from "react"
 import { getBackgroundReady, getServerBackgroundReady, subscribeBackgroundReady } from "@/lib/background-load"
-import { INTRO_WAIT_LIMIT_MS, IntroEvent, initialIntroProgress, introPhase, isHeadingShown, reduceIntroProgress } from "@/lib/intro/handoff"
+import { INTRO_WAIT_LIMIT_MS, IntroEvent, IntroPhase, initialIntroProgress, introPhase, reduceIntroProgress } from "@/lib/intro/progress"
 import { cn } from "@/lib/utils"
 import styles from "./intro.module.css"
 
-// 名前は飾り。1 文字ずつ span に分けて、CSS のアニメーションを少しずつ遅らせる
-const NAME = "RYUKI TOBITA"
+// 名前はページの見出し (h1) を兼ねる。1 文字ずつ span に分けて、CSS のアニメーションを少しずつ遅らせる。
+// 大文字は CSS で見せ、HTML の中の文字 (検索エンジンと読み上げが受け取る) は普通の書き方にする
+const NAME = "Ryuki Tobita"
 
 type IntroProps = {
-  heading: ReactNode
   entrance: ReactNode
-  // 領域の名前 (読み込み中) を持つ要素の id。トップの殻は言語を読めないので、名前は言語の島が描いた
-  // 隠れた要素から aria-labelledby で受け取る (ADR 0035)。この部品の中で Cookie は読まない
-  labelId: string
+  // 領域の名前 (読み込み中・読み込み完了) を持つ要素の id。トップの殻は言語を読めないので、名前は言語の島が
+  // 描いた隠れた要素から aria-labelledby で受け取る (ADR 0035)。この部品の中で Cookie は読まない
+  loadingLabelId: string
+  completeLabelId: string
 }
 
-// トップの導入演出。背景の層に 5 秒の演出を描き、背景の準備完了との引き継ぎを決める (docs/specs/intro-handoff.md)
-export function Intro({ heading, entrance, labelId }: IntroProps) {
+// トップの導入演出。背景の層に 5 秒の演出を描き、最後の姿のまま、背景の準備完了で COMPLETE! に替える
+// (docs/specs/intro-complete.md)
+export function Intro({ entrance, loadingLabelId, completeLabelId }: IntroProps) {
   // 描いた時点で背景の準備ができていれば、演出を流さずに済む (サイト内の移動で戻ったとき)
   const [progress, dispatch] = useReducer(reduceIntroProgress, getBackgroundReady(), initialIntroProgress)
   // 準備完了は、購読と取得の形のストアから受け取る。サーバーでは未完了として描き、最初の HTML と食い違わせない
   const backgroundReady = useSyncExternalStore(subscribeBackgroundReady, getBackgroundReady, getServerBackgroundReady)
   const phase = introPhase(progress, backgroundReady)
+  // 打ち切りも完了の姿にする。Enter で移った先から戻ると、Next.js はこの部品を状態ごと見せ直す (Activity) ので、
+  // 戻ったときに見えるのは打ち切りの姿になるため
+  const complete = phase === IntroPhase.Complete || phase === IntroPhase.Dismissed
+  // 演出を流さず、最後の姿をいきなり出す。見せ直すときは CSS のアニメーションが頭から流れ直すので、
+  // 打ち切りでも止めておく
+  const still = progress.skipped || phase === IntroPhase.Dismissed
   const waitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const clock = useRef<HTMLDivElement | null>(null)
   // 時計の終わりは animationend と finished の両方から届く。2 回目以降を捨てて、待ちの上限のタイマーを
-  // 二重に始めないようにする (docs/specs/intro-handoff.md)
+  // 二重に始めないようにする (docs/specs/intro-complete.md)
   const clockEnded = useRef(false)
 
   // 待ちの上限のタイマーを、部品が外れたときに残さない
@@ -77,7 +85,7 @@ export function Intro({ heading, entrance, labelId }: IntroProps) {
   }, [handleClockEnd])
 
   // このページでの移動になるクリックだけを拾う。修飾キー付きや左ボタン以外は新しいタブで開くなどして
-  // 元のタブは移らないので、演出を打ち切らない (docs/specs/intro-handoff.md)
+  // 元のタブは移らないので、演出を打ち切らない (docs/specs/intro-complete.md)
   const handleEntranceClick = (event: MouseEvent<HTMLDivElement>) => {
     if (event.defaultPrevented) return
     // キーボードの Enter は detail が 0 で来るので、左ボタンと同じ扱いにする
@@ -88,23 +96,28 @@ export function Intro({ heading, entrance, labelId }: IntroProps) {
 
   return (
     <>
-      <section className={cn(styles.intro, progress.skipped && styles.skipped)} data-intro-phase={phase} aria-labelledby={labelId}>
-        {/* 飾りは読み上げない。読み込み中であることは aria-labelledby の先の要素が伝える */}
+      <section
+        className={cn(styles.intro, complete && styles.complete, still && styles.still)}
+        data-intro-phase={phase}
+        aria-labelledby={complete ? completeLabelId : loadingLabelId}
+      >
+        {/* 飾りは読み上げない。読み込み中か完了かは aria-labelledby の先の要素が伝える */}
         <div className={cn(styles.blob, styles.blobA)} aria-hidden />
         <div className={cn(styles.blob, styles.blobB)} aria-hidden />
         <div className={cn(styles.blob, styles.blobC)} aria-hidden />
         <div className={cn(styles.blob, styles.blobD)} aria-hidden />
         <div className={styles.dust} aria-hidden />
 
-        <div className={styles.composition} aria-hidden>
-          <div className={styles.halo} />
-          <div className={styles.shards}>
+        {/* 見出しを含むので、構成そのものは読み上げから外さず、飾りの要素ごとに外す */}
+        <div className={styles.composition}>
+          <div className={styles.halo} aria-hidden />
+          <div className={styles.shards} aria-hidden>
             {[0, 1, 2, 3, 4, 5].map((shard) => (
               <div key={shard} className={styles.shard} />
             ))}
           </div>
 
-          <div className={styles.card}>
+          <div className={styles.card} aria-hidden>
             <div className={styles.chara}>
               {/* 目を閉じた絵を最初に見せる。LCP を遅らせないよう、こちらを先に読み込む */}
               <Image className={styles.base} src="/intro/chara-open.webp" alt="" width={600} height={800} loading="eager" />
@@ -115,29 +128,34 @@ export function Intro({ heading, entrance, labelId }: IntroProps) {
           </div>
 
           {/* カードの縁からはみ出す頭。上半分だけを前面に重ねる */}
-          <div className={styles.popout}>
+          <div className={styles.popout} aria-hidden>
             <div className={styles.chara}>
               <Image className={styles.base} src="/intro/chara-open.webp" alt="" width={600} height={800} loading="eager" />
               <Image className={cn(styles.pose, styles.closed)} src="/intro/chara-closed.webp" alt="" width={600} height={800} />
             </div>
           </div>
 
-          <div className={styles.frontGlass} />
+          <div className={styles.frontGlass} aria-hidden />
 
           <div className={styles.caption}>
-            <div className={styles.name}>
-              {Array.from(NAME).map((char, index) => (
-                <span key={`${char}-${index}`} style={{ animationDelay: `${index * 40}ms` }}>
-                  {char === " " ? "\u00A0" : char}
-                </span>
-              ))}
+            {/* 最後のコマに見えている名前と「Portfolio」を、そのままページの見出しにする。隠した文字は持たない */}
+            <h1 className={styles.title}>
+              <span className={styles.name}>
+                {Array.from(NAME).map((char, index) => (
+                  // 空白もふつうの空白のまま置く。文字は inline で並べるので詰められず、見出しの文字も「Ryuki Tobita」になる
+                  <span key={`${char}-${index}`} style={{ animationDelay: `${index * 40}ms` }}>
+                    {char}
+                  </span>
+                ))}
+              </span>
+              <span className={styles.meta}>Portfolio</span>
+            </h1>
+            <div className={styles.bar} aria-hidden />
+            {/* 状態の文字は英字の飾り。2 つを重ねて置き、完了で入れ替える */}
+            <div className={styles.status} aria-hidden>
+              <span className={styles.statusLoading}>Loading</span>
+              <span className={styles.statusComplete}>Complete!</span>
             </div>
-            <div className={styles.meta}>
-              <span>Portfolio</span>
-              <span>·</span>
-              <span>Loading</span>
-            </div>
-            <div className={styles.bar} />
           </div>
         </div>
 
@@ -146,11 +164,8 @@ export function Intro({ heading, entrance, labelId }: IntroProps) {
         <div ref={clock} className={styles.clock} aria-hidden onAnimationEnd={handleClockEnd} />
       </section>
 
-      {/* 見出しは透明のあいだも読み上げと最初の HTML に残す。見せ方だけを opacity で変える */}
-      <div className={cn(styles.heading, isHeadingShown(phase) && styles.headingShown)}>{heading}</div>
-
-      {/* 入口は演出の最中でも押せる。押されたら演出を打ち切って本文へ移る */}
-      <div className={styles.entrance} onClickCapture={handleEntranceClick}>
+      {/* 入口は演出の最中でも押せる。押されたら演出を打ち切って本文へ移る。完了したら縁の光で少し目立たせる */}
+      <div className={cn(styles.entrance, complete && styles.entranceComplete)} onClickCapture={handleEntranceClick}>
         {entrance}
       </div>
     </>

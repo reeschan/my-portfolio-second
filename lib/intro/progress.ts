@@ -1,10 +1,9 @@
-// 導入演出から 3D 背景への引き継ぎの判断 (docs/specs/intro-handoff.md)。
+// 導入演出の進み具合と、完了の判断 (docs/specs/intro-complete.md)。
 // React から切り離した純粋な関数にして、出来事の順番の組み合わせをテストで守れるようにしている
 export const IntroPhase = {
   Playing: "playing",
   WaitingBackground: "waiting-background",
-  HandedOff: "handed-off",
-  GaveUp: "gave-up",
+  Complete: "complete",
   Dismissed: "dismissed",
 } as const
 export type IntroPhase = (typeof IntroPhase)[keyof typeof IntroPhase]
@@ -24,7 +23,7 @@ export type IntroProgress = {
   entranceClicked: boolean
 }
 
-// 導入演出が終わってから、背景の準備完了を待つ上限 (ミリ秒)
+// 導入演出が終わってから、背景の準備完了を待つ上限 (ミリ秒)。過ぎたら背景なしでも完了にする
 export const INTRO_WAIT_LIMIT_MS = 8000
 
 // 描いた時点で背景の準備ができていれば (サイト内の移動で戻ったとき) 導入演出を流さない。
@@ -50,22 +49,12 @@ export function reduceIntroProgress(progress: IntroProgress, event: IntroEvent):
   }
 }
 
-// 上から順に当てはめる。あとから準備完了になっても、あきらめた状態は覆さない
+// 上から順に当てはめる。完了は、準備完了 (一度来たら戻らない) か待ちの上限のどちらかで決まるので、
+// 一度完了になったら、その後の出来事で戻ることはない
 export function introPhase(progress: IntroProgress, backgroundReady: boolean): IntroPhase {
   if (progress.entranceClicked) return IntroPhase.Dismissed
-  if (progress.skipped) return IntroPhase.HandedOff
+  if (progress.skipped) return IntroPhase.Complete
   if (!progress.introEnded) return IntroPhase.Playing
-  if (progress.waitTimedOut) return IntroPhase.GaveUp
-  if (backgroundReady) return IntroPhase.HandedOff
+  if (backgroundReady || progress.waitTimedOut) return IntroPhase.Complete
   return IntroPhase.WaitingBackground
-}
-
-// 導入演出を出したままにするか。あきらめでは、演出の最後の姿を背景として残す
-export function isIntroShown(phase: IntroPhase): boolean {
-  return phase === IntroPhase.Playing || phase === IntroPhase.WaitingBackground || phase === IntroPhase.GaveUp
-}
-
-// 見出しを出すか。背景を受け取るか、待つのをあきらめたら、何のサイトかを示す
-export function isHeadingShown(phase: IntroPhase): boolean {
-  return phase === IntroPhase.HandedOff || phase === IntroPhase.GaveUp
 }

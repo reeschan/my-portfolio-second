@@ -26,6 +26,7 @@ export const en: Messages = {
   },
   intro: {
     loading: "Loading",
+    complete: "Loaded",
   },
   overview: {
     description:

@@ -1,6 +1,7 @@
 /*
- * トップの導入演出 (docs/specs/intro-handoff.md)。5 秒の流れは CSS のアニメーションだけで作り、
- * React は「演出が終わった」の合図と、名前を 1 文字ずつ出すための分割だけを受け持つ。
+ * トップの導入演出 (docs/specs/intro-handoff.md、終わり方は docs/specs/intro-complete.md)。5 秒の流れは
+ * CSS のアニメーションだけで作り、React は「演出が終わった」の合図・名前を 1 文字ずつ出すための分割・
+ * 完了と止めた姿のクラスだけを受け持つ。
  * 色は必ずトークンから取り、この部品の層の中に閉じる (body や html には触らない)。
  */
 
@@ -21,12 +22,6 @@
   background: hsl(var(--intro-backdrop));
   color: hsl(var(--glass-highlight));
   font-family: var(--font-sans);
-  opacity: 1;
-  visibility: visible;
-  /* 引き継ぎでは透明度だけを 1 秒かけて下げ、そのあと visibility を変える。E2E が「消えた」と判定できるようにする */
-  transition:
-    opacity 1s ease,
-    visibility 0s linear;
   /* 層に押せるものは無い。後ろの頁の操作を邪魔しない */
   pointer-events: none;
 }
@@ -149,10 +144,10 @@
 
 .composition {
   position: relative;
-  width: min(34vmin + 120px, 380px, 44vh);
+  width: min(34vmin + 120px, 380px, 36vh);
   aspect-ratio: 3 / 4;
   /* 入口を下に置くぶん、構成を上へ寄せる */
-  margin-top: -8vh;
+  margin-top: -10vh;
   animation: float var(--intro-duration) cubic-bezier(0.45, 0, 0.55, 1) both;
 }
 
@@ -580,23 +575,43 @@
 .caption {
   position: absolute;
   left: 50%;
-  top: calc(100% + 52px);
+  top: calc(100% + 40px);
   translate: -50% 0;
   width: max-content;
   text-align: center;
 }
 
-.name {
+/* 見出し (h1)。名前と「Portfolio」を縦に並べ、見た目は飾りの文字のまま */
+.title {
   display: flex;
-  gap: 0.02em;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  font-weight: inherit;
+  /* 状態の文字の行を足しても入口と重ならないよう、行の高さを詰める */
+  line-height: 1.25;
+}
+
+/*
+ * 名前の行は flex にしない。flex の子は 1 つずつ別の塊になり、見出しの名前 (読み上げ・検索エンジンが受け取る文字) が
+ * 「R y u k i」のように 1 文字ずつ切れてしまうため (inline-block でも切れる)。文字は inline のまま行の中に並べる
+ */
+.name {
+  display: block;
+  white-space: nowrap;
+  text-transform: uppercase;
   font-size: clamp(18px, 2.4vmin + 8px, 30px);
   font-weight: 700;
-  letter-spacing: 0.32em;
-  text-indent: 0.32em;
+  /* 字と字のあいだは、flex で並べていたとき (字間 0.32em・各文字の字下げ 0.32em・隙間 0.02em) と同じ 0.66em。
+     字下げで右端の字間のぶんを左にも空け、中央にそろえる */
+  letter-spacing: 0.66em;
+  text-indent: 0.66em;
 }
 
 .name span {
-  display: inline-block;
+  /* inline の要素には transform が効かないので、浮かぶ動きは top で付ける */
+  display: inline;
+  position: relative;
   background: linear-gradient(180deg, hsl(var(--glass-highlight)), hsl(var(--intro-pink) / 0.55));
   background: linear-gradient(
     180deg,
@@ -613,23 +628,19 @@
   0%,
   38% {
     opacity: 0;
-    transform: translateY(70%);
+    top: 0.7em;
     filter: blur(6px);
   }
   50%,
   100% {
     opacity: 1;
-    transform: none;
+    top: 0;
     filter: blur(0);
   }
 }
 
 .meta {
   margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
   font-size: 11px;
   letter-spacing: 0.3em;
   color: hsl(var(--glass-highlight) / 0.66);
@@ -669,6 +680,7 @@
   animation: bar var(--intro-duration) cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
+/* 5 秒で 9 割まで満ちる。残りの 1 割は完了で満たし、満ちたのに LOADING のまま、という食い違いを見せない */
 @keyframes bar {
   0%,
   6% {
@@ -676,26 +688,51 @@
   }
   96%,
   100% {
-    transform: scaleX(1);
+    transform: scaleX(0.9);
   }
 }
 
-/* 最後のきらめき (読み込みが終わった合図) */
+/* 状態の文字。LOADING と COMPLETE! を同じ場所に重ねて置き、完了で入れ替える */
+.status {
+  display: grid;
+  margin-top: 12px;
+  line-height: 1.25;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  text-transform: uppercase;
+}
+
+.status > span {
+  grid-area: 1 / 1;
+}
+
+.statusLoading {
+  color: hsl(var(--glass-highlight) / 0.66);
+  animation: fade var(--intro-duration) ease-out both;
+}
+
+.statusComplete {
+  color: hsl(var(--glass-highlight));
+  font-weight: 600;
+  text-shadow: 0 0 12px hsl(var(--intro-pink) / 0.8);
+  opacity: 0;
+}
+
+/* 完了のきらめき。演出の時刻ではなく、完了したときに一度だけ光らせる */
 .flash {
   position: absolute;
   inset: 0;
   background: radial-gradient(60vmin 60vmin at 50% 45%, hsl(var(--glass-highlight) / 0.25), transparent 70%);
   opacity: 0;
-  animation: flash var(--intro-duration) ease-out both;
   pointer-events: none;
 }
 
 @keyframes flash {
-  0%,
-  92% {
+  0% {
     opacity: 0;
   }
-  96% {
+  30% {
     opacity: 1;
   }
   100% {
@@ -724,10 +761,9 @@
 
 /* ---- 状態ごとの見た目 ---- */
 
-/* 背景待ちとあきらめでは、目を閉じた絵を 4 秒おきにゆっくり瞬かせる。
+/* 背景待ちでは、目を閉じた絵を 4 秒おきにゆっくり瞬かせる。
    閉じる 0.2 秒・閉じたまま 0.15 秒・開く 0.35 秒で、残り 3.3 秒は目を開けている */
-.intro[data-intro-phase="waiting-background"] .closed,
-.intro[data-intro-phase="gave-up"] .closed {
+.intro[data-intro-phase="waiting-background"] .closed {
   animation: blink 4s linear infinite;
 }
 
@@ -745,58 +781,109 @@
   }
 }
 
-/* 引き継ぎと打ち切りでは、層を 1 秒かけて透明にし、そのあと visibility を hidden にする */
-.intro[data-intro-phase="handed-off"],
-.intro[data-intro-phase="dismissed"] {
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 1s ease,
-    visibility 0s linear 1s;
-}
-
 /*
- * 演出が終わったあとは目を開けた姿のままにする。閉じた絵のアニメーションを外して透明度 0 にするので、
- * 待ちから引き継ぎに移ってもアニメーションが頭から再生し直さず、閉じた絵がちらつかない
+ * 完了したら目を開けた姿のまま止める。閉じた絵のアニメーションを外して透明度 0 にするので、
+ * 待ちから完了に移ってもアニメーションが頭から再生し直さず、閉じた絵がちらつかない
  */
-.intro[data-intro-phase="handed-off"] .closed,
-.intro[data-intro-phase="dismissed"] .closed {
+.complete .closed {
   animation: none;
   opacity: 0;
 }
 
-/* サイト内の移動でトップに戻ったときは、最初から層を出さない (フェードもしない) */
-.intro.skipped {
-  opacity: 0;
-  visibility: hidden;
-  transition: none;
+/* 完了: 一度光り、バーの残りの 1 割を満たし、LOADING を COMPLETE! に入れ替える */
+.complete .flash {
+  opacity: 0.2;
+  animation: flash 1.2s ease-out both;
 }
 
-/* ---- 見出しと入口 ---- */
-
-.heading {
-  /* 透明でも配置は動かさない。見え方だけをふわっと変える */
-  opacity: 0;
-  transition: opacity 0.8s ease;
+.complete .bar::before {
+  transform: scaleX(1);
+  animation: bar-complete 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-.headingShown {
+@keyframes bar-complete {
+  from {
+    transform: scaleX(0.9);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.complete .statusLoading {
+  animation: none;
+  opacity: 0;
+}
+
+.complete .statusComplete {
   opacity: 1;
+  animation: status-in 0.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
+
+@keyframes status-in {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+/*
+ * 演出を流さず、最後の姿をいきなり出す (サイト内の移動で戻ったとき・打ち切ったあと)。
+ * どのアニメーションも有限の長さで both で止まるので、始まりを大きく過去にずらして終わった姿から描く。
+ * 名前の文字は style 属性で遅らせているので、!important で上書きする
+ */
+.still *,
+.still *::before,
+.still *::after {
+  animation-delay: -60s !important;
+}
+
+/* ---- 入口 ---- */
 
 .entrance {
   position: fixed;
   left: 50%;
   bottom: clamp(1rem, 4vh, 2.5rem);
   z-index: 1;
+  display: flex;
   translate: -50% 0;
+}
+
+/* 完了したら、入口の縁の光をゆっくり脈打たせて少し目立たせる。光は入口の後ろに置き、押せる範囲は変えない */
+.entranceComplete::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 9999px;
+  box-shadow:
+    0 0 0 1px hsl(var(--glass-highlight) / 0.5),
+    0 0 28px 4px hsl(var(--intro-pink) / 0.45);
+  pointer-events: none;
+  animation: entrance-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes entrance-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* 縦に短い画面では、演出を小さくして入口と重ならないようにする */
 @media (max-height: 720px) {
   .composition {
-    width: min(34vmin + 120px, 360px, 38vh);
-    margin-top: -4vh;
+    width: min(34vmin + 120px, 360px, 35vh);
+    margin-top: -7vh;
   }
 
   .caption {
@@ -815,6 +902,10 @@
     margin-top: 10px;
   }
 
+  .status {
+    margin-top: 8px;
+  }
+
   .entrance {
     bottom: 1rem;
   }
@@ -823,8 +914,8 @@
 /* 縦がかなり短い画面では、さらに演出を小さくして名前とバーを入口の上に収める */
 @media (max-height: 560px) {
   .composition {
-    width: min(34vmin + 120px, 360px, 32vh);
-    margin-top: -3vh;
+    width: min(34vmin + 120px, 360px, 25vh);
+    margin-top: -10vh;
   }
 
   .caption {
@@ -844,12 +935,20 @@
     margin-top: 6px;
   }
 
+  .status {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+
   .entrance {
     bottom: 0.5rem;
   }
 }
 
-/* 視差効果を減らす設定では演出を止め、最後の姿 (目を開けたカード・名前・満ちたバー) を出す */
+/*
+ * 視差効果を減らす設定では演出を止め、最後の姿 (目を開けたカード・名前・9 割のバー) を出す。
+ * 完了したら、動きなしで COMPLETE! と満ちたバーに替わる (光らない)
+ */
 @media (prefers-reduced-motion: reduce) {
   .intro *,
   .intro *::before,
@@ -857,9 +956,15 @@
     animation: none !important;
   }
 
-  /* 時計だけは 1 秒で終わらせ、1 秒後に導入演出が終わるようにする */
+  /* 時計だけはすぐに終わらせ、開いた瞬間に導入演出が終わったとみなす */
   .intro .clock {
-    animation: clock 1s linear both !important;
+    animation: clock 1ms linear both !important;
+  }
+
+  /* 入口は脈打たせず、縁の光を強めた姿で止める */
+  .entranceComplete::before {
+    animation: none;
+    opacity: 1;
   }
 
   .blob {
@@ -908,13 +1013,9 @@
     transform: none;
   }
 
-  .flash {
-    opacity: 0.2;
-  }
-
   .name span {
     opacity: 1;
-    transform: none;
+    top: 0;
     filter: none;
   }
 
@@ -923,6 +1024,10 @@
   }
 
   .bar::before {
+    transform: scaleX(0.9);
+  }
+
+  .complete .bar::before {
     transform: scaleX(1);
   }
 }

@@ -85,8 +85,6 @@ async function NowContent({ locale, posts, loadError }: NowContentProps) {
         <NowPostList posts={posts} />
       )}
 
-      {messages.now.languageNote && <p className="text-sm text-muted-foreground">{messages.now.languageNote}</p>}
-
       {now.availability && (
         <Callout variant="emphasis">
           <p>{now.availability}</p>

@@ -31,6 +31,19 @@ export const nowPostImageSchema = z.object({
 
 export type NowPostImage = z.infer<typeof nowPostImageSchema>
 
+// 記事の英語版 (docs/specs/now-post-english.md の「記事のデータ」)。自動訳と持ち主の訳を同じ形で持ち、
+// source で表示の断り書きを変える
+export const nowPostEnglishSchema = z.object({
+  title: z.string().min(1),
+  body: z.string().min(1),
+  // auto は LLM の自動訳、owner は持ち主が送った訳
+  source: z.enum(["auto", "owner"]),
+  // 英語版を保存した日時 (ISO 8601、UTC)
+  updatedAt: z.iso.datetime({ offset: true }),
+})
+
+export type NowPostEnglish = z.infer<typeof nowPostEnglishSchema>
+
 export type NowPost = {
   id: string
   title: string
@@ -42,6 +55,8 @@ export type NowPost = {
   updatedAt?: string
   // 画像の対応表。画像を扱う前に投稿した記事には無い
   images?: NowPostImage[]
+  // 英語版。訳す前・訳に失敗した記事には無い。表示言語が英語のときだけ使う
+  en?: NowPostEnglish
 }
 
 // 保存先から読んだ値の検証。壊れた値が 1 件あっても一覧全体を落とさないよう、呼び出し側で捨てる
@@ -52,6 +67,8 @@ export const nowPostSchema = z.object({
   publishedAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }).optional(),
   images: z.array(nowPostImageSchema).optional(),
+  // 英語版だけが壊れているときは記事を捨てず、en を外して読む。訳の不具合で記事を失わないため
+  en: nowPostEnglishSchema.optional().catch(undefined),
 })
 
 // 新しい順に並べる。同じ日時なら id で順序を固定し、表示が揺れないようにする

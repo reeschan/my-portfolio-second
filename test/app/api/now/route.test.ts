@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { POST } from "@/app/api/now/route"
 import { nowWriteErrors } from "@/lib/now/auth"
 import { nowPostsTag } from "@/lib/now/cached"
+import { autoTranslateAfterWrite } from "@/lib/now/english"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
 import {
@@ -15,6 +16,7 @@ import {
   pngFile,
   svgFile,
   token,
+  useKimiMock,
   useMemoryStoreEnv,
   useSlackMock,
 } from "./helpers"
@@ -137,6 +139,139 @@ describe("POST /api/now", () => {
     expect((await post({ title: " ", body: "b" })).status).toBe(400)
     await runAfterTasks()
     expect(slack.sent()).toEqual([])
+  })
+
+  describe("投稿のあとの自動訳 (PBI-003)", () => {
+    const stored = (id: string) => getNowStore()!.get(id)
+
+    // 自動訳のキーを設定する前の投稿。after() を流しても not-configured で何もしない (英語版なしの記事ができる)
+    async function createWithoutTranslation(title = "元の題名", body = "元の本文"): Promise<NowPost> {
+      const res = await post({ title, body })
+      expect(res.status).toBe(201)
+      const created = (await res.json()) as NowPost
+      await runAfterTasks()
+      return created
+    }
+
+    it("応答は英語版を含まず、after() を流すと source: auto の英語版を保存し、作り置きを捨てる", async () => {
+      vi.useFakeTimers({ now: new Date("2026-10-09T00:00:00Z"), toFake: ["Date"] })
+      const kimi = useKimiMock()
+      kimi.setTranslation("Recent updates", "This is the translated body.")
+
+      const res = await post({ title: "近況", body: "本文です" })
+      expect(res.status).toBe(201)
+      const created = (await res.json()) as NowPost
+      expect(created.en).toBeUndefined()
+      expect(kimi.calls()).toBe(0)
+
+      // 投稿 (POST) も作り置きを捨てるので、自動訳の分だけを見られるよう消しておく
+      revalidateTag.mockClear()
+      await runAfterTasks()
+
+      expect(kimi.calls()).toBe(1)
+      expect(await stored(created.id)).toMatchObject({
+        title: "近況",
+        body: "本文です",
+        en: { title: "Recent updates", body: "This is the translated body.", source: "auto", updatedAt: "2026-10-09T00:00:00.000Z" },
+      })
+      expect(revalidateTag).toHaveBeenCalledWith(nowPostsTag, { expire: 0 })
+    })
+
+    it("MOONSHOT_API_KEY が空なら、Kimi も Slack も呼ばず、英語版を付けない", async () => {
+      const fetchMock = vi.fn<typeof fetch>(() => Promise.reject(new Error("must not call")))
+      vi.stubGlobal("fetch", fetchMock)
+
+      const res = await post({ title: "近況", body: "本文" })
+      expect(res.status).toBe(201)
+      const created = (await res.json()) as NowPost
+
+      await runAfterTasks()
+
+      expect(fetchMock).not.toHaveBeenCalled()
+      expect((await stored(created.id))?.en).toBeUndefined()
+    })
+
+    it("Kimi が失敗すると英語版を付けず、題名と理由を含む知らせを Slack に 1 通送る", async () => {
+      const kimi = useKimiMock()
+      kimi.setReply(() => new Response("boom", { status: 500 }))
+
+      const res = await post({ title: "失敗する記事", body: "本文" })
+      expect(res.status).toBe(201)
+      const created = (await res.json()) as NowPost
+
+      await runAfterTasks()
+
+      expect(kimi.calls()).toBe(1)
+      expect((await stored(created.id))?.en).toBeUndefined()
+      const failures = kimi.sent().filter((message) => message.text.includes("英語版を作れませんでした"))
+      expect(failures).toHaveLength(1)
+      expect(failures[0]?.text).toContain("失敗する記事")
+      expect(failures[0]?.text).toContain("Moonshot request failed")
+      expect(failures[0]?.blocks[1]?.text.text).toContain("Moonshot request failed (status 500)")
+    })
+
+    it("訳している間に記事が消えたら、訳を保存しない", async () => {
+      const created = await createWithoutTranslation()
+      const kimi = useKimiMock({
+        onCall: async () => {
+          await getNowStore()!.remove(created.id)
+        },
+      })
+
+      await autoTranslateAfterWrite(created.id)
+
+      expect(kimi.calls()).toBe(1)
+      expect(await stored(created.id)).toBeNull()
+    })
+
+    it("訳している間に題名が変わったら、訳を保存しない", async () => {
+      const created = await createWithoutTranslation()
+      const kimi = useKimiMock({
+        onCall: async () => {
+          await getNowStore()!.save({ ...created, title: "訳の間に変わった題名" })
+        },
+      })
+
+      await autoTranslateAfterWrite(created.id)
+
+      expect(kimi.calls()).toBe(1)
+      expect((await stored(created.id))?.title).toBe("訳の間に変わった題名")
+      expect((await stored(created.id))?.en).toBeUndefined()
+    })
+
+    it("訳している間に本文が変わったら、訳を保存しない", async () => {
+      const created = await createWithoutTranslation()
+      const kimi = useKimiMock({
+        onCall: async () => {
+          await getNowStore()!.save({ ...created, body: "訳の間に変わった本文" })
+        },
+      })
+
+      await autoTranslateAfterWrite(created.id)
+
+      expect(kimi.calls()).toBe(1)
+      expect((await stored(created.id))?.body).toBe("訳の間に変わった本文")
+      expect((await stored(created.id))?.en).toBeUndefined()
+    })
+
+    it("訳している間に英語版が変わったら (持ち主の訳が送られた)、訳を保存しない", async () => {
+      const created = await createWithoutTranslation()
+      const owner: NowPost = {
+        ...created,
+        en: { title: "Owner title", body: "Owner body", source: "owner", updatedAt: "2026-10-09T00:00:00.000Z" },
+      }
+      await getNowStore()!.save(owner)
+      const kimi = useKimiMock({
+        onCall: async () => {
+          await getNowStore()!.save({ ...owner, en: { ...owner.en!, title: "Updated owner title" } })
+        },
+      })
+
+      await autoTranslateAfterWrite(created.id)
+
+      expect(kimi.calls()).toBe(1)
+      expect((await stored(created.id))?.en).toMatchObject({ title: "Updated owner title", source: "owner" })
+    })
   })
 
   describe("multipart の images で画像を送る (PBI-0024)", () => {

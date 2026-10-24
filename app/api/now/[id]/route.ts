@@ -1,9 +1,11 @@
+import { after } from "next/server"
 import { withBearerAuth } from "@/decorator/with-bearer-auth"
 import { withErrorHandling } from "@/decorator/with-error-handling"
 import { withSlackNotify } from "@/decorator/with-slack-notify"
 import { HttpError } from "@/lib/api/errors"
 import { nowWriteAuth, nowWriteErrors } from "@/lib/now/auth"
 import { revalidateNowPosts } from "@/lib/now/cached"
+import { autoTranslateAfterWrite, japaneseChanged } from "@/lib/now/english"
 import { getNowImageStore, requireNowImageStore } from "@/lib/now/image-store"
 import { planImagesOrThrow, putPlannedImages, readNowPostInput, removeImagesQuietly, withImages } from "@/lib/now/input"
 import { nowPostNotification } from "@/lib/now/notify"
@@ -14,7 +16,21 @@ import { requireNowStore } from "@/lib/now/store"
 
 type Context = { params: Promise<{ id: string }> }
 
+// 自動訳 (Kimi) を after() の中で走らせるので、関数の上限を既定より長くする
+export const maxDuration = 300
+
 const notFound = () => new HttpError(404, "投稿が見つかりません。")
+
+// 書き換えで英語版を引き継ぐか。題名も本文も変わっていなければ (公開日だけの変更など)、古い訳をそのまま使う
+function englishToKeep(japanese: boolean, current: NowPost): Pick<NowPost, "en"> {
+  if (japanese || !current.en) return {}
+  return { en: current.en }
+}
+
+// 外した英語版を、応答を返したあとに訳し直す。訳の間に記事が変わっていたら autoTranslateAfterWrite が保存を捨てる
+function translateAfterResponse(japanese: boolean, id: string) {
+  if (japanese) after(() => autoTranslateAfterWrite(id))
+}
 
 // /now の記事を 1 件書き換える。本文は POST と同じ形で、題名と本文はまるごと置き換える
 // publishedAt を省略したら元の公開日時のまま (並び順を変えずに誤字を直せるように)
@@ -31,6 +47,9 @@ export const PUT = withErrorHandling(
       const current = await store.get(id)
       if (!current) throw notFound()
 
+      // 題名か本文が変わったら、古い英語版を出し続けないよう、この保存では en を外して応答のあとに訳し直す
+      const japanese = japaneseChanged(current, { title, body })
+
       const plan = planImagesOrThrow({ body, uploads, previous: current.images ?? [] })
       // 置き場が要るのは新しく画像を置くときだけ (引き継ぐだけなら、本番で置き場が無くても受け付ける)
       const imageStore = plan.puts.length > 0 ? requireNowImageStore() : getNowImageStore()
@@ -43,6 +62,8 @@ export const PUT = withErrorHandling(
           body,
           publishedAt: publishedAt ? new Date(publishedAt).toISOString() : current.publishedAt,
           updatedAt: new Date().toISOString(),
+          // 題名も本文も変わっていない (公開日だけの変更など) なら、英語版はそのまま引き継ぐ
+          ...englishToKeep(japanese, current),
         },
         [...plan.kept, ...placed],
       )
@@ -58,6 +79,8 @@ export const PUT = withErrorHandling(
       await removeImagesQuietly(imageStore, plan.removed, label)
       // 直した記事が次の表示に出るよう、作り置きを捨てる。検証や保存に失敗したときは呼ばない
       revalidateNowPosts()
+      // 外した英語版を、応答を返したあとに訳し直す (題名も本文も変わっていなければ何もしない)
+      translateAfterResponse(japanese, id)
       return Response.json(post)
     }),
   ),

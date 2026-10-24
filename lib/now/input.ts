@@ -32,6 +32,26 @@ export async function readNowPostInput(request: Request): Promise<NowPostRequest
   return { ...parsed.data, uploads }
 }
 
+// PUT /api/now/[id]/en (持ち主の訳) の入力を読む。受け方は readNowPostInput と同じで、題名と本文だけを取る
+// - application/json: { title, body } (publishedAt など、ほかの項目は読み捨てる)
+// - multipart/form-data: file に Markdown のファイル、title は任意。images は受けない (画像は日本語の記事の対応表から引くため)
+export async function readNowEnglishInput(request: Request): Promise<{ title: string; body: string }> {
+  if (Number(request.headers.get("content-length") ?? 0) > maxRequestBytes) throw new HttpError(413, "リクエストが大きすぎます。")
+  if (!isMultipart(request)) return readJsonBody(request, nowPostInputSchema.pick({ title: true, body: true }), nowWriteErrors.invalid)
+
+  const form = await request.formData().catch(() => {
+    throw invalid("フォームを読めませんでした。")
+  })
+  const file = form.get("file")
+  if (!(file instanceof File)) throw invalid("file に Markdown のファイルを指定してください。")
+  if (form.getAll("images").length > 0) throw invalid("英語版には images を送れません。画像は日本語の記事の画像を使います。")
+
+  const { title, body } = splitTitle(await file.text(), textField(form, "title"), file.name)
+  const parsed = nowPostInputSchema.pick({ title: true, body: true }).safeParse({ title, body })
+  if (!parsed.success) throw new HttpError(400, nowWriteErrors.invalid, { details: { issues: parsed.error.issues } })
+  return parsed.data
+}
+
 function isMultipart(request: Request): boolean {
   return (request.headers.get("content-type") ?? "").toLowerCase().startsWith("multipart/form-data")
 }

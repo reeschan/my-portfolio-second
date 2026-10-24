@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "my-portfolio-second /now API",
-    "description": "/now の記事を投稿・更新・削除する。コレクションの変数 baseUrl (例: https://<ドメイン>) と token (NOW_POST_TOKEN) を入れてから使う。トークンは共有しないこと。詳しくは README の「Now の記事を投稿する」",
+    "description": "/now の記事を投稿・更新・削除し、英語版を付け直す・外す。コレクションの変数 baseUrl (例: https://<ドメイン>) と token (NOW_POST_TOKEN) を入れてから使う。トークンは共有しないこと。詳しくは README の「Now の記事を投稿する」",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -51,6 +51,37 @@
       "request": {
         "method": "DELETE",
         "url": "{{baseUrl}}/api/now/{{id}}"
+      }
+    },
+    {
+      "name": "英語版を自動訳で作り直す",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/now/{{id}}/en/translate",
+        "description": "変数 id の記事を今すぐ英語に訳して保存する (自分で書いた英語版があっても置き換える)。訳し終えるまで待つので数十秒〜数分かかる。200 で英語版付きの記事、502 は訳の失敗 (もう一度送る)、503 は MOONSHOT_API_KEY が無い、404 は記事が無い (訳の間に消えた)、409 は訳の間に記事が変わった (もう一度送る)。今ある記事に英語版を付けるときにも使う"
+      }
+    },
+    {
+      "name": "英語版を自分で書く (Markdown のファイルを選ぶ)",
+      "request": {
+        "method": "PUT",
+        "url": "{{baseUrl}}/api/now/{{id}}/en",
+        "description": "変数 id の記事の英語版を、自分で書いた英語で置き換える (自動訳より優先)。Body の file 行で英語の .md を選ぶ。題名は title 欄 → ファイル先頭の「# 見出し」→ ファイル名の順に決まる。本文で使える画像は日本語の記事にあるものだけ",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "file", "type": "file", "src": [] },
+            { "key": "title", "type": "text", "value": "", "disabled": true }
+          ]
+        }
+      }
+    },
+    {
+      "name": "英語版を外す",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/now/{{id}}/en",
+        "description": "変数 id の記事の英語版を外し、英語の画面でも日本語で出す。英語版が無くても 204"
       }
     }
   ]

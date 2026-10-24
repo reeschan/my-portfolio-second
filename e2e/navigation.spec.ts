@@ -137,6 +137,30 @@ test.describe("ナビゲーション (先読みが済む前に押したとき)",
   )
 })
 
+test(
+  "長いページと短いページを行き来しても、画面の幅が変わらない",
+  { tag: "@navigation", annotation: routes("/works", "/now") },
+  async ({ page }) => {
+    // スクロールバーが出入りすると画面の幅が変わり、3D 背景の canvas が大きさを変えて一瞬空になる (PBI-0033)。
+    // ヘッドレスのブラウザはスクロールバーを隠すので幅の変化そのものは起きない。
+    // そのため、スクロールバーの幅を常に取っておく指定が効いていることも確かめる
+    const viewport = async () =>
+      page.evaluate(() => ({
+        width: document.documentElement.clientWidth,
+        gutter: getComputedStyle(document.documentElement).scrollbarGutter,
+      }))
+
+    await page.goto("/works")
+    await expect(page.getByRole("heading", { level: 1, name: ja.nav.works })).toBeVisible()
+    const long = await viewport()
+    expect(long.gutter).toBe("stable")
+
+    await page.getByRole("navigation", { name: ja.layout.pages }).getByRole("link", { name: ja.nav.now, exact: true }).click()
+    await expect(page.getByRole("heading", { level: 1, name: ja.nav.now })).toBeVisible()
+    expect((await viewport()).width).toBe(long.width)
+  },
+)
+
 test.describe("ナビゲーション (現在地)", () => {
   for (const p of pages) {
     test(

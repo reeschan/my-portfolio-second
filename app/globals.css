@@ -263,6 +263,11 @@
   * {
     @apply border-border;
   }
+  /* スクロールバーの幅を常に取っておく。長いページと短いページを行き来するとスクロールバーが出入りして画面の幅が変わり、
+     3D 背景の canvas が大きさを変えて一瞬空になる (30fps に間引いて描くので、次に描くまで背景が消える)。本文も左右にずれる (PBI-0033) */
+  html {
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-background font-sans text-foreground;
   }

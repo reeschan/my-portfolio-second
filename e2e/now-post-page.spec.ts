@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright"
 import type { APIRequestContext } from "@playwright/test"
+import { en } from "../data/messages/en"
 import { ja } from "../data/messages/ja"
+import { localeCookieName } from "../lib/i18n/config"
 import { siteName, siteUrl } from "../lib/metadata"
 import { excerptOf } from "../lib/now/excerpt"
 import { nowPostPath } from "../lib/now/feed"
@@ -55,6 +57,29 @@ test.describe("Now の記事ページ", () => {
       await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new URL(nowPostPath(id), siteUrl).href)
       await expect(page.locator('meta[property="og:type"]')).toHaveAttribute("content", "article")
       await expect(page.locator('meta[property="article:published_time"]')).toHaveAttribute("content", new Date(publishedAt).toISOString())
+    },
+  )
+
+  test(
+    "英語のとき、英語版の無い記事のページは日本語の題名と本文と断り書きで出る",
+    { tag: "@content", annotation: routes("/now/[id]") },
+    async ({ page, request, baseURL }) => {
+      if (!baseURL) throw new Error("baseURL が設定されていない")
+      const title = uniqueTitle("英語版なしの記事ページ")
+      const body = "英語版の無い記事の本文です。"
+      const { id } = await createNowPost(request, { title, body })
+      // webServer には API キーが無いので自動訳は付かない。英語の Cookie で開くと「日本語のみ」の記事になる
+      await page.context().addCookies([{ name: localeCookieName, value: "en", url: baseURL }])
+
+      await page.goto(nowPostPath(id))
+      // 英語版が無いので、題名 (<title> も) は日本語のまま
+      await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible()
+      await expect(page).toHaveTitle(`${title} | ${siteName}`)
+      await expect(page.getByText(en.now.japaneseOnlyNote)).toBeVisible()
+      // 本文も日本語のまま。読み上げソフトが日本語として読めるよう、Markdown を包む要素に lang="ja" が付く
+      // (html にも lang="ja" があるので、記事の中だけを見る)
+      await expect(page.getByText(body)).toBeVisible()
+      await expect(page.locator("article [lang='ja']").filter({ hasText: body })).toHaveCount(1)
     },
   )
 

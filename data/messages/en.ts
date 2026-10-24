@@ -84,7 +84,10 @@ export const en: Messages = {
     intro: "What I'm working on right now, newest first.",
     updatedBefore: " Updated ",
     updatedAfter: "",
-    languageNote: "Posts are written in Japanese.",
+    // 英語版の無い記事は日本語のまま出す。表示の不具合と取り違えないよう、印と断り書きで日本語だと伝える
+    japaneseOnlyBadge: "In Japanese",
+    japaneseOnlyNote: "This post is available in Japanese only.",
+    machineTranslatedNote: "Machine-translated from Japanese.",
     loadError: "Couldn't load the posts. Please try again later.",
     empty: "No posts yet.",
     recent: "Recent posts",

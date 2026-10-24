@@ -20,6 +20,18 @@ describe("createMemoryStore", () => {
     expect(await store.remove("old")).toBe(false)
     expect((await store.list()).map((p) => p.id)).toEqual(["new"])
   })
+
+  it("英語版 (en) 付きの記事も、そのまま読める", async () => {
+    const store = createMemoryStore()
+    const withEnglish: NowPost = {
+      ...post("en", "2026-01-01T00:00:00.000Z"),
+      en: { title: "English title", body: "English body", source: "owner", updatedAt: "2026-02-01T00:00:00.000Z" },
+    }
+    await store.save(withEnglish)
+
+    expect(await store.get("en")).toEqual(withEnglish)
+    expect(await store.list()).toEqual([withEnglish])
+  })
 })
 
 // 本物の Upstash は呼ばない。REST API に送るコマンドと、返り値の読み方を確かめる
@@ -45,6 +57,24 @@ describe("createUpstashStore", () => {
     expect(url).toBe("https://redis.example")
     expect(init?.headers).toMatchObject({ Authorization: "Bearer tok" })
     expect(JSON.parse(init?.body as string)).toEqual(["HGETALL", "now:posts"])
+  })
+
+  it("英語版 (en) 付きの記事はそのまま読み、en だけ壊れた記事は en を外して残す", async () => {
+    const translated: NowPost = {
+      ...post("translated", "2026-01-01T00:00:00.000Z"),
+      en: { title: "English title", body: "English body", source: "auto", updatedAt: "2026-02-01T00:00:00.000Z" },
+    }
+    // 記事としては正しいが、英語版の source だけが知らない値になっている値
+    const broken = { ...post("broken", "2026-03-01T00:00:00.000Z"), en: { ...translated.en, source: "machine" } }
+    mockFetch(["translated", JSON.stringify(translated), "broken", JSON.stringify(broken)])
+
+    const posts = await createUpstashStore("https://redis.example", "tok").list()
+    expect(posts.map((p) => p.id)).toEqual(["broken", "translated"])
+    const byId = new Map(posts.map((p) => [p.id, p]))
+    expect(byId.get("translated")).toEqual(translated)
+    // 英語版だけが壊れていても記事は残し、en は無いものとして読む
+    expect(byId.get("broken")).toEqual(post("broken", "2026-03-01T00:00:00.000Z"))
+    expect(byId.get("broken")?.en).toBeUndefined()
   })
 
   it("1 件の読み出しは HGET で、ないときは null", async () => {

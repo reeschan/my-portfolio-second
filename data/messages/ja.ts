@@ -90,8 +90,10 @@ export const ja = {
     // 更新日の前後に付ける文言。日付は <time> で囲むので文言と分けて持つ
     updatedBefore: "",
     updatedAfter: "更新",
-    // 記事は日本語だけで書くので、英語のときだけ断り書きを出す
-    languageNote: "",
+    // 英語版の無い記事を英語の画面で出すときの印と断り書き。日本語の画面では出ないが、型をそろえるため置く
+    japaneseOnlyBadge: "日本語のみ",
+    japaneseOnlyNote: "この記事は日本語のみです。",
+    machineTranslatedNote: "日本語から機械翻訳しました。",
     loadError: "記事を読み込めませんでした。時間をおいて再度お試しください。",
     empty: "まだ投稿はありません。",
     recent: "最近の投稿",

@@ -1,6 +1,8 @@
 import { createNowPost, expect, nowPostToken, routes, test, uniqueTitle } from "./fixtures"
+import { en } from "../data/messages/en"
 import { ja } from "../data/messages/ja"
 import { formatJapaneseDateTime } from "../lib/format"
+import { localeCookieName } from "../lib/i18n/config"
 import { siteUrl } from "../lib/metadata"
 import { escapeXml, nowPostPath } from "../lib/now/feed"
 
@@ -27,6 +29,28 @@ test.describe("Now の記事", () => {
       await expect(card.getByText("2026年10月9日")).toBeVisible()
       // 抜粋は Markdown の記号を落とした平文
       await expect(card.getByText("近況 Next.js 16 に移行しています。")).toBeVisible()
+    },
+  )
+
+  test(
+    "英語のとき、英語版の無い記事のカードは日本語の題名と印で出る",
+    { tag: "@content", annotation: routes("/now") },
+    async ({ page, request, baseURL }) => {
+      if (!baseURL) throw new Error("baseURL が設定されていない")
+      const title = uniqueTitle("英語版なし")
+      await createNowPost(request, { title, body: "英語版のない記事の本文です。" })
+      await page.context().addCookies([{ name: localeCookieName, value: "en", url: baseURL }])
+
+      await page.goto("/now")
+      const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: title }) })
+      await expect(card).toBeVisible()
+      // 英語版が無いので、題名も抜粋も日本語のまま。読み上げの言語が分かるよう見出しに lang="ja" を付け、
+      // 英語の閲覧者には印で日本語であることを伝える
+      await expect(card.getByRole("heading", { level: 2, name: title })).toHaveAttribute("lang", "ja")
+      await expect(card.getByText("英語版のない記事の本文です。")).toHaveAttribute("lang", "ja")
+      await expect(card.getByText(en.now.japaneseOnlyBadge)).toBeVisible()
+      // 一覧の下の一律の断り書きは消えた (旧い文言は data/messages から消したので、ここにだけ残す)
+      await expect(page.getByText("Posts are written in Japanese.")).toHaveCount(0)
     },
   )
 

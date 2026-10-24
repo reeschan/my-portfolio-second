@@ -11,6 +11,7 @@ import { pageMetadata, pageTitle, siteUrl } from "@/lib/metadata"
 import { getNowPostCached } from "@/lib/now/cached"
 import { excerptOf } from "@/lib/now/excerpt"
 import { nowPostPath } from "@/lib/now/feed"
+import { localizeNowPost, NowPostNotice } from "@/lib/now/localize"
 import { blogPostingJsonLd, postDescriptionLength, serializeJsonLd } from "@/lib/now/structured-data"
 
 // 知らない id の 404 は proxy.ts が返す。殻の検証を外すかは PBI-015 で決める
@@ -30,13 +31,15 @@ type NowPostPageProps = {
   params: Promise<{ id: string }>
 }
 
-// 記事ごとの metadata。題名・説明は記事の中身から、canonical は /now/<id> から作る (ADR 0029・0030)
+// 記事ごとの metadata。題名・説明は表示言語で出し分けた記事の中身から、canonical は /now/<id> から作る (ADR 0029・0030)
 export async function generateMetadata({ params }: NowPostPageProps): Promise<Metadata> {
   const { id } = await params
   const post = await loadPost(id)
+  // 出し分けは作り置きの外で行う (作り置きの鍵を言語で増やさない。ADR 0035)
+  const localized = localizeNowPost(post, await getLocale())
   return pageMetadata({
-    title: pageTitle(post.title),
-    description: excerptOf(post.body, postDescriptionLength),
+    title: pageTitle(localized.title),
+    description: excerptOf(localized.body, postDescriptionLength),
     path: nowPostPath(post.id),
     article: { publishedTime: post.publishedAt, modifiedTime: post.updatedAt },
   })
@@ -47,29 +50,48 @@ export default async function NowPostPage({ params }: NowPostPageProps) {
   const post = await loadPost(id)
   const locale = await getLocale()
   const messages = messagesOf(locale)
+  // 題名・本文・断り書きは一覧のカードと同じ関数で決める (表示の食い違いを防ぐ)
+  const localized = localizeNowPost(post, locale)
+  // 英語の画面で日本語のまま出す記事だけ、読み上げソフトが日本語として読めるよう本文を lang="ja" で包む
+  const contentLang = locale === "en" && localized.lang === "ja" ? "ja" : undefined
 
   return (
     // 記事のページはルートグループの外 (app/now/[id]) にあり、共通のレイアウトを使えない。
     // タブ付きの見た目を保つため、ここで SiteFrame に包む (ADR 0035)
     <SiteFrame>
-      <PageTemplate title={post.title}>
+      <PageTemplate title={localized.title}>
         <article className="max-w-3xl space-y-6">
-          <p className="text-sm text-muted-foreground">
-            <time dateTime={post.publishedAt}>{formatDate(post.publishedAt, locale)}</time>
-            {/* 出し方は一覧のダイアログ (now-post-dialog.tsx) と同じ。更新日があるときだけ添える */}
-            {post.updatedAt && (
-              <>
-                {messages.now.dialogUpdatedBefore}
-                <time dateTime={post.updatedAt}>{formatDate(post.updatedAt, locale)}</time>
-                {messages.now.dialogUpdatedAfter}
-              </>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              <time dateTime={post.publishedAt}>{formatDate(post.publishedAt, locale)}</time>
+              {/* 出し方は一覧のダイアログ (now-post-dialog.tsx) と同じ。更新日があるときだけ添える */}
+              {post.updatedAt && (
+                <>
+                  {messages.now.dialogUpdatedBefore}
+                  <time dateTime={post.updatedAt}>{formatDate(post.updatedAt, locale)}</time>
+                  {messages.now.dialogUpdatedAfter}
+                </>
+              )}
+              {/* 自動訳の記事は、持ち主の英語力と取り違えないよう日付の横に断り書きを添える */}
+              {localized.notice === NowPostNotice.machineTranslated && (
+                <>
+                  {" "}
+                  <span>{messages.now.machineTranslatedNote}</span>
+                </>
+              )}
+            </p>
+            {/* 英語版が無い記事は、表示の不具合と取り違えないよう日付の下に日本語であることを断る */}
+            {localized.notice === NowPostNotice.japaneseOnly && (
+              <p className="text-sm text-muted-foreground">{messages.now.japaneseOnlyNote}</p>
             )}
-          </p>
+          </div>
 
-          {/* 題名が h1 なので、本文の # は h2 から始める */}
-          <Markdown headingStart={2} images={post.images} imageViewerTitle={messages.now.imageViewerTitle(post.title)}>
-            {post.body}
-          </Markdown>
+          <div lang={contentLang}>
+            {/* 題名が h1 なので、本文の # は h2 から始める。拡大表示の題も出し分けた題名を使う */}
+            <Markdown headingStart={2} images={post.images} imageViewerTitle={messages.now.imageViewerTitle(localized.title)}>
+              {localized.body}
+            </Markdown>
+          </div>
 
           <p>
             <Link href="/now" className="text-primary underline-offset-4 hover:underline">
@@ -82,7 +104,7 @@ export default async function NowPostPage({ params }: NowPostPageProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(blogPostingJsonLd({ post, url: new URL(nowPostPath(post.id), siteUrl).href })),
+            __html: serializeJsonLd(blogPostingJsonLd({ post, localized, url: new URL(nowPostPath(post.id), siteUrl).href })),
           }}
         />
       </PageTemplate>

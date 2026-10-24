@@ -6,7 +6,18 @@ import { POST } from "@/app/api/now/route"
 import { nowPostsTag } from "@/lib/now/cached"
 import type { NowPost } from "@/lib/now/schema"
 import { getNowStore } from "@/lib/now/store"
-import { formRequest, jsonRequest, mdFile, memoryImageStore, paramsOf, pngFile, svgFile, useMemoryStoreEnv, useSlackMock } from "../helpers"
+import {
+  formRequest,
+  jsonRequest,
+  mdFile,
+  memoryImageStore,
+  paramsOf,
+  pngFile,
+  svgFile,
+  useKimiMock,
+  useMemoryStoreEnv,
+  useSlackMock,
+} from "../helpers"
 
 // after() はリクエストの外では使えないので、渡された処理を溜めておき、テストから実行する
 const afterTasks = vi.hoisted(() => [] as (() => unknown)[])
@@ -116,6 +127,75 @@ describe("PUT /api/now/[id]", () => {
     expect((await put(original.id, { title: "t", body: "b" }, "wrong")).status).toBe(401)
     expect(await stored(original.id)).toEqual(original)
     expect(revalidateTag).not.toHaveBeenCalled()
+  })
+
+  describe("書き換えのときの英語版 (PBI-005)", () => {
+    const english = { title: "Original title", body: "Original body", source: "auto" as const, updatedAt: "2026-01-02T00:00:00.000Z" }
+
+    // POST の after() を挟まず、書き換えの分だけを見られるよう、英語版つきの記事を保存先に直接置く
+    async function saveWithEnglish(): Promise<NowPost> {
+      const post: NowPost = {
+        id: crypto.randomUUID(),
+        title: "元の題名",
+        body: "元の本文",
+        publishedAt: "2026-01-01T00:00:00.000Z",
+        en: english,
+      }
+      await getNowStore()!.save(post)
+      return post
+    }
+
+    it("本文を書き換えると、応答の記事から英語版を外し、after() で新しい自動訳を保存する", async () => {
+      const original = await saveWithEnglish()
+      const kimi = useKimiMock()
+      kimi.setTranslation("New title", "New body")
+
+      const res = await put(original.id, { title: original.title, body: "直した本文" })
+      expect(res.status).toBe(200)
+      const updated = (await res.json()) as NowPost
+      expect(updated.en).toBeUndefined()
+      expect(updated.body).toBe("直した本文")
+      // 古い英語版を出し続けないよう、保存した時点でも en は無い
+      expect((await stored(original.id))?.en).toBeUndefined()
+      expect(kimi.calls()).toBe(0)
+
+      await runAfterTasks()
+
+      expect(kimi.calls()).toBe(1)
+      expect((await stored(original.id))?.en).toMatchObject({ title: "New title", body: "New body", source: "auto" })
+    })
+
+    it("題名を書き換えても、応答の記事から英語版を外して訳し直す", async () => {
+      const original = await saveWithEnglish()
+      const kimi = useKimiMock()
+      kimi.setTranslation("Renamed title", "Translated body")
+
+      const res = await put(original.id, { title: "直した題名", body: original.body })
+      expect(((await res.json()) as NowPost).en).toBeUndefined()
+      expect(kimi.calls()).toBe(0)
+
+      await runAfterTasks()
+
+      expect(kimi.calls()).toBe(1)
+      expect((await stored(original.id))?.en).toMatchObject({ title: "Renamed title", source: "auto" })
+    })
+
+    it("公開日だけを書き換えると、英語版をそのまま残し、訳し直さない", async () => {
+      const original = await saveWithEnglish()
+      const kimi = useKimiMock()
+
+      const res = await put(original.id, { title: original.title, body: original.body, publishedAt: "2026-02-01T00:00:00Z" })
+      expect(res.status).toBe(200)
+      const updated = (await res.json()) as NowPost
+      expect(updated.publishedAt).toBe("2026-02-01T00:00:00.000Z")
+      expect(updated.en).toEqual(original.en)
+      expect((await stored(original.id))?.en).toEqual(original.en)
+
+      // after() を流しても Kimi に fetch が飛ばない (訳し直さない)
+      await runAfterTasks()
+      expect(kimi.calls()).toBe(0)
+      expect((await stored(original.id))?.en).toEqual(original.en)
+    })
   })
 
   describe("画像 (PBI-0024)", () => {

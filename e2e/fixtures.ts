@@ -37,6 +37,16 @@ export async function createNowPost(
   return (await res.json()) as { id: string }
 }
 
+// 持ち主の訳を PUT /api/now/[id]/en で仕込む。200 を確かめる (e2e/now-english.spec.ts)。
+// webServer には MOONSHOT_API_KEY を渡さないので自動訳は付かない。E2E で英語版を作る手段はこの API だけ
+export async function putNowPostEnglish(request: APIRequestContext, id: string, english: { title: string; body: string }): Promise<void> {
+  const res = await request.put(`/api/now/${id}/en`, {
+    headers: { Authorization: `Bearer ${nowPostToken}` },
+    data: english,
+  })
+  expect(res.status(), await res.text()).toBe(200)
+}
+
 // multipart で送る画像 1 枚 (e2e/now-post-page.spec.ts)
 export type NowPostImageUpload = { name: string; mimeType: string; buffer: Buffer }
 

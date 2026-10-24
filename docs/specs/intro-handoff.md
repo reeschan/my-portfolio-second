@@ -3,6 +3,7 @@
 - 日付: 2026-10-23
 - 状態: 合意済み (design-flow の grilling で持ち主と確認)
 - 用語: [CONTEXT.md](../../CONTEXT.md) の「3D 背景」「背景テーマ」「背景の準備完了」「導入演出」「引き継ぎ」「入口」
+- 2026-10-24 改訂: 導入演出の終わり方 (3D 背景への引き継ぎと、見出しを見せる段) は [intro-complete.md](intro-complete.md) で改めた。最後のコマに COMPLETE! を出して止まり、3D 背景には切り替えない。下の User Stories 5・8・9・15 と、Implementation Decisions の「引き継ぎの判断」「トップのページ」「視差効果を減らす設定」は intro-complete.md が正本になる
 
 ## Problem Statement
 

@@ -28,6 +28,7 @@ export const ja = {
   // トップの導入演出の読み上げ用。飾りの英字は読み上げず、ここだけ伝える
   intro: {
     loading: "読み込み中",
+    complete: "読み込み完了",
   },
   overview: {
     description:

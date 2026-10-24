@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
 import { Section } from "@/components/common"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { ThemePicker } from "@/components/features/theme/theme-picker"
 import { messagesOf } from "@/data/messages"
 import type { Locale } from "@/lib/i18n/config"
@@ -27,8 +27,17 @@ async function themeMetadata(locale: Locale): Promise<Metadata> {
   }
 }
 
-export default async function ThemePage() {
-  // Cookie は "use cache" の中で読めないので、外で読んだ言語を引数にして中身に渡す (ADR 0035)
+// 見出しとパネルは殻に置き、言語に依る本文だけをパネルの中で待つ (ADR 0036)
+export default function ThemePage() {
+  return (
+    <TabPageTemplate id="theme">
+      <ThemeBody />
+    </TabPageTemplate>
+  )
+}
+
+// Cookie は "use cache" の中で読めないので、外で読んだ言語を引数にして中身に渡す (ADR 0035)
+async function ThemeBody() {
   return <ThemeContent locale={await getLocale()} />
 }
 
@@ -41,11 +50,9 @@ async function ThemeContent({ locale }: { locale: Locale }) {
   const messages = messagesOf(locale)
 
   return (
-    <PageTemplate title={messages.nav.theme}>
-      <Section title={messages.theme.heading}>
-        <p className="mb-6 text-muted-foreground">{messages.theme.intro}</p>
-        <ThemePicker />
-      </Section>
-    </PageTemplate>
+    <Section title={messages.theme.heading}>
+      <p className="mb-6 text-muted-foreground">{messages.theme.intro}</p>
+      <ThemePicker />
+    </Section>
   )
 }

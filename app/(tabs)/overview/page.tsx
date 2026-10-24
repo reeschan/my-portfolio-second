@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import { cacheLife } from "next/cache"
 import { Section, TextLink } from "@/components/common"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { overviewByLocale } from "@/data/localized"
 import { profileLinks } from "@/data/overview"
 import { messagesOf } from "@/data/messages"
@@ -26,7 +26,16 @@ async function overviewMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/overview" })
 }
 
-export default async function OverviewPage() {
+// 見出しとパネルは殻に置き、言語に依る本文だけをパネルの中で待つ (ADR 0036)
+export default function OverviewPage() {
+  return (
+    <TabPageTemplate id="overview">
+      <OverviewBody />
+    </TabPageTemplate>
+  )
+}
+
+async function OverviewBody() {
   return <OverviewContent locale={await getLocale()} />
 }
 
@@ -41,7 +50,7 @@ async function OverviewContent({ locale }: { locale: Locale }) {
   const guides = pageGuides.map((guide) => ({ ...guide, label: navLabelOf(guide.href, messages.nav) }))
 
   return (
-    <PageTemplate title={messages.nav.overview}>
+    <>
       <div className="space-y-10">
         <Section title={messages.overview.profile} size="lg">
           <div className="flex flex-wrap items-center gap-5">
@@ -90,7 +99,7 @@ async function OverviewContent({ locale }: { locale: Locale }) {
       {/* 検索エンジンに、このページが持ち主のプロフィールだと伝える。Person はレイアウトの分を @id で指す (lib/structured-data.ts) */}
       {/* serializeJsonLd が < をエスケープ済み (lib/now/structured-data.ts、Next.js の JSON-LD のガイド) */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(profilePageJsonLd()) }} />
-    </PageTemplate>
+    </>
   )
 }
 

@@ -50,28 +50,34 @@ It is published on npm.
 - Folding is decided by the timeline's own width (container queries), not the viewport. Sides are logical directions, so it flips automatically for right-to-left languages
 - Only features that are Baseline widely available are used. Even Reveal keeps the content and layout intact in browsers that don't support it`,
   },
-  "pbi-orchestration-jev": {
-    title: "pbi-orchestration-jev",
+  atelier: {
+    title: "Atelier",
     description:
-      "A Claude Code skill that splits multi-file implementations into PBIs and hands them to sub-agents. A decision table picks the model, and verification commands decide pass or fail.",
-    alt: "Architecture diagram of pbi-orchestration-jev. The Claude Code orchestrator asks Jev for judgments in short text, decides the order of executors with select_model.py, hands PBIs to Codex, Antigravity and the Agent tool, and records their state under docs/pbi/ in the target repository.",
+      "A Claude Code skill (formerly pbi-orchestration-jev) that runs development as a nine-stage workflow template. By default it splits multi-file implementations into PBIs and hands them to sub-agents; a decision table picks the model, and verification commands decide pass or fail.",
+    alt: "Architecture diagram of Atelier. The Claude Code orchestrator asks Jev about PBI quality through prepare.py, picks a tier and the order of runners with select_model.py, and hands PBIs to pbi-worker (the Agent tool) or to external runners such as opencode, Codex, Antigravity and DeepSeek Harness. It verifies each PBI with verify.py and unchanged.py and records status and hand-offs under docs/pbi/ in the target repository. Runners and models, routing and workflow templates are edited as home settings in a local editor.",
     body: `# Overview
-A Claude Code skill for splitting multi-file implementations into PBIs (Product Backlog Items) and handing them to sub-agents.
+A Claude Code skill that runs development as a "workflow template". It was formerly called pbi-orchestration-jev.
+Each of nine stages (understand, design, plan, route, build, verify, review, fix, finish) is filled by a component you can swap.
+The default template splits multi-file implementations into PBIs (Product Backlog Items) and hands them to sub-agents.
 The main session acts as the orchestrator, handling drafting, model assignment, review and send-backs.
-The implementation itself is done by the Codex CLI, the Antigravity CLI and Claude Code's Agent tool.
+The implementation itself is done by opencode (DeepSeek), the Codex CLI, the Antigravity CLI, DeepSeek Harness and Claude Code's Agent tool.
 
 # Features
+- Keeps the components of each stage as data (templates), so components and templates can be swapped without editing the skill
 - Picks the model tier (haiku / sonnet / opus) from facts such as the number of changed files and a summary judgment
-- Outputs, per tier, the order of executors to try, moving on when one hits a usage limit or an error
+- Outputs, per tier, the order of runners to try, moving on when one hits a usage limit or an error
 - Runs the verification commands itself and checks each acceptance criterion one by one
 - Allows up to two send-backs, then stops and waits for the user's decision
-- Tallies tokens per model and how often the prompt cache had to be rebuilt
+- Writes a hand-off when the context grows, and resumes after /clear
+- Records every run and sums tokens, cost and results per model
+- Lets you edit runners and models, routing and templates together in a local editor
 
 # Highlights
+- The last component of every stage is a built-in or a script, so a run needs nothing beyond Claude Code
 - Model routing is decided by a decision table, not gut feeling, and is covered by tests
 - Pass or fail comes from actually running the verification commands, not from a sub-agent's report or the judgment API
 - Only text is sent to the Jev judgment API, never source code, diffs, environment variables or credentials
-- It can keep going with defaults even when Jev is unavailable`,
+- Workers end with a five-line report and keep the details in files, so the orchestrator's context stays small`,
   },
   "shared-memory": {
     title: "shared-memory",

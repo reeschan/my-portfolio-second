@@ -85,37 +85,43 @@ npm に公開している。
 - 使う CSS を Baseline で広く使える機能に絞った。Reveal だけは、対応していないブラウザでも内容と配置が崩れない`,
   },
   {
-    id: "pbi-orchestration-jev",
-    title: "pbi-orchestration-jev",
+    id: "atelier",
+    title: "Atelier",
     description:
-      "複数ファイルにまたがる実装を、PBI に分けてサブエージェントに渡す Claude Code のスキル。担当モデルは決定表で決め、合否は検証コマンドで決める。",
-    tech: ["Claude Code", "Python", "Node.js", "Codex CLI", "Antigravity CLI", "Jev API", "D2"],
+      "開発を 9 工程のワークフローテンプレートとして回す Claude Code のスキル (旧 pbi-orchestration-jev)。既定では複数ファイルの実装を PBI に分けてサブエージェントに渡し、担当モデルは決定表で、合否は検証コマンドで決める。",
+    tech: ["Claude Code", "Python", "Node.js", "opencode", "Codex CLI", "Antigravity CLI", "Jev API", "MCP", "D2"],
     repository: {
-      url: "https://github.com/reeschan/pbi-orchestration-jev",
+      url: "https://github.com/reeschan/atelier",
       visibility: "public",
     },
     architecture: {
-      light: "/works/pbi-orchestration-jev/architecture-light.svg",
-      dark: "/works/pbi-orchestration-jev/architecture-dark.svg",
-      alt: "pbi-orchestration-jev のアーキテクチャ図。Claude Code のオーケストレーターが Jev に短い文章で判断を聞き、select_model.py で実行先の順番を決めて、Codex・Antigravity・Agent ツールに PBI を渡し、対象リポジトリの docs/pbi/ に状態を記録する。",
+      light: "/works/atelier/architecture-light.svg",
+      dark: "/works/atelier/architecture-dark.svg",
+      alt: "Atelier のアーキテクチャ図。Claude Code のオーケストレーターが prepare.py で Jev に起票の質を聞き、select_model.py で段と実行先の順番を決めて、pbi-worker (Agent ツール) や opencode・Codex・Antigravity・DeepSeek Harness などの外部の実行先に PBI を渡す。検証は verify.py と unchanged.py で行い、状態と引き継ぎを対象リポジトリの docs/pbi/ に記録する。実行先とモデルの一覧・振り分け・ワークフローテンプレートは、手元のエディタでホームの設定として編集する。",
     },
     body: `# 概要
-複数ファイルにまたがる実装を、PBI (Product Backlog Item) に分けてサブエージェントに渡すための Claude Code のスキル。
+開発を「ワークフローテンプレート」として回す Claude Code のスキル。旧名は pbi-orchestration-jev。
+理解・設計・計画・振り分け・実装・検証・レビュー・差し戻し・仕上げの 9 工程それぞれに、差し替えられる部品を置く。
+既定のテンプレートでは、複数ファイルにまたがる実装を PBI (Product Backlog Item) に分けてサブエージェントに渡す。
 メインのセッションがオーケストレーターになり、起票・担当モデルの決定・レビュー・差し戻しを受け持つ。
-実装は Codex CLI、Antigravity CLI、Claude Code の Agent ツールが行う。
+実装は opencode (DeepSeek)、Codex CLI、Antigravity CLI、DeepSeek Harness、Claude Code の Agent ツールが行う。
 
 # 主な機能
+- 工程ごとの部品の並びをデータ (テンプレート) で持ち、スキルを書き換えずに部品やテンプレートを差し替えられる
 - 変更ファイル数などの事実と、要約の判定から、担当モデルの段 (haiku / sonnet / opus) を決める
 - 段ごとに、上から試す実行先の並びを出す。利用上限やエラーで使えなければ次へ移る
 - 検証コマンドを自分で実行し、受け入れ条件を 1 つずつ判定する
 - 差し戻しは 2 回まで。超えたら止めて、ユーザーの判断を待つ
-- モデル別のトークン数とプロンプトキャッシュの作り直しの回数を集計する
+- 文脈が大きくなったら引き継ぎを書き、/clear のあとに続きから再開する
+- 実行ごとの記録を残し、モデル別のトークン数・費用・合否を集計する
+- 実行先とモデルの一覧・振り分け・テンプレートを、手元のエディタでまとめて編集できる
 
 # 工夫したところ
+- どの工程も最後の部品は組み込みかスクリプトにして、Claude Code だけあれば最後まで回るようにした
 - モデルの振り分けを勘ではなく決定表で決め、テストで確かめている
 - 合否はサブエージェントの報告や判定 API の答えではなく、検証コマンドの実行結果で決める
 - 判定 API の Jev に送るのは文章だけで、ソースコード・diff・環境変数・認証情報は送らない
-- Jev が使えなくても、既定値で進められる`,
+- オーケストレーターの文脈を小さく保つため、作業者の報告は 5 行にし、詳細はファイルに置く`,
   },
   {
     id: "shared-memory",

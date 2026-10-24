@@ -53,7 +53,7 @@
 
 | 用途 | クラス | 部品 |
 | --- | --- | --- |
-| ページの見出し (h1) | `text-4xl font-bold tracking-tight` | `PageTemplate` |
+| ページの見出し (h1) | `text-4xl font-bold tracking-tight` | `TabPageTemplate`・`PageTemplate` |
 | 区切りの見出し (h2) | `text-2xl font-semibold` (大) / `text-xl font-semibold` (中) | `Section` の `size` |
 | カードの見出し (h3) | `text-lg font-semibold` または `font-medium` | 各 features の部品 |
 | 補足 | `text-sm text-muted-foreground` | — |

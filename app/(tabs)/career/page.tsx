@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { CareerTimeline } from "@/components/features/career/career-timeline"
 import { careerByLocale } from "@/data/localized"
 import { messagesOf } from "@/data/messages"
@@ -21,7 +21,16 @@ async function careerMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.career), description: messages.career.description, path: "/career" })
 }
 
-export default async function CareerPage() {
+// 見出しとパネルは殻に置き、言語に依る本文だけをパネルの中で待つ (ADR 0036)
+export default function CareerPage() {
+  return (
+    <TabPageTemplate id="career">
+      <CareerBody />
+    </TabPageTemplate>
+  )
+}
+
+async function CareerBody() {
   return <CareerContent locale={await getLocale()} />
 }
 
@@ -31,9 +40,5 @@ async function CareerContent({ locale }: { locale: Locale }) {
   "use cache"
   cacheLife("max")
   const messages = messagesOf(locale)
-  return (
-    <PageTemplate title={messages.nav.career}>
-      <CareerTimeline entries={careerByLocale[locale]} messages={messages.career} />
-    </PageTemplate>
-  )
+  return <CareerTimeline entries={careerByLocale[locale]} messages={messages.career} />
 }

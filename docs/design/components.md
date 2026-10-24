@@ -19,8 +19,8 @@ flowchart TD
 ```
 
 - 矢印の向きにだけ import してよい。逆向き (ui → common など) や features 同士の import はしない
-- ページは `PageTemplate` で包み、中身は features / common の部品を並べるだけにする
-- タブ付きのページはルートグループ `app/(tabs)/` に置き、共通のレイアウト (`SiteFrame`) がタブバーと本文の入れ物を持つ。サイト内の移動ではタブバーを描き直さない (ADR 0035)
+- ページは `TabPageTemplate` (タブ付きのページ) か `PageTemplate` (見出しがタブ名でないページ) で包み、中身は features / common の部品を並べるだけにする
+- タブ付きのページはルートグループ `app/(tabs)/` に置き、共通のレイアウト (`SiteFrame`) がタブバーと本文の入れ物を持つ。サイト内の移動ではタブバーを描き直さない (ADR 0035)。読み込み中の枠を区画ごとに出す `loading.tsx` は置かない (ADR 0036)
 - 表示する文言・数値は `data/` に置く。部品はデータを props か `data/` から受け取る
 - 文言は言語ごとに持つ (ADR 0026)。固定の文言は `data/messages/`、表示データの英語版は `data/en/` で、言語ごとの入口は `data/localized.ts`。Client Component は `useLocale()` / `useMessages()`、Server Component は `getLocale()` / `getMessages()` で今の言語を読む
 
@@ -60,8 +60,10 @@ Markdown を使わないページ (/skills・/works の一覧) の最初の読�
 | 部品 | 役割 |
 | --- | --- |
 | `SiteFrame` | タブ付きのページの共通の枠。共通のレイアウト (`app/(tabs)/layout.tsx`) が使う。タブバー・アドレスバーと本文の入れ物を持ち、表示言語は `<Suspense>` の中で読んで `LocaleProvider` で配る。サイト内の移動では描き直さない |
-| `PageTemplate` | h1 + 本文パネル。タブバーと外枠は `SiteFrame` が持つ |
-| `PanelFrameFallback` | 本文のパネルが届くまでの枠 (`aria-busy`)。言語の文言を使わない殻 |
+| `TabPageTemplate` | タブ付きのページの h1 (タブ名) + 本文パネル。見出しとパネルは殻に置き、Cookie に依る本文だけをパネルの中の `<Suspense>` で待つ (ADR 0036) |
+| `PageTemplate` | h1 + 本文パネル。見出しがタブ名でないページ (/now の記事、404) が使う。タブバーと外枠は `SiteFrame` が持つ |
+| `PanelFrameFallback` | 本文のパネルが届くまでの枠 (見出しの場所 + パネル)。言語の文言を使わない殻 |
+| `PanelBodyFallback` | パネルの中身が届くまでの線 (`aria-busy`)。`TabPageTemplate` と `PanelFrameFallback` が使う |
 | `BrowserTabs` | ブラウザ風のタブ (`nav`「ページ切り替え」、現在地に `aria-current="page"`) とアドレスバー。タブの中身は `lib/navigation.ts` |
 | `LocaleSwitch` | 右上 (アドレスバーの右端) の EN / JP スイッチ (`group`「表示言語」、選択中に `aria-pressed`)。Cookie に言語を残す (ADR 0026) |
 | `RssButton` | RSS フィードへのリンク |

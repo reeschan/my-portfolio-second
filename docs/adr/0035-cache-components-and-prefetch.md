@@ -22,7 +22,7 @@ Next.js 16.4 の Cache Components と Partial Prefetching を使うと、ビル�
   - 中身: 表示言語で描くもの。`<Suspense>` の中で Cookie から言語を読み、言語を引数にした `"use cache"` の部品で描く。先読みのページの殻 (App Shell) に入るよう `cacheLife` の `stale` を 5 分以上にする (`data/` の固定の中身は `max`)
 - **タブ付きのページはルートグループ `app/(tabs)/` に置き、タブバーとアドレスバーは共通のレイアウト (`components/layout/site-frame.tsx`) が持つ**。サイト内の移動ではタブバーを描き直さない。URL は変わらない
   - 共通のレイアウトの `<Suspense>` の中で言語を読み、`LocaleProvider` で配る (ルートのレイアウトからは外す)
-  - 本文のパネルの位置に、読み込み中の枠 (`aria-busy`) を `loading.tsx` で置く
+  - 本文のパネルの位置に、読み込み中の枠 (`aria-busy`) を `loading.tsx` で置く (ADR 0036 で置き換え。`loading.tsx` は置かず、見出しとパネルを殻に置いて、線は本文にだけ出す)
 - /now の記事は `"use cache"` と `cacheTag` で作り置きし、投稿・更新・削除の API の成功時に `revalidateTag` で作り直す。`connection()` と `no-store` は外す。保存先の失敗は作り置きしない (投げて、ページが文言を出す)
 - **旧リンクの `/now?post=<id>` の 308 と、知らない id の記事 (`/now/<id>`) の 404 は、ページの中ではなく `proxy.ts` (対象は `/now` と `/now/:id` だけ) で返す**。Partial Prefetching では、`generateStaticParams` の無い動的ルートはビルドで作る「params が未確定の殻」を先に 200 で返すので、ページの中の `permanentRedirect()`・`notFound()` では状態コードを変えられない (本番ビルドで 200 になった。開発サーバーでは 404・308 になるので気付きにくい)。`instant = false`・`connection()`・`generateStaticParams` ではどれも直らなかった
   - 記事のページの要求ごとに、proxy が保存先 (Upstash) を 1 回読んで記事の有無を確かめる。proxy は別のバンドルで `"use cache"` の作り置きと共有できないため。保存先が落ちているときは通す (本物の記事まで 404 にしない)

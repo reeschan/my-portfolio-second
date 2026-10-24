@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
-import { PageTemplate } from "@/components/layout/page-template"
+import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { WorkGallery } from "@/components/features/works/work-gallery"
 import { messagesOf } from "@/data/messages"
 import type { Locale } from "@/lib/i18n/config"
@@ -20,19 +20,11 @@ async function worksMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.works), description: messages.works.description, path: "/works" })
 }
 
-export default async function WorksPage() {
-  return <WorksContent locale={await getLocale()} />
-}
-
-// Cookie は "use cache" の外で読んで引数で渡す (cookies() はキャッシュの中で読めない。next-request-in-use-cache)
-// eslint-disable-next-line @typescript-eslint/require-await
-async function WorksContent({ locale }: { locale: Locale }) {
-  "use cache"
-  cacheLife("max")
-  const messages = messagesOf(locale)
+// 見出しとパネルは殻に置く (ADR 0036)。作品の一覧はクライアントの部品が言語を読んで描くので、本文も Cookie を読まずに殻に入る
+export default function WorksPage() {
   return (
-    <PageTemplate title={messages.nav.works}>
+    <TabPageTemplate id="works">
       <WorkGallery />
-    </PageTemplate>
+    </TabPageTemplate>
   )
 }

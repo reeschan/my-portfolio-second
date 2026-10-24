@@ -25,6 +25,7 @@
 - 2026-10-24: `pnpm format:check` は手元の Windows (`core.autocrlf=true`) で、触っていないファイルの CRLF に反応して 191 件落ちる。中身の問題ではないので、変えたファイルだけを `prettier --check` で確かめた (CI は Linux なので影響しない)
 
 - 2026-10-24: develop に先に PBI-0034 (`docs/pbi/0034-works-atelier-rename`、#85) がマージされていたので、この PBI を 0035 に付け替えた
+- 2026-10-24: PR #87 の Vercel のプレビューが `invalid_max_duration` で失敗した (このプロジェクトは Fluid compute が無効で、Hobby の上限が 60 秒)。持ち主と相談し、`vercel.json` に `"fluid": true` を足して有効にした (Hobby でも上限 300 秒)。ADR 0037 と仕様に書き足した
 
 ## 検証結果
 

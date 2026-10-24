@@ -34,7 +34,7 @@
 
 - 英語で閲覧する人が /now の記事を英語で読める。持ち主の手間は増えない
 - 記事の値に任意の `en` が増える。英語版の無い記事は今までと同じ形で、読み込みの検証は `en` だけ壊れていても記事を捨てない
-- `/api/now` の書き込みの API に `maxDuration = 300` を付ける
+- `/api/now` の書き込みの API に `maxDuration = 300` を付ける。このプロジェクトは Fluid compute が無効で Hobby の上限が 60 秒だったため (プレビューのデプロイが `invalid_max_duration` で失敗)、`vercel.json` に `"fluid": true` を足して有効にする (Hobby でも上限 300 秒。全関数が Fluid compute で動く)
 - 自動訳のプロンプトはチャットのシステムプロンプトではないので、プライバシー eval (ADR 0008) の対象外。訳の質を測る eval は作らない
 - テストでは本物の LLM を呼ばない。API の Route Handler と自動訳の部品は `fetch` をモックし、E2E は持ち主の訳を `PUT /en` で仕込む。新しい API は `api-contract` 観点の対象
 - 英語版を検索に載せたくなったら、ADR 0026 の「URL で分ける」に置き換える新しい ADR を書く

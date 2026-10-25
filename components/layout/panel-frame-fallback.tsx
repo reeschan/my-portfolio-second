@@ -15,7 +15,7 @@ export function PanelFrameFallback() {
   )
 }
 
-// パネルの中身が届くまでの線。見出しとパネルを殻に持つページは、パネルの中にこれだけを出す (ADR 0036)。
+// パネルの中身が届くまでの線。本文が殻に無いページの枠 (PanelFrameFallback) が使う (ADR 0038)。
 // 中身は控えめな線だけにする。読み込み中だと分かる程度に留め、本文の形は決めない
 export function PanelBodyFallback() {
   return (

@@ -6,7 +6,7 @@ import { expect, routes, test } from "./fixtures"
 // 3D 背景の canvas は、テーマの一覧ではなく背景の枠 (data-background-theme) の中から取る
 
 // 見出しは導入演出の最後のコマの名前と「Portfolio」
-const heading = { level: 1, name: /Ryuki Tobita\s*Portfolio/ } as const
+const heading = { level: 1, name: /Ryuki Tobita\s+Portfolio/ } as const
 
 test.describe("トップの導入演出", () => {
   // 全体の設定 (playwright.config.ts) は動きを止めているので、演出そのものを確かめるここでは戻す

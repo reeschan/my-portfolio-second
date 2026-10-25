@@ -2,9 +2,10 @@ import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
 import { Callout, TextLink } from "@/components/common"
 import { NowPostList } from "@/components/features/now/now-post-list"
+import { Localized } from "@/components/layout/localized"
 import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { now } from "@/data/now"
-import { messagesOf, type Messages } from "@/data/messages"
+import { messagesOf } from "@/data/messages"
 import { formatDate } from "@/lib/format"
 import type { Locale } from "@/lib/i18n/config"
 import { getLocale } from "@/lib/i18n/server"
@@ -26,28 +27,32 @@ async function nowMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.now), description: messages.now.description, path: "/now" })
 }
 
-// 見出しとパネルは殻に置き、言語と記事に依る本文だけをパネルの中で待つ (ADR 0036)
+// 見出しと紹介文は既定の言語で殻に置く。記事一覧は Cookie を読む前に作り置きから取る (ADR 0038)
 export default function NowPage() {
   return (
-    <TabPageTemplate id="now">
-      <NowBody />
-    </TabPageTemplate>
+    <Localized>
+      {(locale) => (
+        <TabPageTemplate id="now">
+          <NowBody locale={locale} />
+        </TabPageTemplate>
+      )}
+    </Localized>
   )
 }
 
-async function NowBody() {
-  const locale = await getLocale()
-  // 記事の読み込みはキャッシュの外で行い、失敗したときの文言はここ (上位) で決める。
+async function NowBody({ locale }: { locale: Locale }) {
+  // 記事の読み込みはキャッシュの外で行い、失敗したかどうかだけを中に渡す。
+  // 文言は描く言語の辞書から取る (日本語の失敗文言を作り置きの鍵にしない)。
   // listNowPostsCached が投げた結果は作り置きされないので、次の要求でやり直せる
-  const { posts, loadError } = await loadPosts(messagesOf(locale).now)
-  return <NowContent locale={locale} posts={posts} loadError={loadError} />
+  const { posts, failed } = await loadPosts()
+  return <NowContent locale={locale} posts={posts} failed={failed} />
 }
 
 type NowContentProps = {
   locale: Locale
   // 新しい順に並べ済みのもの (lib/now/cached.ts)
   posts: NowPost[]
-  loadError: string | null
+  failed: boolean
 }
 
 // 言語と記事の一覧を作り置きの鍵にする。記事が変われば引数が変わるので、古い中身は使われない。
@@ -56,7 +61,7 @@ type NowContentProps = {
 // 記事の作り置き (lib/now/cached.ts) と同じ 5 分に揃える。
 // "use cache" の部品は async でなければならない (Next.js の決まり) が、ここに待つ処理は無い
 // eslint-disable-next-line @typescript-eslint/require-await
-async function NowContent({ locale, posts, loadError }: NowContentProps) {
+async function NowContent({ locale, posts, failed }: NowContentProps) {
   "use cache"
   cacheLife({ stale: 300, revalidate: 300, expire: 86400 })
 
@@ -77,9 +82,9 @@ async function NowContent({ locale, posts, loadError }: NowContentProps) {
         {now.location && <>・{now.location}</>}
       </p>
 
-      {loadError ? (
+      {failed ? (
         <Callout variant="tinted">
-          <p>{loadError}</p>
+          <p>{messages.now.loadError}</p>
         </Callout>
       ) : (
         <NowPostList posts={posts} />
@@ -100,12 +105,12 @@ async function NowContent({ locale, posts, loadError }: NowContentProps) {
   )
 }
 
-// 記事を読む。保存先が落ちていても (ApiError) ページは出し、文言はここ (上位) で決める
-async function loadPosts(messages: Messages["now"]): Promise<{ posts: NowPost[]; loadError: string | null }> {
+// 記事を読む。保存先が落ちていても (ApiError) ページは出し、失敗したかどうかだけを返す
+async function loadPosts(): Promise<{ posts: NowPost[]; failed: boolean }> {
   try {
-    return { posts: await listNowPostsCached(), loadError: null }
+    return { posts: await listNowPostsCached(), failed: false }
   } catch (error) {
     console.error("Failed to load now posts", error)
-    return { posts: [], loadError: messages.loadError }
+    return { posts: [], failed: true }
   }
 }

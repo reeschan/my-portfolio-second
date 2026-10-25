@@ -60,3 +60,4 @@
 | [0035](0035-cache-components-and-prefetch.md) | ページは言語に依らない殻と言語ごとの中身に分け、Cache Components と先読みですぐ切り替える | 提案中 (読み込み中の枠は 0036 で置き換え) |
 | [0036](0036-tab-page-heading-in-shell.md) | タブ付きのページは見出しとパネルの外枠を殻に置き、読み込み中の線は本文にだけ出す | 提案中 |
 | [0037](0037-now-post-english-auto-translation.md) | /now の記事の英語版は、投稿のたびに LLM で自動で訳して記事と一緒に保存する | 提案中 |
+| [0038](0038-default-locale-shell.md) | タブ付きのページの本文は、既定の言語で殻に置く | 提案中 |

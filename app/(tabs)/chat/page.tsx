@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
+import { Localized } from "@/components/layout/localized"
 import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { ResumeChat } from "@/components/features/chat/resume-chat"
 import { messagesOf } from "@/data/messages"
@@ -20,11 +21,15 @@ async function chatMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.chat), description: messages.chat.description, path: "/chat" })
 }
 
-// 見出しとパネルは殻に置く (ADR 0036)。会話の状態と文言はクライアントの部品が持つので、本文も Cookie を読まずに殻に入る
+// 見出しと会話は既定の言語で殻に置く。文言はクライアントの部品が言語を読む (ADR 0038)
 export default function ChatPage() {
   return (
-    <TabPageTemplate id="chat">
-      <ResumeChat />
-    </TabPageTemplate>
+    <Localized>
+      {() => (
+        <TabPageTemplate id="chat">
+          <ResumeChat />
+        </TabPageTemplate>
+      )}
+    </Localized>
   )
 }

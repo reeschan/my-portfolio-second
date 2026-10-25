@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test"
 import { en } from "../data/messages/en"
 import { ja } from "../data/messages/ja"
 import { localeCookieName } from "../lib/i18n/config"
@@ -20,16 +21,24 @@ function expectNoPositivePageSignals(html: string) {
   expect(html.includes('property="og:url"'), "404 に og:url が出ている").toBe(false)
 }
 
+// og は 404 の文言に替わるが、twitter は親の題と説明を残していた (PBI-0036)。
+// 属性値のエスケープはブラウザのパーサーがほどく。文字列置換だと &amp; の順で二重にほどける
+async function expectTwitterMatchesNotFound(page: Page, html: string) {
+  expect(await metaContent(page, html, "twitter:title")).toBe(pageTitle(ja.notFound.title))
+  expect(await metaContent(page, html, "twitter:description")).toBe(ja.notFound.body)
+}
+
 test(
   "SEO: 存在しない URL は 404 で、canonical も og:url も持たず、トップ・Now・ワークへの導線がある",
   { tag: ["@seo"], annotation: routes("/") },
-  async ({ request }) => {
+  async ({ request, page }) => {
     const res = await request.get(unknownPagePath())
     expect(res.status()).toBe(404)
 
     const html = await res.text()
     expect(html).toContain(ja.notFound.heading)
     expectNoPositivePageSignals(html)
+    await expectTwitterMatchesNotFound(page, html)
     for (const href of ["/", "/now", "/works"]) {
       expect(html.includes(`href="${href}"`), `${href} への導線が無い`).toBe(true)
     }
@@ -39,7 +48,7 @@ test(
 test(
   "SEO: 知らない id の記事の URL も同じ 404 で、canonical も og:url も持たない",
   { tag: ["@seo"], annotation: routes("/now/[id]") },
-  async ({ request }) => {
+  async ({ request, page }) => {
     const res = await request.get(unknownPostPath())
     expect(res.status()).toBe(404)
 
@@ -47,6 +56,7 @@ test(
     const html = await res.text()
     expect(html).toContain(ja.notFound.heading)
     expectNoPositivePageSignals(html)
+    await expectTwitterMatchesNotFound(page, html)
   },
 )
 
@@ -67,6 +77,8 @@ test.describe("SEO: 404 をページとして開く", () => {
     // metadata が二重に混ざると title が 2 つになる。1 つだけ出ていることを見る
     await expect(page.locator("title")).toHaveCount(1)
     await expect(page).toHaveTitle(pageTitle(ja.notFound.title))
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", pageTitle(ja.notFound.title))
+    await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute("content", ja.notFound.body)
   })
 
   test(
@@ -83,6 +95,22 @@ test.describe("SEO: 404 をページとして開く", () => {
       await expect(page.getByRole("link", { name: en.notFound.now })).toHaveAttribute("href", "/now")
       await expect(page.getByRole("link", { name: en.notFound.works })).toHaveAttribute("href", "/works")
       await expect(page).toHaveTitle(pageTitle(en.notFound.title))
+      await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", pageTitle(en.notFound.title))
+      await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute("content", en.notFound.body)
     },
   )
 })
+
+// メタタグの content を取る。DOMParser は script を実行せず、属性値の参照もほどく
+async function metaContent(page: Page, html: string, name: string): Promise<string | null> {
+  return page.evaluate(
+    ({ source, metaName }) => {
+      const doc = new DOMParser().parseFromString(source, "text/html")
+      for (const el of doc.querySelectorAll("meta")) {
+        if (el.getAttribute("name") === metaName) return el.getAttribute("content")
+      }
+      return null
+    },
+    { source: html, metaName: name },
+  )
+}

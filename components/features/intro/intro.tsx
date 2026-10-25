@@ -148,6 +148,10 @@ export function Intro({ entrance, loadingLabelId, completeLabelId }: IntroProps)
                   </span>
                 ))}
               </span>
+              {/* 名前と Portfolio は縦の flex の別の子なので、境目の空白はテキストに残らず
+                  「Ryuki TobitaPortfolio」になる。読み上げと検索の文字にだけ空白を足す。
+                  sr-only は画面の流れから外れるので、縦並びの見た目は変わらない */}
+              <span className="sr-only"> </span>
               <span className={styles.meta}>Portfolio</span>
             </h1>
             <div className={styles.bar} aria-hidden />

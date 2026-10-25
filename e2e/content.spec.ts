@@ -103,6 +103,6 @@ test.describe("表示内容", () => {
 
   test("トップ: 名前と Portfolio の見出しが出る", { tag: "@content", annotation: routes("/") }, async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Ryuki Tobita\s*Portfolio/)
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Ryuki Tobita\s+Portfolio/)
   })
 })

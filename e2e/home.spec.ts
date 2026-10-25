@@ -10,7 +10,7 @@ test.describe("トップ: JS なしでも中身が出る", () => {
 
   test("JS を切っても見出しと「Enter」のリンクが見える", { tag: ["@content", "@smoke"], annotation: routes("/") }, async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByRole("heading", { level: 1, name: /Ryuki Tobita\s*Portfolio/ })).toBeVisible()
+    await expect(page.getByRole("heading", { level: 1, name: /Ryuki Tobita\s+Portfolio/ })).toBeVisible()
     await expect(page.getByRole("link", { name: "Enter" })).toHaveAttribute("href", "/overview")
   })
 })
@@ -21,7 +21,7 @@ test.describe("トップ: 視差効果を減らす設定", () => {
 
   test("視差効果を減らす設定では見出しの文字に演出が付かない", { tag: ["@a11y"], annotation: routes("/") }, async ({ page }) => {
     await page.goto("/")
-    const heading = page.getByRole("heading", { level: 1, name: /Ryuki Tobita\s*Portfolio/ })
+    const heading = page.getByRole("heading", { level: 1, name: /Ryuki Tobita\s+Portfolio/ })
     await expect(heading).toBeVisible()
     // 名前は 1 文字ずつ浮かぶので、見出しの中のすべての要素にアニメーションが付いていないことを見る
     const animationNames = await heading.evaluate((el) =>

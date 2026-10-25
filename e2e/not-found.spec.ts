@@ -20,6 +20,12 @@ function expectNoPositivePageSignals(html: string) {
   expect(html.includes('property="og:url"'), "404 に og:url が出ている").toBe(false)
 }
 
+// og は 404 の文言に替わるが、twitter は親の題と説明を残していた (PBI-0036)
+function expectTwitterMatchesNotFound(html: string) {
+  expect(metaContent(html, "twitter:title")).toBe(pageTitle(ja.notFound.title))
+  expect(metaContent(html, "twitter:description")).toBe(ja.notFound.body)
+}
+
 test(
   "SEO: 存在しない URL は 404 で、canonical も og:url も持たず、トップ・Now・ワークへの導線がある",
   { tag: ["@seo"], annotation: routes("/") },
@@ -30,6 +36,7 @@ test(
     const html = await res.text()
     expect(html).toContain(ja.notFound.heading)
     expectNoPositivePageSignals(html)
+    expectTwitterMatchesNotFound(html)
     for (const href of ["/", "/now", "/works"]) {
       expect(html.includes(`href="${href}"`), `${href} への導線が無い`).toBe(true)
     }
@@ -47,6 +54,7 @@ test(
     const html = await res.text()
     expect(html).toContain(ja.notFound.heading)
     expectNoPositivePageSignals(html)
+    expectTwitterMatchesNotFound(html)
   },
 )
 
@@ -67,6 +75,8 @@ test.describe("SEO: 404 をページとして開く", () => {
     // metadata が二重に混ざると title が 2 つになる。1 つだけ出ていることを見る
     await expect(page.locator("title")).toHaveCount(1)
     await expect(page).toHaveTitle(pageTitle(ja.notFound.title))
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", pageTitle(ja.notFound.title))
+    await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute("content", ja.notFound.body)
   })
 
   test(
@@ -83,6 +93,33 @@ test.describe("SEO: 404 をページとして開く", () => {
       await expect(page.getByRole("link", { name: en.notFound.now })).toHaveAttribute("href", "/now")
       await expect(page.getByRole("link", { name: en.notFound.works })).toHaveAttribute("href", "/works")
       await expect(page).toHaveTitle(pageTitle(en.notFound.title))
+      await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", pageTitle(en.notFound.title))
+      await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute("content", en.notFound.body)
     },
   )
 })
+
+// メタタグの content を取る。属性の並びと、アポストロフィのエスケープは応答によって変わる
+function metaContent(html: string, name: string): string | null {
+  const tags = html.match(/<meta\b[^>]*>/gi) ?? []
+  for (const tag of tags) {
+    if (attr(tag, "name") !== name) continue
+    const content = attr(tag, "content")
+    return content === null ? null : decodeMeta(content)
+  }
+  return null
+}
+
+function attr(tag: string, name: string): string | null {
+  const match = tag.match(new RegExp(`\\b${name}="([^"]*)"`))
+  return match?.[1] ?? null
+}
+
+function decodeMeta(value: string): string {
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&#x27;", "'")
+    .replaceAll("&#39;", "'")
+    .replaceAll("&apos;", "'")
+    .replaceAll("&quot;", '"')
+}

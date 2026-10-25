@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
+import { Localized } from "@/components/layout/localized"
 import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { SkillsVisualization } from "@/components/features/skills/skills-visualization"
 import { messagesOf } from "@/data/messages"
@@ -20,11 +21,15 @@ async function skillsMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.skills), description: messages.skills.description, path: "/skills" })
 }
 
-// 見出しとパネルは殻に置く (ADR 0036)。グラフと表はクライアントの部品が言語を読んで描くので、本文も Cookie を読まずに殻に入る
+// 見出しとグラフは既定の言語で殻に置く。グラフと表はクライアントの部品が言語を読む (ADR 0038)
 export default function SkillsPage() {
   return (
-    <TabPageTemplate id="skills">
-      <SkillsVisualization />
-    </TabPageTemplate>
+    <Localized>
+      {() => (
+        <TabPageTemplate id="skills">
+          <SkillsVisualization />
+        </TabPageTemplate>
+      )}
+    </Localized>
   )
 }

@@ -5,6 +5,7 @@ import { Markdown } from "@/components/common/markdown"
 import { PageTemplate } from "@/components/layout/page-template"
 import { SiteFrame } from "@/components/layout/site-frame"
 import { messagesOf } from "@/data/messages"
+import { LocaleProvider } from "@/lib/i18n/locale-context"
 import { formatDate } from "@/lib/format"
 import { getLocale } from "@/lib/i18n/server"
 import { pageMetadata, pageTitle, siteUrl } from "@/lib/metadata"
@@ -55,59 +56,62 @@ export default async function NowPostPage({ params }: NowPostPageProps) {
   // 英語の画面で日本語のまま出す記事だけ、読み上げソフトが日本語として読めるよう本文を lang="ja" で包む
   const contentLang = locale === "en" && localized.lang === "ja" ? "ja" : undefined
 
+  // 記事のページはルートグループの外 (app/now/[id]) にあり、共通のレイアウトを使えない。
+  // タブ付きの見た目を保つため、ここで SiteFrame に包む (ADR 0035)。
+  // タブバーだけが Cookie を待つので、画像の拡大表示などのクライアントの部品にはここで言語を配る (ADR 0038)
   return (
-    // 記事のページはルートグループの外 (app/now/[id]) にあり、共通のレイアウトを使えない。
-    // タブ付きの見た目を保つため、ここで SiteFrame に包む (ADR 0035)
     <SiteFrame>
-      <PageTemplate title={localized.title}>
-        <article className="max-w-3xl space-y-6">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">
-              <time dateTime={post.publishedAt}>{formatDate(post.publishedAt, locale)}</time>
-              {/* 出し方は一覧のダイアログ (now-post-dialog.tsx) と同じ。更新日があるときだけ添える */}
-              {post.updatedAt && (
-                <>
-                  {messages.now.dialogUpdatedBefore}
-                  <time dateTime={post.updatedAt}>{formatDate(post.updatedAt, locale)}</time>
-                  {messages.now.dialogUpdatedAfter}
-                </>
+      <LocaleProvider locale={locale}>
+        <PageTemplate title={localized.title}>
+          <article className="max-w-3xl space-y-6">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">
+                <time dateTime={post.publishedAt}>{formatDate(post.publishedAt, locale)}</time>
+                {/* 出し方は一覧のダイアログ (now-post-dialog.tsx) と同じ。更新日があるときだけ添える */}
+                {post.updatedAt && (
+                  <>
+                    {messages.now.dialogUpdatedBefore}
+                    <time dateTime={post.updatedAt}>{formatDate(post.updatedAt, locale)}</time>
+                    {messages.now.dialogUpdatedAfter}
+                  </>
+                )}
+                {/* 自動訳の記事は、持ち主の英語力と取り違えないよう日付の横に断り書きを添える */}
+                {localized.notice === NowPostNotice.machineTranslated && (
+                  <>
+                    {" "}
+                    <span>{messages.now.machineTranslatedNote}</span>
+                  </>
+                )}
+              </p>
+              {/* 英語版が無い記事は、表示の不具合と取り違えないよう日付の下に日本語であることを断る */}
+              {localized.notice === NowPostNotice.japaneseOnly && (
+                <p className="text-sm text-muted-foreground">{messages.now.japaneseOnlyNote}</p>
               )}
-              {/* 自動訳の記事は、持ち主の英語力と取り違えないよう日付の横に断り書きを添える */}
-              {localized.notice === NowPostNotice.machineTranslated && (
-                <>
-                  {" "}
-                  <span>{messages.now.machineTranslatedNote}</span>
-                </>
-              )}
+            </div>
+
+            <div lang={contentLang}>
+              {/* 題名が h1 なので、本文の # は h2 から始める。拡大表示の題も出し分けた題名を使う */}
+              <Markdown headingStart={2} images={post.images} imageViewerTitle={messages.now.imageViewerTitle(localized.title)}>
+                {localized.body}
+              </Markdown>
+            </div>
+
+            <p>
+              <Link href="/now" className="text-primary underline-offset-4 hover:underline">
+                {messages.now.backToList}
+              </Link>
             </p>
-            {/* 英語版が無い記事は、表示の不具合と取り違えないよう日付の下に日本語であることを断る */}
-            {localized.notice === NowPostNotice.japaneseOnly && (
-              <p className="text-sm text-muted-foreground">{messages.now.japaneseOnlyNote}</p>
-            )}
-          </div>
+          </article>
 
-          <div lang={contentLang}>
-            {/* 題名が h1 なので、本文の # は h2 から始める。拡大表示の題も出し分けた題名を使う */}
-            <Markdown headingStart={2} images={post.images} imageViewerTitle={messages.now.imageViewerTitle(localized.title)}>
-              {localized.body}
-            </Markdown>
-          </div>
-
-          <p>
-            <Link href="/now" className="text-primary underline-offset-4 hover:underline">
-              {messages.now.backToList}
-            </Link>
-          </p>
-        </article>
-
-        {/* 検索エンジンに記事の構造を渡す。serializeJsonLd が < をエスケープ済み (lib/now/structured-data.ts) */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(blogPostingJsonLd({ post, localized, url: new URL(nowPostPath(post.id), siteUrl).href })),
-          }}
-        />
-      </PageTemplate>
+          {/* 検索エンジンに記事の構造を渡す。serializeJsonLd が < をエスケープ済み (lib/now/structured-data.ts) */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: serializeJsonLd(blogPostingJsonLd({ post, localized, url: new URL(nowPostPath(post.id), siteUrl).href })),
+            }}
+          />
+        </PageTemplate>
+      </LocaleProvider>
     </SiteFrame>
   )
 }

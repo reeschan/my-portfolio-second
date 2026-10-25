@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { cacheLife } from "next/cache"
 import { Section } from "@/components/common"
+import { Localized } from "@/components/layout/localized"
 import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { ThemePicker } from "@/components/features/theme/theme-picker"
 import { messagesOf } from "@/data/messages"
@@ -27,18 +28,17 @@ async function themeMetadata(locale: Locale): Promise<Metadata> {
   }
 }
 
-// 見出しとパネルは殻に置き、言語に依る本文だけをパネルの中で待つ (ADR 0036)
+// 見出しと本文は既定の言語で殻に置く。Cookie の言語が違えば同じ木を描き直す (ADR 0038)
 export default function ThemePage() {
   return (
-    <TabPageTemplate id="theme">
-      <ThemeBody />
-    </TabPageTemplate>
+    <Localized>
+      {(locale) => (
+        <TabPageTemplate id="theme">
+          <ThemeContent locale={locale} />
+        </TabPageTemplate>
+      )}
+    </Localized>
   )
-}
-
-// Cookie は "use cache" の中で読めないので、外で読んだ言語を引数にして中身に渡す (ADR 0035)
-async function ThemeBody() {
-  return <ThemeContent locale={await getLocale()} />
 }
 
 // 言語ごとに作り置きし、先読みのページの殻 (App Shell) に入れる。選んだテーマはクライアントの部品が持つので、

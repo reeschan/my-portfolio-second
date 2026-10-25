@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import { cacheLife } from "next/cache"
 import { Section, TextLink } from "@/components/common"
+import { Localized } from "@/components/layout/localized"
 import { TabPageTemplate } from "@/components/layout/tab-page-template"
 import { overviewByLocale } from "@/data/localized"
 import { profileLinks } from "@/data/overview"
@@ -26,17 +27,17 @@ async function overviewMetadata(locale: Locale): Promise<Metadata> {
   return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/overview" })
 }
 
-// 見出しとパネルは殻に置き、言語に依る本文だけをパネルの中で待つ (ADR 0036)
+// 見出しと本文は既定の言語で殻に置く。Cookie の言語が違えば同じ木を描き直す (ADR 0038)
 export default function OverviewPage() {
   return (
-    <TabPageTemplate id="overview">
-      <OverviewBody />
-    </TabPageTemplate>
+    <Localized>
+      {(locale) => (
+        <TabPageTemplate id="overview">
+          <OverviewContent locale={locale} />
+        </TabPageTemplate>
+      )}
+    </Localized>
   )
-}
-
-async function OverviewBody() {
-  return <OverviewContent locale={await getLocale()} />
 }
 
 // Cookie は "use cache" の外で読んで引数で渡す (cookies() はキャッシュの中で読めない。next-request-in-use-cache)

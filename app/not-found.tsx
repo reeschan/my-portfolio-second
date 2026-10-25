@@ -8,7 +8,7 @@ import { SiteFrame } from "@/components/layout/site-frame"
 import { messagesOf } from "@/data/messages"
 import type { Locale } from "@/lib/i18n/config"
 import { getLocale } from "@/lib/i18n/server"
-import { pageTitle } from "@/lib/metadata"
+import { ogImagePath, pageTitle } from "@/lib/metadata"
 
 export async function generateMetadata(): Promise<Metadata> {
   return notFoundMetadata(await getLocale())
@@ -29,6 +29,14 @@ async function notFoundMetadata(locale: Locale): Promise<Metadata> {
     alternates: { canonical: null },
     // openGraph は親と浅く混ざるので、url を消すには丸ごと置き換える。url: null で og:url を出さない
     openGraph: { title: pageTitle(messages.notFound.title), description: messages.notFound.body, url: null },
+    // twitter も親と浅く混ざる。題と説明だけだとカードの形が落ちるので、親と同じ形で置き換える。
+    // 置き換えないと、トップの題と説明が 404 に残る
+    twitter: {
+      card: "summary_large_image",
+      title: pageTitle(messages.notFound.title),
+      description: messages.notFound.body,
+      images: [ogImagePath],
+    },
     // 404 は索引に載せない。Next.js も 404 には noindex を足すが、意図をコードにも残しておく
     robots: { index: false, follow: true },
   }

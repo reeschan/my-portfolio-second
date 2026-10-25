@@ -19,6 +19,7 @@ PBI: [PBI.md](PBI.md)
 - 2026-10-25: 本番 (https://www.reeschan.pink) を Cookie 無しの通常の UA で取得した。タブ付きのページはどれも、本文が `<div hidden id="S:">` の中だけにある。`/overview` と `/career` はタブバーと同じ穴に本文が入り、`/works` と `/now` はパネル内の `<Suspense>` がもう一段の穴を作っている。`/skills` は本文がタブバーと同じ穴に入るが、その穴も `hidden` なのでクローラーは読めない。原因は `SiteFrame` がページ全体を Cookie の `<Suspense>` で包んでいること。`use cache` の中身も、Cookie を読んでから描くとその殻に入らない (Next.js の caching の説明どおり、fallback だけが殻に残る)
 - 2026-10-25: トップの h1 は `.title` が縦の flex で、名前と `Portfolio` が別の子なので、テキストとしては空白が消える。見た目を変えずに空白を足すには、画面に出ない文字の空白を 1 つ置く。自己紹介の一行は、導入演出のキャプションが名前・Portfolio・状態の文字で埋まっているので足さない
 - 2026-10-25: 404 の `generateMetadata` は `openGraph` を丸ごと置き換えているが `twitter` を渡していない。親の twitter の題と説明が残る
+- 2026-10-25: E2E の HTML の切り出しを正規表現からやめた。CodeQL が script の除去と `&amp;` の置換を指摘したため、ブラウザの `DOMParser` で読む。script は実行しない
 
 ## 検証
 

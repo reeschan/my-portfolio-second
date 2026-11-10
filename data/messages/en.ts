@@ -2,7 +2,8 @@
 import type { Messages } from "./ja"
 
 export const en: Messages = {
-  // 検索結果と OGP に出すサイトの説明。ページごとの説明がないトップで使う
+  // 検索結果と OGP に出すサイトの説明。ページが自分の説明を持たないときの既定
+  // (トップは概要のページで、自分の説明 (overview.description) を持つ)
   site: {
     description:
       "Portfolio of Ryuki Tobita, a full-stack developer who builds everything from the frontend to cloud infrastructure. Career, skills, and works, plus an AI chat that answers questions about my career.",
@@ -23,10 +24,6 @@ export const en: Messages = {
     rssTitle: "Subscribe to the RSS feed",
     language: "Language",
     close: "Close",
-  },
-  intro: {
-    loading: "Loading",
-    complete: "Loaded",
   },
   overview: {
     description:

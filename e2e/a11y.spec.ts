@@ -5,7 +5,7 @@ import { expect, pages, routes, test } from "./fixtures"
 const failOn = ["critical", "serious"]
 
 test.describe("アクセシビリティ (axe)", () => {
-  for (const p of [{ path: "/" }, ...pages]) {
+  for (const p of pages) {
     test(`${p.path} に重大なアクセシビリティ違反がない`, { tag: "@a11y", annotation: routes(p.path) }, async ({ page }) => {
       await page.goto(p.path)
       await page.waitForLoadState("networkidle")

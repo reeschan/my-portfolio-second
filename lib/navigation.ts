@@ -11,7 +11,7 @@ export type NavItem = {
 }
 
 export const navItems: readonly NavItem[] = [
-  { id: "overview", href: "/overview" },
+  { id: "overview", href: "/" },
   { id: "career", href: "/career" },
   { id: "skills", href: "/skills" },
   { id: "works", href: "/works" },

@@ -13,7 +13,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Request-time API。これが無いとビルド時の sitemap が配られ、あとから増えた記事が載らない
   await connection()
 
-  const fixedPaths = ["/", ...navItems.filter((item) => !isUtilityPage(item.href)).map((item) => item.href)]
+  // トップ ("/") はタブの概要が持つ href そのものなので、固定で並べず navItems に任せる (2 回載らない)
+  const fixedPaths = navItems.filter((item) => !isUtilityPage(item.href)).map((item) => item.href)
   const posts = await loadPosts()
   return [
     ...fixedPaths.map((path) => ({ url: new URL(path, siteUrl).href })),

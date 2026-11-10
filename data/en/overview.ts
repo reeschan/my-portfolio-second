@@ -1,4 +1,4 @@
-// /overview の英語版。並びと href は data/overview.ts と揃える
+// / (概要) の英語版。並びと href は data/overview.ts と揃える
 import type { PageGuide, Profile } from "../overview"
 
 export const profileEn: Profile = {

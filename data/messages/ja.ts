@@ -3,7 +3,8 @@ import type { BackgroundThemeId } from "@/lib/background-theme"
 import type { NavId } from "@/lib/navigation"
 
 export const ja = {
-  // 検索結果と OGP に出すサイトの説明。ページごとの説明がないトップで使う
+  // 検索結果と OGP に出すサイトの説明。ページが自分の説明を持たないときの既定
+  // (トップは概要のページで、自分の説明 (overview.description) を持つ)
   site: {
     description:
       "フロントエンドからクラウド基盤まで一人で通して作るフルスタックデベロッパー、Ryuki Tobita のポートフォリオ。経歴・スキル・制作物を載せ、職務経歴について AI に質問できる。",
@@ -24,11 +25,6 @@ export const ja = {
     rssTitle: "RSSフィードを購読",
     language: "表示言語",
     close: "閉じる",
-  },
-  // トップの導入演出の読み上げ用。飾りの英字は読み上げず、ここだけ伝える
-  intro: {
-    loading: "読み込み中",
-    complete: "読み込み完了",
   },
   overview: {
     description:

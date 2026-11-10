@@ -5,7 +5,7 @@ import { nowPostPath } from "../lib/now/feed"
 import { createNowPost, expect, routes, test, uniqueTitle } from "./fixtures"
 
 // サイト全体の構造化データ (PBI-008・PBI-009、docs/specs/seo-stage2.md)。
-// ルートのレイアウトが出す WebSite・Person を、ページの ld+json (記事の BlogPosting・/overview の ProfilePage など) と
+// ルートのレイアウトが出す WebSite・Person を、ページの ld+json (記事の BlogPosting・/ の ProfilePage など) と
 // 合わせて集める。Next.js 16 は metadata を本文の後ろに流すので、page.goto のあとの DOM で見る。
 // 期待値は data/ と lib/ の定数から作り、名前や URL を二重に書かない
 
@@ -31,8 +31,8 @@ function ofType(nodes: JsonLdNode[], type: string): JsonLdNode[] {
   return nodes.filter((node) => node["@type"] === type)
 }
 
-// トップはタブの並びに無いので足す。ルートをこのファイルに写さず、タブの定義から作る
-const paths = ["/", ...navItems.map((item) => item.href)]
+// トップ = 概要 (ADR 0039)。ルートをこのファイルに写さず、タブの定義から作る
+const paths = navItems.map((item) => item.href)
 
 test.describe("SEO: サイト全体の構造化データ", () => {
   for (const path of paths) {
@@ -55,10 +55,10 @@ test.describe("SEO: サイト全体の構造化データ", () => {
   }
 
   test(
-    "/overview は ProfilePage を 1 つ持ち、mainEntity が同じページの Person を指す",
-    { tag: ["@seo"], annotation: routes("/overview") },
+    "/ は ProfilePage を 1 つ持ち、mainEntity が同じページの Person を指す",
+    { tag: ["@seo"], annotation: routes("/") },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       // ページの script は本文と一緒に来るが、描画を待ってから集める (初回のコンパイル中の空の DOM を数えない)
       await expect(page.locator("h1").first()).toBeVisible()
 
@@ -66,11 +66,11 @@ test.describe("SEO: サイト全体の構造化データ", () => {
       const profilePages = ofType(nodes, "ProfilePage")
       const persons = ofType(nodes, "Person")
 
-      expect(profilePages.length, "/overview の ProfilePage の数").toBe(1)
+      expect(profilePages.length, "/ の ProfilePage の数").toBe(1)
       // Person はレイアウトの 1 つだけ。ProfilePage はその @id を指し、同じ人物を書き直さない
-      expect(persons.length, "/overview の Person の数").toBe(1)
+      expect(persons.length, "/ の Person の数").toBe(1)
       expect(profilePages[0]?.["mainEntity"]).toEqual({ "@id": persons[0]?.["@id"] })
-      expect(profilePages[0]?.["url"]).toBe(new URL("/overview", siteUrl).href)
+      expect(profilePages[0]?.["url"]).toBe(siteUrl.href)
     },
   )
 

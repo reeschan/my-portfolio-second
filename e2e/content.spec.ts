@@ -8,8 +8,8 @@ import { works } from "../data/works"
 // (文言そのものは data/ が正本なので、テストは data/ から読んで突き合わせる)
 
 test.describe("表示内容", () => {
-  test("概要: プロフィールの見出しと肩書き・自己紹介が出る", { tag: "@content", annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("概要: プロフィールの見出しと肩書き・自己紹介が出る", { tag: "@content", annotation: routes("/") }, async ({ page }) => {
+    await page.goto("/")
     await expect(page.getByRole("heading", { level: 2, name: "プロフィール" })).toBeVisible()
     await expect(page.getByText(profile.role, { exact: true })).toBeVisible()
     // メインのアイコンが代替テキスト付きで、読み込めている (壊れた画像でない)
@@ -21,8 +21,8 @@ test.describe("表示内容", () => {
     }
   })
 
-  test("概要: 外部のプロフィールへのリンクが新しいタブで開く", { tag: "@content", annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("概要: 外部のプロフィールへのリンクが新しいタブで開く", { tag: "@content", annotation: routes("/") }, async ({ page }) => {
+    await page.goto("/")
     const list = page.getByRole("list", { name: "外部のプロフィール" })
     for (const link of profileLinks) {
       const anchor = list.getByRole("link", { name: link.label, exact: true })
@@ -34,9 +34,9 @@ test.describe("表示内容", () => {
 
   test(
     "概要: 各ページの案内がタブと同じ順に並び、押すとそのページへ進める",
-    { tag: ["@content", "@navigation"], annotation: routes("/overview", "/career") },
+    { tag: ["@content", "@navigation"], annotation: routes("/", "/career") },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       const list = page.getByRole("list", { name: "各ページの案内" })
       await expect(list.getByRole("listitem")).toHaveCount(pageGuides.length)
       for (const guide of pageGuides) {
@@ -99,10 +99,5 @@ test.describe("表示内容", () => {
     await page.goto("/chat")
     await expect(page.getByRole("log", { name: "会話" })).toContainText("職務経歴やスキルについて")
     await expect(page.getByText("詳細については LinkedIn やメール", { exact: false })).toBeVisible()
-  })
-
-  test("トップ: 名前と Portfolio の見出しが出る", { tag: "@content", annotation: routes("/") }, async ({ page }) => {
-    await page.goto("/")
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(/Ryuki Tobita\s+Portfolio/)
   })
 })

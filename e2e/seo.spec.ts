@@ -1,14 +1,15 @@
 import { ja } from "../data/messages/ja"
-import { siteName, siteUrl } from "../lib/metadata"
+import { pageTitle, siteName, siteUrl } from "../lib/metadata"
 import { navItems } from "../lib/navigation"
 import { expect, pages, routes, test } from "./fixtures"
 
 // 検索エンジンと SNS に渡すメタデータ (PBI-0019、ADR 0029)
 test.describe("SEO: タイトル・説明・canonical・OGP", () => {
-  test("トップはサイト名とサイトの説明を持つ", { tag: ["@smoke"], annotation: routes("/") }, async ({ page }) => {
+  test("トップは概要の title・説明・canonical を持つ", { tag: ["@smoke"], annotation: routes("/") }, async ({ page }) => {
     await page.goto("/")
-    await expect(page).toHaveTitle(siteName)
-    await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", ja.site.description)
+    await expect(page).toHaveTitle(pageTitle(ja.nav.overview))
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", ja.overview.description)
+    // トップのパスは "/" だが、canonical は末尾の "/" を付けないサイトの URL になる
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", siteUrl.origin)
   })
 
@@ -18,10 +19,12 @@ test.describe("SEO: タイトル・説明・canonical・OGP", () => {
       { tag: ["@smoke"], annotation: routes(p.path) },
       async ({ page }) => {
         await page.goto(p.path)
+        // トップ ("/") の canonical と og:url は末尾の "/" の無いサイトの URL になる
+        const expectedUrl = p.path === "/" ? siteUrl.origin : new URL(p.path, siteUrl).href
         await expect(page).toHaveTitle(`${p.tab} | ${siteName}`)
         await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /\S/)
-        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new URL(p.path, siteUrl).href)
-        await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", new URL(p.path, siteUrl).href)
+        await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", expectedUrl)
+        await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", expectedUrl)
         // OGP の画像は本番の URL の絶対パスで指す (SNS が相対パスを読めないため)
         await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", new RegExp(`^${siteUrl.origin}/opengraph-image`))
         await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image")
@@ -62,11 +65,19 @@ test.describe("SEO: タイトル・説明・canonical・OGP", () => {
         expect(new URL(loc).host, `正のホスト以外の URL が載っている: ${loc}`).toBe(siteUrl.host)
       }
 
-      // トップと印の付いていないタブのページは載せる。期待値はタブの並びの定義から作る
-      const fixedPaths = ["/", ...navItems.filter((item) => !item.utility).map((item) => item.href)]
+      // 印の付いていないタブのページは載せる。トップはタブの概要 ("/") なので一緒に入る。
+      // 期待値はタブの並びの定義から作る
+      const fixedPaths = navItems.filter((item) => !item.utility).map((item) => item.href)
       for (const path of fixedPaths) {
         expect(locs, `${path} が sitemap に無い`).toContain(new URL(path, siteUrl).href)
       }
+
+      // トップは 1 回だけ載せ、/ へ転送する /overview は載せない (docs/specs/top-overview.md)
+      expect(
+        locs.filter((loc) => loc === siteUrl.href),
+        "/ が 1 回だけ載る",
+      ).toHaveLength(1)
+      expect(locs).not.toContain(new URL("/overview", siteUrl).href)
 
       // 道具のページは索引に要らない (docs/specs/seo-stage2.md)
       for (const path of navItems.filter((item) => item.utility).map((item) => item.href)) {

@@ -24,7 +24,7 @@ async function overviewMetadata(locale: Locale): Promise<Metadata> {
   "use cache"
   cacheLife("max")
   const messages = messagesOf(locale)
-  return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/overview" })
+  return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/" })
 }
 
 // 見出しと本文は既定の言語で殻に置く。Cookie の言語が違えば同じ木を描き直す (ADR 0038)

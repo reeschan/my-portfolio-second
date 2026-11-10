@@ -11,7 +11,8 @@ const nextConfig: NextConfig = {
   headers() {
     return [
       {
-        // すべての応答に付ける。headers はファイルシステムより先に当たるので、404 の応答にも付く
+        // ページの応答にはすべて付ける (ファイルシステムより先に当たるので 404 にも付く)。ただし redirects() が
+        // 返す /overview の 308 には付かない。308 には守る本文が無いので、そのまま受け入れる (ADR 0039)
         source: "/:path*",
         headers: [
           {
@@ -32,6 +33,12 @@ const nextConfig: NextConfig = {
         ],
       },
     ]
+  },
+  // 概要を / に移したので、古い /overview へのリンクと検索結果を / に寄せる (ADR 0039)。
+  // /now の転送を proxy.ts でしているのは ?post= を転送先に残さないため。ここではクエリ (utm など) を
+  // 残してよく、redirects ならページにも proxy にも届く前に返せて、proxy の matcher を広げずに済む
+  redirects() {
+    return [{ source: "/overview", destination: "/", permanent: true }]
   },
 }
 

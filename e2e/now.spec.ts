@@ -234,8 +234,8 @@ test.describe("Now の RSS", () => {
     },
   )
 
-  test("どのページもフィードの場所を link rel=alternate で示す", { tag: "@smoke", annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("どのページもフィードの場所を link rel=alternate で示す", { tag: "@smoke", annotation: routes("/") }, async ({ page }) => {
+    await page.goto("/")
     await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute("href", /\/rss\.xml$/)
   })
 })

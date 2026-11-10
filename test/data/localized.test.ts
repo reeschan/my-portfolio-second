@@ -1,5 +1,5 @@
 // @perspectives content
-// @routes /overview /career /skills /works
+// @routes / /career /skills /works
 import { describe, expect, it } from "vitest"
 import { en } from "@/data/messages/en"
 import { ja } from "@/data/messages/ja"

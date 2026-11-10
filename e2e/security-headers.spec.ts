@@ -20,8 +20,8 @@ function expectSecurityHeaders(headers: Record<string, string>): void {
 }
 
 test.describe("セキュリティヘッダー: すべての応答", () => {
-  test("固定のページの応答に付く", { tag: ["@seo"], annotation: routes("/overview") }, async ({ request }) => {
-    const res = await request.get("/overview")
+  test("固定のページの応答に付く", { tag: ["@seo"], annotation: routes("/") }, async ({ request }) => {
+    const res = await request.get("/")
     expect(res.status()).toBe(200)
     expectSecurityHeaders(res.headers())
   })

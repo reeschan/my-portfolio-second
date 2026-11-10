@@ -66,14 +66,14 @@ test.describe("背景テーマ", () => {
 
   test(
     "保存済みのテーマは、既定のテーマが変わってもそのまま出る",
-    { tag: ["@interaction", "@navigation"], annotation: routes("/overview", "/theme") },
+    { tag: ["@interaction", "@navigation"], annotation: routes("/", "/theme") },
     async ({ page }) => {
       const theme = backgroundThemes.find((t) => t.id !== defaultBackgroundThemeId)
       if (!theme) throw new Error("既定でない背景テーマが要る")
       // 読み込みの最初から保存を優先することを確かめたいので、ページを開く前に保存済みの閲覧者を作る
       await page.addInitScript(({ key, id }) => window.localStorage.setItem(key, id), { key: storageKey, id: theme.id })
 
-      await page.goto("/overview")
+      await page.goto("/")
       await expect(page.locator(canvasSelector)).toHaveAttribute("data-background-theme", theme.id)
 
       await page.goto("/theme")
@@ -107,7 +107,7 @@ test.describe("背景テーマ", () => {
   test("ソフトウェア描画では背景を最小の解像度で描く", { tag: "@performance", annotation: routes("/") }, async ({ page }) => {
     // 待ちの上限が 15 秒 × 2 あり、GPU の無い環境ではシェーダーの準備も遅いので、テスト全体を長めにする
     test.setTimeout(60_000)
-    await page.goto("/overview")
+    await page.goto("/")
     const canvas = page.locator(`${canvasSelector} canvas`)
     await expect(canvas).toBeVisible({ timeout: 15_000 })
 

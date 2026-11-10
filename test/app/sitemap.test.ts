@@ -22,7 +22,7 @@ const post = (id: string, publishedAt: string, updatedAt?: string): NowPost => (
 })
 
 // 期待値はタブの並びの定義から作る。道具のページ (印の付いたページ) は sitemap に載らない (docs/specs/seo-stage2.md)
-const fixedUrls = [siteUrl.href, ...navItems.filter((item) => !item.utility).map((item) => new URL(item.href, siteUrl).href)]
+const fixedUrls = navItems.filter((item) => !item.utility).map((item) => new URL(item.href, siteUrl).href)
 
 describe("sitemap", () => {
   // 記事はテストの中で入れて、終わったら消す (メモリの保存先はテストの間ずっと生きている)
@@ -41,6 +41,10 @@ describe("sitemap", () => {
   it("保存先に記事が無いとき、トップと印の付いていないタブのページだけを本番の URL で載せる", async () => {
     const urls = (await sitemap()).map((entry) => entry.url)
     expect(urls).toEqual(fixedUrls)
+    // トップはタブの概要の href でもあるが、載せるのは 1 回だけ (docs/specs/top-overview.md)
+    expect(urls.filter((url) => url === siteUrl.href)).toHaveLength(1)
+    // /overview は / へ転送するので、載せない
+    expect(urls).not.toContain(new URL("/overview", siteUrl).href)
   })
 
   it("記事があると、固定のページのあとに新しい順で足し、lastModified に更新日 (無ければ公開日) を入れる", async () => {

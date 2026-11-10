@@ -3,7 +3,8 @@ import type { BackgroundThemeId } from "@/lib/background-theme"
 import type { NavId } from "@/lib/navigation"
 
 export const ja = {
-  // 検索結果と OGP に出すサイトの説明。ページごとの説明がないトップで使う
+  // 検索結果と OGP に出すサイトの説明。ページが自分の説明を持たないときの既定
+  // (トップは概要のページで、自分の説明 (overview.description) を持つ)
   site: {
     description:
       "フロントエンドからクラウド基盤まで一人で通して作るフルスタックデベロッパー、Ryuki Tobita のポートフォリオ。経歴・スキル・制作物を載せ、職務経歴について AI に質問できる。",
@@ -24,11 +25,6 @@ export const ja = {
     rssTitle: "RSSフィードを購読",
     language: "表示言語",
     close: "閉じる",
-  },
-  // トップの導入演出の読み上げ用。飾りの英字は読み上げず、ここだけ伝える
-  intro: {
-    loading: "読み込み中",
-    complete: "読み込み完了",
   },
   overview: {
     description:
@@ -109,7 +105,7 @@ export const ja = {
   chat: {
     description:
       "Ryuki Tobita の職務経歴について、AI に質問できるチャットです。経歴・スキル・参画した案件などについて、職務経歴書の内容をもとに AI が答えます。",
-    greeting: "こんにちは！職務経歴やスキルについて、気になることを何でも聞いてください。",
+    greeting: "こんにちは。職務経歴やスキルについて、気になることを何でも聞いてください。",
     suggestions: [
       "これまでの経歴を簡単に教えてください",
       "得意な技術スタックは？",
@@ -120,7 +116,7 @@ export const ja = {
     thinking: "考え中…",
     empty: "回答が空でした。もう一度お試しください。",
     failed: "回答の取得に失敗しました。",
-    placeholder: "経歴について質問する...",
+    placeholder: "経歴について質問する",
     input: "質問",
     send: "送信",
     note: [

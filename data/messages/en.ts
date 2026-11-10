@@ -2,7 +2,8 @@
 import type { Messages } from "./ja"
 
 export const en: Messages = {
-  // 検索結果と OGP に出すサイトの説明。ページごとの説明がないトップで使う
+  // 検索結果と OGP に出すサイトの説明。ページが自分の説明を持たないときの既定
+  // (トップは概要のページで、自分の説明 (overview.description) を持つ)
   site: {
     description:
       "Portfolio of Ryuki Tobita, a full-stack developer who builds everything from the frontend to cloud infrastructure. Career, skills, and works, plus an AI chat that answers questions about my career.",
@@ -23,10 +24,6 @@ export const en: Messages = {
     rssTitle: "Subscribe to the RSS feed",
     language: "Language",
     close: "Close",
-  },
-  intro: {
-    loading: "Loading",
-    complete: "Loaded",
   },
   overview: {
     description:
@@ -102,7 +99,7 @@ export const en: Messages = {
   chat: {
     description:
       "Ask an AI about Ryuki Tobita's career. It answers questions about experience, skills and past engagements based on the resume.",
-    greeting: "Hi! Feel free to ask anything about my career and skills.",
+    greeting: "Hi. Feel free to ask anything about my career and skills.",
     suggestions: [
       "Give me a quick summary of your career",
       "What is your strongest tech stack?",
@@ -113,7 +110,7 @@ export const en: Messages = {
     thinking: "Thinking…",
     empty: "The answer was empty. Please try again.",
     failed: "Couldn't get an answer.",
-    placeholder: "Ask about my career...",
+    placeholder: "Ask about my career",
     input: "Question",
     send: "Send",
     note: [

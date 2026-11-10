@@ -22,9 +22,11 @@ export function NowPostCard({ post }: NowPostCardProps) {
   const japaneseOnly = locale === "en" && localized.lang === "ja"
   const contentLang = japaneseOnly ? "ja" : undefined
 
+  // ホバーは枠と面の色だけを変える。カードが浮き上がると読む前に視線が動くため (unslop の Motion)
   return (
-    <article className="relative rounded-lg border border-border/50 bg-background/50 p-4 transition-all hover:-translate-y-1 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring">
-      <time dateTime={post.publishedAt} className="text-xs text-muted-foreground">
+    <article className="relative rounded-lg border border-border/50 bg-background/50 p-4 transition-colors hover:border-border hover:bg-background/70 focus-within:ring-2 focus-within:ring-ring">
+      {/* 日付は数字の幅をそろえ、桁が変わっても並びが崩れないようにする */}
+      <time dateTime={post.publishedAt} className="text-xs text-muted-foreground font-mono tabular-nums">
         {formatDate(post.publishedAt, locale)}
       </time>
       <h2 lang={contentLang} className="mt-1 text-lg font-medium">

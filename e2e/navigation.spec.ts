@@ -3,36 +3,36 @@ import { expect, pages, routes, test } from "./fixtures"
 
 test.describe("ナビゲーション", () => {
   test(
-    "トップの Enter から概要ページへ進める",
-    { tag: ["@navigation", "@responsive"], annotation: routes("/", "/overview") },
-    async ({ page }) => {
-      await page.goto("/")
-      await page.getByRole("link", { name: "Enter" }).click()
-      await expect(page).toHaveURL(/\/overview$/)
-      await expect(page.getByRole("heading", { level: 1, name: "概要" })).toBeVisible()
-    },
-  )
-
-  test(
     "タブを順にクリックして全ページを巡回できる",
     { tag: ["@navigation", "@responsive"], annotation: routes(...pages.map((p) => p.path)) },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       // 概要の本文にも各ページへのリンクがあるので、タブの帯に絞って押す
       const nav = page.getByRole("navigation", { name: "ページ切り替え" })
       for (const p of pages) {
         await nav.getByRole("link", { name: p.tab, exact: true }).click()
-        await expect(page).toHaveURL(new RegExp(`${p.path}$`))
+        // "/" は末尾が "/" のどの URL にも当たるので、パスそのものを比べる
+        await expect.poll(() => new URL(page.url()).pathname).toBe(p.path)
         await expect(page.getByRole("heading", { level: 1, name: p.heading })).toBeVisible()
       }
     },
   )
 
   test(
+    "/overview は恒久リダイレクトで / へ行く",
+    { tag: ["@navigation", "@seo"], annotation: routes("/overview", "/") },
+    async ({ request }) => {
+      const res = await request.get("/overview", { maxRedirects: 0 })
+      expect(res.status()).toBe(308)
+      expect(res.headers()["location"]).toBe("/")
+    },
+  )
+
+  test(
     "タブの並び順が 概要→経歴→スキル→ワーク→Now→チャット→テーマ になっている",
-    { tag: "@navigation", annotation: routes("/overview") },
+    { tag: "@navigation", annotation: routes("/") },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       const names = pages.map((p) => p.tab)
       const tabLinks = page
         .getByRole("navigation", { name: "ページ切り替え" })
@@ -42,13 +42,13 @@ test.describe("ナビゲーション", () => {
     },
   )
 
-  test("RSS ボタンがフィードを指している", { tag: "@navigation", annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("RSS ボタンがフィードを指している", { tag: "@navigation", annotation: routes("/") }, async ({ page }) => {
+    await page.goto("/")
     await expect(page.getByRole("link", { name: "RSSフィード" })).toHaveAttribute("href", "/rss.xml")
   })
 
-  test("タブを押してもタブバーが描き直されない", { tag: "@navigation", annotation: routes("/overview", "/career") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("タブを押してもタブバーが描き直されない", { tag: "@navigation", annotation: routes("/", "/career") }, async ({ page }) => {
+    await page.goto("/")
     const nav = page.getByRole("navigation", { name: ja.layout.pages })
     // 押す前のタブバーの要素を取っておく
     const handle = await nav.elementHandle()
@@ -76,7 +76,7 @@ test.describe("ナビゲーション (先読みが済む前に押したとき)",
 
   test(
     "先読みが済んでいないタブを押しても、見出しと本文のパネルが消えない",
-    { tag: "@navigation", annotation: routes("/overview", "/career", "/skills", "/now", "/theme") },
+    { tag: "@navigation", annotation: routes("/", "/career", "/skills", "/now", "/theme") },
     async ({ page }) => {
       // 先読みが済む前の状態を作る: 先読みの要求は落とし、押したあとの要求は往復の遅れを足して返す。
       // 遅れが無いと手元では一瞬で替わり、途中で見出しが消えても見逃す
@@ -86,7 +86,7 @@ test.describe("ナビゲーション (先読みが済む前に押したとき)",
         if (headers.rsc) await new Promise((resolve) => setTimeout(resolve, 300))
         return route.continue()
       })
-      await page.goto("/overview")
+      await page.goto("/")
       await expect(page.getByRole("heading", { level: 1, name: ja.nav.overview })).toBeVisible()
 
       const nav = page.getByRole("navigation", { name: ja.layout.pages })
@@ -177,10 +177,10 @@ test.describe("ナビゲーション (現在地)", () => {
 
   test(
     "スマホ幅でもタブバーを横にスクロールして最後のタブまで押せる",
-    { tag: ["@navigation", "@responsive"], annotation: routes("/overview", "/chat") },
+    { tag: ["@navigation", "@responsive"], annotation: routes("/", "/chat") },
     async ({ page }) => {
       await page.setViewportSize({ width: 360, height: 740 })
-      await page.goto("/overview")
+      await page.goto("/")
       const last = page.getByRole("navigation", { name: "ページ切り替え" }).getByRole("link", { name: "チャット", exact: true })
       await last.scrollIntoViewIfNeeded()
       await last.click()

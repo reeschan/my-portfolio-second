@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import { cacheLife } from "next/cache"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
@@ -15,8 +15,9 @@ import { siteGraphJsonLd } from "@/lib/structured-data"
 import { BackgroundScene } from "@/components/features/background/background-scene"
 import { isVercelAnalyticsEnabled } from "@/lib/analytics"
 
-// globals.css の --font-sans から参照するため CSS 変数として読み込む
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+// globals.css の --font-sans と --font-mono から参照するため CSS 変数として読み込む
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" })
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
 
 export async function generateMetadata(): Promise<Metadata> {
   return siteMetadata(await getLocale())
@@ -41,8 +42,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // ルートのレイアウトは Cookie を読まない (ADR 0035)。表示言語はタブ付きの共通の枠 (SiteFrame) と、
-  // タブのないトップのページがそれぞれ <Suspense> の中で読んで配る
+  // ルートのレイアウトは Cookie を読まない (ADR 0035)。表示言語はタブ付きの共通の枠 (SiteFrame) が
+  // <Suspense> の中で読んで配る。すべてのページ (/ を含む) はこの枠の中に描かれる
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
@@ -50,7 +51,7 @@ export default function RootLayout({
             英語の閲覧者の lang もここで en にする (PBI-009)。CSP は frame-ancestors だけなので nonce は要らない */}
         <script dangerouslySetInnerHTML={{ __html: htmlLangScript() }} />
       </head>
-      <body className={inter.variable}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <BackgroundScene />
           <div className="relative min-h-screen">{children}</div>

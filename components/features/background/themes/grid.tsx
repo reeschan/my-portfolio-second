@@ -5,7 +5,6 @@ import { useFrame } from "@react-three/fiber"
 import { Float } from "@react-three/drei"
 import { MathUtils, type Group, type Mesh } from "three"
 import type { ThreeElements } from "@react-three/fiber"
-import { usePathname } from "next/navigation"
 import { sceneColors } from "@/lib/theme"
 
 // three.js は CSS 変数 (hsl(var(--primary)) など) を解釈できないため、テーマ色の定数を使う
@@ -107,26 +106,17 @@ function MouseFollower() {
 
 // テーマ「グリッド」: サイト開設時からの既定の背景
 export function GridTheme() {
-  const pathname = usePathname()
-  const isHomePage = pathname === "/"
-
+  // 粒の数はページに依らず 200。タブを移るたびに粒が並び直さないようにするため
   return (
     <>
       <ambientLight intensity={0.3} />
       <pointLight position={[10, 10, 10]} intensity={0.3} />
-      <Particles count={isHomePage ? 300 : 200} /> {/* トップページではパーティクルを増やす */}
+      <Particles count={200} />
       <Grid />
       <MouseFollower />
-      {/* トップページでは浮遊オブジェクトを増やす */}
       <FloatingObject position={[3, 1, -5]} scale={0.8} rotation={[0, 0, 0]} color={COLORS.primary} />
       <FloatingObject position={[-3, -1, -3]} scale={0.6} rotation={[0, 0, 0]} color={COLORS.secondary} />
       <FloatingObject position={[0, 2, -4]} scale={0.4} rotation={[0, 0, 0]} color={COLORS.accent} />
-      {isHomePage && (
-        <>
-          <FloatingObject position={[4, -2, -6]} scale={0.7} rotation={[0, 0, 0]} color={COLORS.primary} />
-          <FloatingObject position={[-4, 3, -5]} scale={0.5} rotation={[0, 0, 0]} color={COLORS.secondary} />
-        </>
-      )}
     </>
   )
 }

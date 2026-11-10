@@ -24,7 +24,7 @@ async function overviewMetadata(locale: Locale): Promise<Metadata> {
   "use cache"
   cacheLife("max")
   const messages = messagesOf(locale)
-  return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/overview" })
+  return pageMetadata({ title: pageTitle(messages.nav.overview), description: messages.overview.description, path: "/" })
 }
 
 // 見出しと本文は既定の言語で殻に置く。Cookie の言語が違えば同じ木を描き直す (ADR 0038)
@@ -55,14 +55,14 @@ async function OverviewContent({ locale }: { locale: Locale }) {
       <div className="space-y-10">
         <Section title={messages.overview.profile} size="lg">
           <div className="flex flex-wrap items-center gap-5">
-            {/* 3D 背景の上でも縁が分かるよう、トークンの枠線で囲む */}
+            {/* 3D 背景の上でも縁が分かるよう、細い線で囲む (青は意味のある所だけなので、色は付けない) */}
             <Image
               src={profile.avatar.src}
               alt={profile.avatar.alt}
               width={112}
               height={112}
               priority
-              className="size-28 shrink-0 rounded-full border-2 border-primary/60 object-cover shadow-lg"
+              className="size-28 shrink-0 rounded-full border border-border object-cover"
             />
             <p className="text-lg font-semibold">
               {profile.name}

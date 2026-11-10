@@ -14,13 +14,10 @@ import { expect, pages, routes, test } from "./fixtures"
 test.describe("表示言語", () => {
   test(
     "既定は日本語で、右上のスイッチは JP が選ばれている。準備中のお知らせは出ない",
-    { tag: ["@smoke", "@responsive"], annotation: routes("/", "/overview") },
+    { tag: ["@smoke", "@responsive"], annotation: routes("/") },
     async ({ page }) => {
       await page.goto("/")
       await expect(page.locator("html")).toHaveAttribute("lang", "ja")
-      await expect(page.getByText("準備中")).toHaveCount(0)
-
-      await page.goto("/overview")
       await expect(page.getByText("準備中")).toHaveCount(0)
       const group = page.getByRole("group", { name: ja.layout.language })
       await expect(group.getByRole("button", { name: "JP" })).toHaveAttribute("aria-pressed", "true")
@@ -28,8 +25,8 @@ test.describe("表示言語", () => {
     },
   )
 
-  test("スイッチは画面の右上にある", { tag: ["@navigation", "@responsive"], annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("スイッチは画面の右上にある", { tag: ["@navigation", "@responsive"], annotation: routes("/") }, async ({ page }) => {
+    await page.goto("/")
     const box = await page.getByRole("group", { name: ja.layout.language }).boundingBox()
     const viewport = page.viewportSize()
     if (!box || !viewport) throw new Error("スイッチの位置か画面の大きさが取れない")
@@ -40,9 +37,9 @@ test.describe("表示言語", () => {
 
   test(
     "EN を押すと英語に切り替わり、他のページに移っても再読み込みしても英語のまま。JP で戻せる",
-    { tag: ["@interaction", "@navigation", "@responsive"], annotation: routes("/overview", "/career") },
+    { tag: ["@interaction", "@navigation", "@responsive"], annotation: routes("/", "/career") },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       await page.getByRole("group", { name: ja.layout.language }).getByRole("button", { name: "EN" }).click()
 
       await expect(page.getByRole("heading", { level: 1, name: en.nav.overview })).toBeVisible()
@@ -63,9 +60,9 @@ test.describe("表示言語", () => {
 
   test(
     "英語に切り替えたあと、別のタブを押すと英語の中身が出る",
-    { tag: ["@interaction", "@navigation"], annotation: routes("/overview", "/career") },
+    { tag: ["@interaction", "@navigation"], annotation: routes("/", "/career") },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       await page.getByRole("group", { name: ja.layout.language }).getByRole("button", { name: "EN" }).click()
       await expect(page.getByRole("heading", { level: 1, name: en.nav.overview })).toBeVisible()
 
@@ -79,31 +76,27 @@ test.describe("表示言語", () => {
 
 test.describe("html の lang (直接開いたとき)", () => {
   // <head> のインラインのスクリプトが Cookie を読む経路を、クライアントの操作を挟まずに確かめる (PBI-009)
-  test(
-    '英語の Cookie で直接開くと <html lang="en"> になる',
-    { tag: ["@content"], annotation: routes("/overview") },
-    async ({ page, baseURL }) => {
-      if (!baseURL) throw new Error("baseURL が設定されていない")
-      await page.context().addCookies([{ name: localeCookieName, value: "en", url: baseURL }])
-      await page.goto("/overview")
-      await expect(page.locator("html")).toHaveAttribute("lang", "en")
-    },
-  )
+  test('英語の Cookie で直接開くと <html lang="en"> になる', { tag: ["@content"], annotation: routes("/") }, async ({ page, baseURL }) => {
+    if (!baseURL) throw new Error("baseURL が設定されていない")
+    await page.context().addCookies([{ name: localeCookieName, value: "en", url: baseURL }])
+    await page.goto("/")
+    await expect(page.locator("html")).toHaveAttribute("lang", "en")
+  })
 
   test(
     '日本語の Cookie で直接開くと <html lang="ja"> になる',
-    { tag: ["@content"], annotation: routes("/overview") },
+    { tag: ["@content"], annotation: routes("/") },
     async ({ page, baseURL }) => {
       if (!baseURL) throw new Error("baseURL が設定されていない")
       await page.context().addCookies([{ name: localeCookieName, value: "ja", url: baseURL }])
-      await page.goto("/overview")
+      await page.goto("/")
       await expect(page.locator("html")).toHaveAttribute("lang", "ja")
     },
   )
 })
 
 test(
-  "トップ: 英語の Cookie で開くと、言語のスイッチの EN が選ばれ、導入演出の領域の名前が英語",
+  "トップ: 英語の Cookie で開くと、言語のスイッチの EN が選ばれ、h1 が英語の概要",
   { tag: ["@content", "@interaction"], annotation: routes("/") },
   async ({ page, baseURL }) => {
     if (!baseURL) throw new Error("baseURL が設定されていない")
@@ -114,14 +107,13 @@ test(
       "aria-pressed",
       "true",
     )
-    // 領域の名前は殻ではなく言語の島が描き、aria-labelledby で渡す。島が流れてくるまで待つ
-    await expect(page.getByRole("region", { name: en.intro.loading })).toBeVisible()
+    await expect(page.getByRole("heading", { level: 1, name: en.nav.overview })).toBeVisible()
   },
 )
 
 test(
-  "トップ: 右上のスイッチで英語にすると、Enter の先も英語で出る",
-  { tag: ["@interaction", "@responsive"], annotation: routes("/", "/overview") },
+  "トップ: 右上のスイッチで英語にすると、概要の見出しとタブが英語になる",
+  { tag: ["@interaction", "@responsive"], annotation: routes("/") },
   async ({ page }) => {
     await page.goto("/")
     const group = page.getByRole("group", { name: ja.layout.language })
@@ -136,8 +128,10 @@ test(
       "aria-pressed",
       "true",
     )
-    await page.getByRole("link", { name: "Enter" }).click()
     await expect(page.getByRole("heading", { level: 1, name: en.nav.overview })).toBeVisible()
+    await expect(
+      page.getByRole("navigation", { name: en.layout.pages }).getByRole("link", { name: en.nav.overview, exact: true }),
+    ).toHaveAttribute("aria-current", "page")
   },
 )
 
@@ -159,8 +153,8 @@ test.describe("表示言語 (英語の内容)", () => {
     })
   }
 
-  test("概要: 自己紹介と各ページの案内が英語で出る", { tag: "@content", annotation: routes("/overview") }, async ({ page }) => {
-    await page.goto("/overview")
+  test("概要: 自己紹介と各ページの案内が英語で出る", { tag: "@content", annotation: routes("/") }, async ({ page }) => {
+    await page.goto("/")
     await expect(page.getByText(profileEn.role, { exact: true })).toBeVisible()
     for (const paragraph of profileEn.summary) {
       await expect(page.getByText(paragraph)).toBeVisible()

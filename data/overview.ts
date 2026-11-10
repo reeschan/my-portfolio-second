@@ -1,4 +1,4 @@
-// /overview の内容。自己紹介・外部のプロフィールへのリンク・各ページの案内をここにまとめる (PBI-0013)
+// / (概要) の内容。自己紹介・外部のプロフィールへのリンク・各ページの案内をここにまとめる (PBI-0013)
 // 英語版は data/en/overview.ts。言語ごとの切り替えは data/localized.ts (PBI-0014)
 
 export type ProfileLink = {

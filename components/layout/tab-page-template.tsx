@@ -19,7 +19,7 @@ export function TabPageTemplate({ id, children }: TabPageTemplateProps) {
 
   return (
     <>
-      <h1 className="mb-6 text-4xl font-bold tracking-tight">{messages.nav[id]}</h1>
+      <h1 className="mb-6 text-4xl font-semibold">{messages.nav[id]}</h1>
       <GlassPanel>{children}</GlassPanel>
     </>
   )

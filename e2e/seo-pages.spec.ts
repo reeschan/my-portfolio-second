@@ -1,5 +1,5 @@
 import { ja } from "../data/messages/ja"
-import { pageTitle, siteName, siteUrl } from "../lib/metadata"
+import { pageTitle, siteUrl } from "../lib/metadata"
 import { navItems } from "../lib/navigation"
 import { nowPostPath } from "../lib/now/feed"
 import { createNowPost, expect, routes, test, uniqueTitle } from "./fixtures"
@@ -35,10 +35,11 @@ function isSelfUrl(value: string, pageUrl: string): boolean {
   return !process.env.CI && url.origin === new URL(pageUrl).origin && url.pathname === "/opengraph-image"
 }
 
-// ルートごとの title。トップはサイト名、タブのページは「タブ名 | サイト名」(lib/metadata.ts)
-const pageRoutes = [{ path: "/", title: siteName }, ...navItems.map((item) => ({ path: item.href, title: pageTitle(ja.nav[item.id]) }))]
+// ルートごとの title。トップ = 概要で、タブのページは「タブ名 | サイト名」(lib/metadata.ts)。
+// トップの "/" も navItems に含まれるので、ここで足さない (足すと "/" が 2 回並び、題名が重複する)
+const pageRoutes = navItems.map((item) => ({ path: item.href, title: pageTitle(ja.nav[item.id]) }))
 
-// canonical の期待値。トップは metadataBase (siteUrl) そのもので、Next は "/" を末尾スラッシュなしの origin に正規化する
+// canonical の期待値。トップ (/ = 概要) は metadataBase (siteUrl) そのもので、Next は "/" を末尾スラッシュなしの origin に正規化する
 function canonicalUrl(path: string): string {
   return path === "/" ? siteUrl.origin : new URL(path, siteUrl).href
 }

@@ -12,7 +12,7 @@ interface PageTemplateProps {
 export function PageTemplate({ title, children }: PageTemplateProps) {
   return (
     <>
-      <h1 className="mb-6 text-4xl font-bold tracking-tight">{title}</h1>
+      <h1 className="mb-6 text-4xl font-semibold">{title}</h1>
       <GlassPanel>{children}</GlassPanel>
     </>
   )

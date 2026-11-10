@@ -1,11 +1,13 @@
+import { ja } from "../data/messages/ja"
 import { displayHost } from "../lib/metadata"
 import { expect, pages, routes, test } from "./fixtures"
 
 test.describe("スモーク: 全ページが表示できる", () => {
-  test("トップページにタイトルと Enter リンクが出る", { tag: ["@smoke", "@responsive"], annotation: routes("/") }, async ({ page }) => {
+  test("トップページに概要の見出しとタブが出る", { tag: ["@smoke", "@responsive"], annotation: routes("/") }, async ({ page }) => {
     await page.goto("/")
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Ryuki Tobita")
-    await expect(page.getByRole("link", { name: "Enter" })).toBeVisible()
+    await expect(page.getByRole("heading", { level: 1, name: ja.nav.overview })).toBeVisible()
+    const nav = page.getByRole("navigation", { name: ja.layout.pages })
+    await expect(nav.getByRole("link", { name: ja.nav.overview, exact: true })).toHaveAttribute("aria-current", "page")
   })
 
   for (const p of pages) {
@@ -39,7 +41,7 @@ test.describe("スモーク: 全ページが表示できる", () => {
 
   test(
     "Vercel 以外ではページを移っても計測スクリプトを読み込まない",
-    { tag: ["@smoke"], annotation: routes("/overview", "/career") },
+    { tag: ["@smoke"], annotation: routes("/", "/career") },
     async ({ page }) => {
       // 計測は Vercel 上でだけ行う (ADR 0027)。手元と CI で読むと 404 や外部への通信になる
       const analyticsRequests: string[] = []
@@ -47,7 +49,7 @@ test.describe("スモーク: 全ページが表示できる", () => {
         if (/\/_vercel\/insights\/|va\.vercel-scripts\.com/.test(req.url())) analyticsRequests.push(req.url())
       })
 
-      await page.goto("/overview")
+      await page.goto("/")
       // タブで移る = 画面が動き出している (計測の部品なら読み込みを始めている) ことを確かめてから数える
       const nav = page.getByRole("navigation", { name: "ページ切り替え" })
       await nav.getByRole("link", { name: "経歴", exact: true }).click()

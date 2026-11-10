@@ -1,8 +1,9 @@
 import { test as base, expect, type APIRequestContext } from "@playwright/test"
 
 // 全ページ共通のルート一覧。ページを増やしたらここにも足す (巡回エージェントもこの一覧と app/ を突き合わせる)
+// トップ = 概要 (ADR 0039)。/overview は / へ 308 で転送するので、巡回は "/" を使う
 export const pages = [
-  { path: "/overview", tab: "概要", heading: "概要" },
+  { path: "/", tab: "概要", heading: "概要" },
   { path: "/career", tab: "経歴", heading: "経歴" },
   { path: "/skills", tab: "スキル", heading: "スキル" },
   { path: "/works", tab: "ワーク", heading: "ワーク" },

@@ -35,3 +35,5 @@
 | [0031](0031-navigation-perf/PBI.md) | タブを押したらすぐ中身が替わるようにする | 進行中 |
 | [0033](0033-tab-switch-flicker/PBI.md) | タブを切り替えたときのちらつきをなくす | 進行中 |
 | [0036](0036-seo-crawler-shell/PBI.md) | JS を動かさないクローラーが本文を読めるようにする | 完了 |
+| [0038](0038-top-overview/PBI.md) | トップを概要にし、導入演出をなくす | 進行中 |
+| [0039](0039-unslop-design/PBI.md) | unslop の観点で見た目の AI っぽさを取る | 進行中 |

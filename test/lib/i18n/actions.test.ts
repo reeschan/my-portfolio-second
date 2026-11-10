@@ -1,5 +1,5 @@
 // @perspectives interaction
-// @routes /overview
+// @routes /
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const set = vi.fn()

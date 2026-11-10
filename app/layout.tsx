@@ -41,8 +41,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // ルートのレイアウトは Cookie を読まない (ADR 0035)。表示言語はタブ付きの共通の枠 (SiteFrame) と、
-  // タブのないトップのページがそれぞれ <Suspense> の中で読んで配る
+  // ルートのレイアウトは Cookie を読まない (ADR 0035)。表示言語はタブ付きの共通の枠 (SiteFrame) が
+  // <Suspense> の中で読んで配る。すべてのページ (/ を含む) はこの枠の中に描かれる
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>

@@ -17,12 +17,6 @@ const requiredTokens = [
   "--chart-3",
   "--chart-4",
   "--rss",
-  "--intro-backdrop",
-  "--intro-pink",
-  "--intro-violet",
-  "--intro-teal",
-  "--intro-red",
-  "--glass-highlight",
   "--radius",
 ]
 
@@ -30,7 +24,7 @@ test.describe("テーマ", () => {
   // OS がライトモードでも、サイトの既定はダークテーマ (layout.tsx の defaultTheme="dark")
   test.use({ colorScheme: "light" })
 
-  for (const p of [{ path: "/" }, ...pages]) {
+  for (const p of pages) {
     test(
       `${p.path} はダークテーマで表示され、背景色がトークンから決まる`,
       { tag: "@theme", annotation: routes(p.path) },
@@ -58,9 +52,9 @@ test.describe("テーマ", () => {
 
   test(
     "本文パネルはガラス調 (半透明 + 背景ぼかし) で、3D 背景が透けて見える",
-    { tag: "@theme", annotation: routes("/overview") },
+    { tag: "@theme", annotation: routes("/") },
     async ({ page }) => {
-      await page.goto("/overview")
+      await page.goto("/")
       // 見出しの直後にある本文パネル。CSS クラスではなく、見出しとの位置関係で取る
       const panel = page.getByRole("main").getByRole("heading", { level: 1 }).locator("xpath=following-sibling::div[1]")
       const style = await panel.evaluate((el) => {

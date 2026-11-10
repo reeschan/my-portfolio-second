@@ -1,5 +1,5 @@
 // @perspectives seo
-// @routes / /overview
+// @routes /
 import { describe, expect, it } from "vitest"
 import { ja } from "@/data/messages/ja"
 import { profile, profileLinks } from "@/data/overview"
@@ -66,12 +66,12 @@ describe("siteGraphJsonLd", () => {
 describe("profilePageJsonLd", () => {
   const profilePage = profilePageJsonLd()
 
-  it("ProfilePage の url は /overview の絶対 URL、name はタブの表示名から作った題名になる", () => {
+  it("ProfilePage の url はトップ (/) の絶対 URL、name はタブの表示名から作った題名になる", () => {
     expect(profilePage).toEqual({
       "@context": "https://schema.org",
       "@type": "ProfilePage",
       name: pageTitle(ja.nav.overview),
-      url: new URL("/overview", siteUrl).href,
+      url: siteUrl.href,
       mainEntity: { "@id": personId },
       inLanguage: "ja",
     })

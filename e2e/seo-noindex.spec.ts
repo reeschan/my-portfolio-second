@@ -5,8 +5,8 @@ import { expect, routes, test } from "./fixtures"
 // 期待値はタブの並びの定義の印から作り、ルートをこのファイルに写さない (PBI-004)
 
 const utilityPaths = navItems.filter((item) => item.utility).map((item) => item.href)
-// トップはタブの並びに無いので別に足す
-const indexablePaths = ["/", ...navItems.filter((item) => !item.utility).map((item) => item.href)]
+// トップ = 概要で、タブの並びに "/" が含まれる (足すと "/" が 2 回並ぶ)
+const indexablePaths = navItems.filter((item) => !item.utility).map((item) => item.href)
 
 test.describe("SEO: 道具のページの noindex", () => {
   for (const path of utilityPaths) {

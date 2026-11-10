@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test"
 import { ja } from "../data/messages/ja"
+import { profile } from "../data/overview"
 import { certifications } from "../data/skills"
 import { works } from "../data/works"
 import { expect, routes, test } from "./fixtures"
@@ -11,9 +12,12 @@ import { expect, routes, test } from "./fixtures"
 
 const workTitle = works[0]?.title
 const certification = certifications[0]
-if (!workTitle || !certification) throw new Error("本文の期待値が data/ に無い")
+// トップ = 概要 (ADR 0039)。概要の本文 (自己紹介の 1 段落目) は、JS を切った閲覧者にも見える位置にある
+const profileSummary = profile.summary[0]
+if (!workTitle || !certification || !profileSummary) throw new Error("本文の期待値が data/ に無い")
 
 const pages = [
+  { path: "/", phrase: profileSummary },
   { path: "/works", phrase: workTitle },
   { path: "/skills", phrase: certification },
   { path: "/now", phrase: ja.now.intro },

@@ -49,7 +49,7 @@ Ryuki Tobita の個人ポートフォリオ。Next.js (App Router) + Tailwind CS
 
 ## 構成
 
-- `app/`: ページ (`/overview` `/career` `/skills` `/works` `/now` `/chat` `/contact` `/theme`) と API (`/api/chat` `/api/contact` `/api/now` `/rss.xml`)、検索と共有のための `sitemap.ts` `robots.ts` `opengraph-image.tsx`。ページは部品を組み立てるだけにする
+- `app/`: ページ (`/` (概要) `/career` `/skills` `/works` `/now` `/chat` `/contact` `/theme`) と API (`/api/chat` `/api/contact` `/api/now` `/rss.xml`)、検索と共有のための `sitemap.ts` `robots.ts` `opengraph-image.tsx`。ページは部品を組み立てるだけにする
 - `components/`: UI。層と依存の向きは **[docs/design/components.md](docs/design/components.md)**
   - `ui/`: shadcn/ui の基本部品 (Button, Badge, Dialog, Tabs …)
   - `common/`: 画面をまたいで使う部品 (GlassPanel, Section, Callout, TagList, BulletList, TextLink, Markdown)。`@/components/common` から import する

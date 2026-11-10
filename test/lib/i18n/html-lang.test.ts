@@ -1,5 +1,5 @@
 // @perspectives interaction
-// @routes /overview
+// @routes /
 import { runInNewContext } from "node:vm"
 import { describe, expect, it } from "vitest"
 import { htmlLangScript } from "@/lib/i18n/html-lang"

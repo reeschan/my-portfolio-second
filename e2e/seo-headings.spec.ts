@@ -5,8 +5,8 @@ import { expect, routes, test } from "./fixtures"
 // ページを開いた直後の DOM で、h1 の次に h3 が来るような段の飛びが無いことを確かめる。
 // /now/[id] の記事の本文の見出しは別の PBI で扱うので、ここでは固定のページだけを見る。
 
-// トップはタブの並びに無いので足す。期待値はタブの並びの定義から作り、ルートをこのファイルに写さない
-const paths = ["/", ...navItems.map((item) => item.href)]
+// トップ = 概要で、タブの並びに "/" が含まれる。期待値はタブの並びの定義から作り、ルートをこのファイルに写さない
+const paths = navItems.map((item) => item.href)
 
 test.describe("SEO: 見出しの段", () => {
   for (const path of paths) {

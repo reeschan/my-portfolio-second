@@ -99,35 +99,3 @@ describe("背景の読み込みを始めてよいか", () => {
     expect(getServerBackgroundLoadStart()).toBe(false)
   })
 })
-
-describe("背景の準備完了", () => {
-  it("markBackgroundReady で true になり、購読者は 1 回だけ呼ばれる", async () => {
-    const { getBackgroundReady, markBackgroundReady, subscribeBackgroundReady } = await loadStore()
-    const listener = vi.fn()
-    subscribeBackgroundReady(listener)
-    expect(getBackgroundReady()).toBe(false)
-
-    markBackgroundReady()
-    expect(getBackgroundReady()).toBe(true)
-    expect(listener).toHaveBeenCalledTimes(1)
-
-    // テーマを替えて Canvas を作り直しても、準備完了は戻さない
-    markBackgroundReady()
-    expect(listener).toHaveBeenCalledTimes(1)
-  })
-
-  it("購読を解除した購読者には知らせない", async () => {
-    const { markBackgroundReady, subscribeBackgroundReady } = await loadStore()
-    const removed = vi.fn()
-    const unsubscribe = subscribeBackgroundReady(removed)
-
-    unsubscribe()
-    markBackgroundReady()
-    expect(removed).not.toHaveBeenCalled()
-  })
-
-  it("サーバーでは常に false", async () => {
-    const { getServerBackgroundReady } = await loadStore()
-    expect(getServerBackgroundReady()).toBe(false)
-  })
-})

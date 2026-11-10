@@ -4,7 +4,7 @@ import { useMemo, useRef } from "react"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 import { loopTime } from "@/lib/background-frame"
-import { introColors } from "@/lib/theme"
+import { glassColors } from "@/lib/theme"
 
 // ループの長さ (秒)。シェーダーの LOOP と必ず同じ値にする。動きはすべて
 // この長さで 1 周する位相の関数なので、10 秒ごとに同じ姿へ戻り、つなぎ目が出ない
@@ -207,15 +207,15 @@ export function GlassTheme() {
   const matRef = useRef<THREE.ShaderMaterial>(null)
 
   // 描画中に new しないよう、uniform の箱はすべて初回に作る。
-  // 色は導入演出と揃えるため lib/theme.ts のトークンから取り、2 度と変えない
+  // 色は glass テーマの配色 (lib/theme.ts の glassColors) から取り、2 度と変えない
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(1, 1) },
-      uBackdrop: { value: srgbVector(introColors.backdrop) },
-      uViolet: { value: srgbVector(introColors.violet) },
-      uPink: { value: srgbVector(introColors.pink) },
-      uTeal: { value: srgbVector(introColors.teal) },
+      uBackdrop: { value: srgbVector(glassColors.backdrop) },
+      uViolet: { value: srgbVector(glassColors.violet) },
+      uPink: { value: srgbVector(glassColors.pink) },
+      uTeal: { value: srgbVector(glassColors.teal) },
     }),
     [],
   )
@@ -234,7 +234,7 @@ export function GlassTheme() {
 
   return (
     <>
-      <color attach="background" args={[introColors.backdrop]} />
+      <color attach="background" args={[glassColors.backdrop]} />
       <mesh frustumCulled={false}>
         <planeGeometry args={[2, 2]} />
         <shaderMaterial

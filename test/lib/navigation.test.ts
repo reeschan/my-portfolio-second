@@ -1,5 +1,5 @@
 // @perspectives navigation
-// @routes /overview /career /skills /works /now /chat /theme
+// @routes / /career /skills /works /now /chat /theme
 import { existsSync, readdirSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
@@ -14,7 +14,7 @@ function isRouteGroup(entry: { isDirectory: () => boolean; name: string }): bool
   return entry.isDirectory() && routeGroupPattern.test(entry.name)
 }
 
-// "/overview" のページが app/(任意のグループ)/overview/page.tsx か app/overview/page.tsx にあるか
+// "/career" のページが app/(任意のグループ)/career/page.tsx か app/career/page.tsx にあるか
 function pageFile(route: string): string | null {
   const segment = route.replace(/^\//, "")
   const candidates = [
@@ -26,7 +26,7 @@ function pageFile(route: string): string | null {
   return candidates.find((candidate) => existsSync(candidate)) ?? null
 }
 
-// トップ (app/page.tsx) 以外の、URL に載るページ。ルートグループは URL に出さない
+// タブに並ぶページの URL。ルートグループは URL に出さない。グループ直下の page.tsx はトップ ("/") (ADR 0039)
 function pageRoutes(): string[] {
   const routes: string[] = []
   for (const entry of readdirSync(appDir, { withFileTypes: true })) {
@@ -34,6 +34,7 @@ function pageRoutes(): string[] {
 
     if (isRouteGroup(entry)) {
       const groupDir = path.join(appDir, entry.name)
+      if (existsSync(path.join(groupDir, "page.tsx"))) routes.push("/")
       for (const page of readdirSync(groupDir, { withFileTypes: true })) {
         if (page.isDirectory() && existsSync(path.join(groupDir, page.name, "page.tsx"))) routes.push(`/${page.name}`)
       }
@@ -52,7 +53,7 @@ describe("navItems", () => {
     }
   })
 
-  it("app/ のページ (トップ以外) はすべてタブに並んでいる", () => {
+  it("app/ のページはすべてタブに並んでいる", () => {
     expect([...navItems.map((i) => i.href)].sort()).toEqual(pageRoutes().sort())
   })
 })

@@ -39,7 +39,7 @@ export function siteGraphJsonLd(): Record<string, unknown> {
   }
 }
 
-// /overview がページの script として出す ProfilePage。主題 (mainEntity) は、レイアウトが出す Person を @id で指す。
+// / (概要) がページの script として出す ProfilePage。主題 (mainEntity) は、レイアウトが出す Person を @id で指す。
 // Person をここでもう一度書くと 1 ページに同じ人物が 2 人いることになるので、参照だけにする
 export function profilePageJsonLd(): Record<string, unknown> {
   return {
@@ -47,7 +47,8 @@ export function profilePageJsonLd(): Record<string, unknown> {
     "@type": "ProfilePage",
     // 題名はタブの表示名から作る (文言を二重に持たない)。表示言語によらず同じ値にするのは Person と同じ扱い
     name: pageTitle(ja.nav.overview),
-    url: new URL("/overview", siteUrl).href,
+    // 概要のページは / なので、url もサイトの URL (siteUrl) そのものになる
+    url: siteUrl.href,
     mainEntity: { "@id": personId },
     inLanguage: "ja",
   }

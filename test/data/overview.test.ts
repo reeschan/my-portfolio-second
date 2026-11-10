@@ -1,5 +1,5 @@
 // @perspectives content
-// @routes /overview
+// @routes /
 import { existsSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
@@ -9,7 +9,7 @@ import { navItems } from "@/lib/navigation"
 
 describe("overview のデータ", () => {
   it("概要以外のすべてのタブに、タブと同じ順で案内がある (ページを足したら案内の書き忘れに気づける)", () => {
-    const tabs = navItems.filter((item) => item.href !== "/overview").map((item) => item.href)
+    const tabs = navItems.filter((item) => item.href !== "/").map((item) => item.href)
     expect(pageGuides.map((guide) => guide.href)).toEqual(tabs)
   })
 

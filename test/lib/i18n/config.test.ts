@@ -1,5 +1,5 @@
 // @perspectives interaction
-// @routes /overview
+// @routes /
 import { describe, expect, it } from "vitest"
 import { defaultLocale, isLocale, resolveLocale } from "@/lib/i18n/config"
 

@@ -14,7 +14,7 @@ atelier (v5) で 7 つの作業に分けた。波 1 で 1〜5、波 2 で 6・7�
 - [x] 書体を Geist と Geist Mono に替え、アドレスバーの URL を等幅にする — `pnpm build` と theme の E2E
 - [x] theme.md と ADR 0004 を更新する — レビュー
 - [x] テストの段 (E2E を足す) と `pnpm test:coverage-map -- --write`
-- [ ] `pnpm commit-gate` (コミットの直前に流す)
+- [x] `pnpm commit-gate` (コミットの直前に流す)
 
 ## ADR が要る判断
 

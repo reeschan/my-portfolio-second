@@ -22,8 +22,10 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
   return (
     <article
       className={cn(
-        "relative overflow-hidden rounded-lg border border-border/50 bg-background/50 transition-all",
-        interactive ? "hover:-translate-y-1 hover:shadow-lg focus-within:ring-2 focus-within:ring-ring" : "hover:shadow-md",
+        // 押せるカードのホバーは枠と面の色だけを変える。浮き上がらせると読み終える前に視線が動き、
+        // ダークの面では影が奥行きに見えないため (unslop の Motion)
+        "relative overflow-hidden rounded-lg border border-border/50 bg-background/50 transition-colors",
+        interactive && "hover:border-border hover:bg-background/70 focus-within:ring-2 focus-within:ring-ring",
       )}
     >
       {/* 図は横長で白や黒の地なので、切り取らず枠に収める。ライト / ダークは dark: で出し分ける */}
@@ -33,14 +35,14 @@ export function WorkCard({ work, onSelect, priority }: WorkCardProps) {
           alt={work.architecture.alt}
           fill
           loading={priority ? "eager" : undefined}
-          className={cn("object-contain dark:hidden", interactive && "transition-transform hover:scale-105")}
+          className="object-contain dark:hidden"
         />
         <Image
           src={work.architecture.dark}
           alt={work.architecture.alt}
           fill
           loading={priority ? "eager" : undefined}
-          className={cn("hidden object-contain dark:block", interactive && "transition-transform hover:scale-105")}
+          className="hidden object-contain dark:block"
         />
       </div>
       <div className="p-4">

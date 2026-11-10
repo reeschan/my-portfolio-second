@@ -99,7 +99,7 @@ export const en: Messages = {
   chat: {
     description:
       "Ask an AI about Ryuki Tobita's career. It answers questions about experience, skills and past engagements based on the resume.",
-    greeting: "Hi! Feel free to ask anything about my career and skills.",
+    greeting: "Hi. Feel free to ask anything about my career and skills.",
     suggestions: [
       "Give me a quick summary of your career",
       "What is your strongest tech stack?",
@@ -110,7 +110,7 @@ export const en: Messages = {
     thinking: "Thinking…",
     empty: "The answer was empty. Please try again.",
     failed: "Couldn't get an answer.",
-    placeholder: "Ask about my career...",
+    placeholder: "Ask about my career",
     input: "Question",
     send: "Send",
     note: [

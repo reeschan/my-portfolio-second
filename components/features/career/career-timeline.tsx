@@ -40,14 +40,14 @@ function CareerTimelineItem({ entry, messages }: { entry: CareerEntry; messages:
       </TimelineMarker>
 
       <TimelineMeta className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <time>
+        <time className="font-mono tabular-nums">
           {entry.startDate} - {entry.endDate ?? messages.present}
         </time>
         {entry.ongoing && <Badge variant="status">{messages.ongoing}</Badge>}
       </TimelineMeta>
 
-      {/* カードの面は今までと同じ見た目を保つため、Tailwind のクラスで指定する */}
-      <TimelineCard className="rounded-lg border border-border/40 border-t-4 border-t-primary bg-card p-4 shadow-md">
+      {/* カードの面をこのサイトのトークンで揃えるため、Tailwind のクラスで指定する。強調は細い線と面の段差だけで付け、青や影は使わない */}
+      <TimelineCard className="rounded-lg border border-border/40 bg-card p-4">
         {/* ページの h1 の下に h2 を挟まず h3 を置くと段が飛ぶので、経歴の項目は h2 にする。見た目はクラスで保つ */}
         <h2 className="text-lg font-semibold">{entry.title}</h2>
         <p className="text-sm text-muted-foreground">{entry.subtitle}</p>

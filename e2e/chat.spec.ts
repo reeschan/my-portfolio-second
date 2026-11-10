@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test"
+import { ja } from "../data/messages/ja"
 import { expect, routes, test } from "./fixtures"
 
 // /api/chat はブラウザ側でモックする。本物の LLM は呼ばない (testing/e2e-policy.yml の external-mock 観点)
@@ -107,6 +108,22 @@ test.describe("チャット", () => {
     await expect(page.getByRole("button", { name: "送信" })).toBeDisabled()
     await expect(page.getByRole("textbox", { name: "質問" })).toHaveAttribute("maxlength", "1000")
   })
+
+  test(
+    "あいさつと入力欄の案内に感嘆符と末尾の「...」を使わない",
+    { tag: ["@chat", "@content"], annotation: routes("/chat") },
+    async ({ page }) => {
+      await page.goto("/chat")
+
+      // unslop の Copy の決まり (PBI-003): 感嘆符と末尾の「...」を戻さない
+      const greeting = page.getByText(ja.chat.greeting)
+      await expect(greeting).toBeVisible()
+      expect(await greeting.textContent()).not.toMatch(/[!！]/)
+
+      const input = page.getByRole("textbox", { name: ja.chat.input })
+      expect(await input.getAttribute("placeholder")).not.toMatch(/[!！]|(\.\.\.|…)$/)
+    },
+  )
 })
 
 test.describe("チャット (会話の流れ)", () => {

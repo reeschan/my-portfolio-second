@@ -46,7 +46,9 @@
   --color-rss: hsl(var(--rss));
 
   /* --- 文字 --- */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  /* 等幅の書体。数字や記号の幅をそろえたい文字に使う (例えば日付・URL・技術のタグ)。日本語が混ざっても崩れないよう、日本語の書体を後ろに置く */
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, "Hiragino Sans", "Noto Sans JP", monospace;
 
   /* --- 角丸 --- */
   --radius-lg: var(--radius);
@@ -202,10 +204,12 @@
   --toki-line-color: hsl(var(--border));
   --toki-line-width: 1px;
   --toki-marker-size: 2rem;
-  --toki-marker-bg: hsl(var(--primary));
-  --toki-marker-fg: hsl(var(--primary-foreground));
+  --toki-marker-bg: hsl(var(--secondary));
+  --toki-marker-fg: hsl(var(--secondary-foreground));
   --toki-marker-ring-width: 4px;
   --toki-marker-ring-color: hsl(var(--card));
   --toki-card-bg: hsl(var(--card));
+  /* ダークの面では影が奥行きに見えないので、カードは面の明るさと細い線だけで分ける */
+  --toki-card-shadow: none;
   --toki-arrow-size: 0;
 }

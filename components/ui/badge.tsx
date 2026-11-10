@@ -9,11 +9,11 @@ const badgeVariants = cva("inline-flex items-center text-xs font-medium", {
   variants: {
     variant: {
       // 状態を強調する (例: 継続中)
-      status: "rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-primary",
+      status: "rounded-md border border-primary/40 bg-primary/10 px-2 py-0.5 text-primary",
       // 一覧の見出し的なラベル (例: 参画先の名前)
-      secondary: "rounded-full bg-secondary px-2.5 py-0.5 text-secondary-foreground",
-      // 補足情報 (例: 使用技術)
-      muted: "rounded-md bg-muted px-2 py-0.5 font-normal text-muted-foreground",
+      secondary: "rounded-md bg-secondary px-2.5 py-0.5 text-secondary-foreground",
+      // 補足情報 (例: 使用技術)。数字や記号の幅がそろうよう等幅にする
+      muted: "rounded-md bg-muted px-2 py-0.5 font-mono font-normal text-muted-foreground",
     },
   },
   defaultVariants: {

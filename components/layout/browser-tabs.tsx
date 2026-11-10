@@ -56,7 +56,7 @@ function TabBar({ pathname }: { pathname: string }) {
 function AddressBar({ pathname }: { pathname: string }) {
   return (
     <div className="glass-bar flex h-10 items-center gap-2 border-b border-border/20 px-4">
-      <div className="flex h-7 w-full items-center rounded-full bg-background/60 px-3 text-xs text-muted-foreground">
+      <div className="flex h-7 w-full items-center rounded-full bg-background/60 px-3 font-mono text-xs text-muted-foreground">
         {displayHost}
         {pathname}
       </div>
